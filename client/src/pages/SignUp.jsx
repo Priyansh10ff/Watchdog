@@ -4,35 +4,33 @@ import axiosInstance from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import AuthSidePanel from "../components/AuthSidePanel";
 
-// Input styles live in one constant instead of being repeated on every input
 const inputClass =
   "w-full h-[44px] rounded-full border border-[#d5d5d5] px-6 text-[13px] text-[#333] outline-none focus:border-[#aaaaaa] placeholder:text-[#c4c4c4]";
 
-const Login = () => {
-  const [form, setForm] = useState({ email: "", password: "" });
+const SignUp = () => {
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [err, setErr] = useState("");
   const [loader, setLoader] = useState(false);
 
   const navigate = useNavigate();
   const { setUser } = useAuth();
 
-  // One handler for every input: the input's name attribute picks the field
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // stops the browser from reloading the page
+    e.preventDefault();
     setErr("");
     setLoader(true);
     try {
-      const response = await axiosInstance.post("/auth/login", form);
+      // The server sets the cookie and returns the new user, so the user is logged in right away
+      const response = await axiosInstance.post("/auth/register", form);
 
       setUser(response.data.user);
       navigate("/dashboard");
     } catch (error) {
-      // ?. keeps this safe when there is no response at all (server down, no network)
-      setErr(error.response?.data?.message || "Login failed. Try again.");
+      setErr(error.response?.data?.message || "Sign up failed. Try again.");
     } finally {
       setLoader(false);
     }
@@ -40,14 +38,13 @@ const Login = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#D8D0C4] p-4 sm:p-8">
-      {/* Main Card */}
       <div className="flex min-h-[640px] w-full max-w-[1080px] overflow-hidden rounded-[36px] bg-white p-4 md:rounded-[52px]">
         {/* ================= LEFT SIDE ================= */}
         <div className="flex w-full items-center justify-center py-10 md:w-1/2">
           <form onSubmit={handleSubmit} className="w-full max-w-[340px]">
-            <div className="mb-12 text-center">
+            <div className="mb-10 text-center">
               <h1 className="text-[34px] font-semibold tracking-[-1.5px] text-[#303030]">
-                Welcome back 👋
+                Sign Up 👋
               </h1>
               <p className="mt-4 text-[13px] text-[#999999]">
                 Please enter your details.
@@ -57,6 +54,17 @@ const Login = () => {
             {err && (
               <p className="mb-3 text-center text-[13px] text-red-500">{err}</p>
             )}
+
+            <input
+              type="text"
+              name="name"
+              placeholder="Full Name"
+              autoComplete="name"
+              value={form.name}
+              onChange={handleChange}
+              required
+              className={`${inputClass} mb-3`}
+            />
 
             <input
               type="email"
@@ -72,26 +80,27 @@ const Login = () => {
             <input
               type="password"
               name="password"
-              placeholder="Password"
-              autoComplete="current-password"
+              placeholder="Password (min 8 characters)"
+              autoComplete="new-password"
               value={form.password}
               onChange={handleChange}
               required
+              minLength={8}
               className={inputClass}
             />
 
             <button
               type="submit"
               disabled={loader}
-              className="mt-8 h-[44px] w-full rounded-full bg-[#ff9918] text-[13px] font-medium text-white transition hover:bg-[#f58c08] disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-6 h-[44px] w-full rounded-full bg-[#ff9918] text-[13px] font-medium text-white transition hover:bg-[#f58c08] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loader ? "Logging in..." : "Log In"}
+              {loader ? "Creating account..." : "Sign Up"}
             </button>
 
             <p className="mt-5 text-center text-[13px] text-[#aaaaaa]">
-              Don't have an account?{" "}
-              <Link to="/signup" className="font-medium text-[#333333]">
-                Sign Up
+              Already have an account?{" "}
+              <Link to="/login" className="font-medium text-[#333333]">
+                Log In
               </Link>
             </p>
           </form>
@@ -104,9 +113,8 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default SignUp;
 
 // VIVA
-// Q: Why e.preventDefault()?   A form submit reloads the page by default.
-// Q: Why one handleChange?     [e.target.name] is a computed key, so it updates the matching field.
-// Q: Why error.response?.data? When the server is down there is no response object, and a plain access would crash.
+// Q: Is minLength on the input enough?  No. It is only a convenience. The server validates again, because anyone can bypass the browser.
+// Q: Why autoComplete values?           They let password managers fill and save credentials correctly.
