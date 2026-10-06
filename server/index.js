@@ -6,6 +6,7 @@ import cors from "cors";
 import helmet from "helmet";
 import authRoutes from "./routes/auth.routes.js";
 import monitorRoutes from "./routes/monitor.routes.js";
+import { startScheduler } from "./jobs/scheduler.js";
 
 const required = ["MONGO_URI", "JWT_SECRET"];
 const missing = required.filter((key) => !process.env[key]);
@@ -55,6 +56,10 @@ mongoose
     app.listen(PORT, () => {
       console.log(`Server started on port ${PORT}`);
     });
+
+    if (process.env.DISABLE_SCHEDULER !== "true") {
+      startScheduler();
+    }
   })
   .catch((err) => {
     console.log(err);
