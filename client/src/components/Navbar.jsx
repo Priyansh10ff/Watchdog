@@ -31,7 +31,6 @@ const Navbar = () => {
           Uptime<span className="text-[#ff6b35]">Tracker</span>
         </Link>
 
-        {/* Links. Add Incidents and others here as the pages get built */}
         <div className="flex items-center gap-7">
           <Link
             to="/dashboard"
@@ -42,6 +41,17 @@ const Navbar = () => {
             }`}
           >
             Dashboard
+          </Link>
+
+          <Link
+            to="/incidents"
+            className={`text-sm font-medium transition-colors ${
+              isActive("/incidents")
+                ? "text-[#ff6b35]"
+                : "text-gray-600 hover:text-[#ff6b35]"
+            }`}
+          >
+            Incidents
           </Link>
 
           <span className="hidden text-sm text-gray-500 sm:block">

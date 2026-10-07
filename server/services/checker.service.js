@@ -7,7 +7,7 @@ import { performance } from "perf_hooks";
 import Monitor from "../models/monitor.model.js";
 import CheckResult from "../models/checkResult.model.js";
 import isPrivateIp from "../utils/isPrivateIp.js";
-import { applyResult } from "./incident.service.js";
+import { applyResult, handleIncident } from "./incident.service.js";
 
 const USER_AGENT = "WatchdogBot/1.0 (uptime monitoring)";
 const MAX_REDIRECTS = 3;
@@ -168,7 +168,9 @@ export const processMonitor = async (monitor) => {
   });
   await monitor.save();
 
-  return { result, transition };
+  const { event, incident } = await handleIncident(monitor, result, transition);
+
+  return { result, transition, incidentEvent: event, incident };
 };
 
 const leaseUntil = () => new Date(Date.now() + LEASE_MS);

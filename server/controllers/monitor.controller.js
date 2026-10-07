@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Monitor from "../models/monitor.model.js";
 import CheckResult from "../models/checkResult.model.js";
+import Incident from "../models/incident.model.js";
 import validateUrl from "../utils/validateUrl.js";
 import { checkSoon, processMonitor } from "../services/checker.service.js";
 
@@ -335,8 +336,11 @@ export const deleteMonitor = async (req, res) => {
       });
     }
 
-    await CheckResult.deleteMany({ monitor: monitor._id });
     await monitor.deleteOne();
+    await Promise.all([
+      CheckResult.deleteMany({ monitor: monitor._id }),
+      Incident.deleteMany({ monitor: monitor._id }),
+    ]);
 
     return res.status(200).json({
       success: true,
@@ -433,13 +437,16 @@ export const checkNow = async (req, res) => {
       });
     }
 
-    const { result, transition } = await processMonitor(monitor);
+    const { result, transition, incidentEvent, incident } =
+      await processMonitor(monitor);
 
     return res.status(200).json({
       success: true,
       message: result.isUp ? "Check passed" : "Check failed",
       result,
       transition,
+      incidentEvent,
+      incident,
       monitor,
     });
   } catch (error) {

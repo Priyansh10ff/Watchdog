@@ -9,6 +9,7 @@ import {
   getResults,
   checkNow,
 } from "../controllers/monitor.controller.js";
+import { getMonitorIncidents } from "../controllers/incident.controller.js";
 import isAuthenticated from "../middlewares/auth.middleware.js";
 
 const monitorRoutes = express.Router();
@@ -21,6 +22,7 @@ monitorRoutes.get("/:id", getMonitor);
 monitorRoutes.patch("/:id", updateMonitor);
 monitorRoutes.patch("/:id/toggle", toggleMonitor);
 monitorRoutes.get("/:id/results", getResults);
+monitorRoutes.get("/:id/incidents", getMonitorIncidents);
 monitorRoutes.post("/:id/check", checkNow);
 monitorRoutes.delete("/:id", deleteMonitor);
 

@@ -6,6 +6,7 @@ import cors from "cors";
 import helmet from "helmet";
 import authRoutes from "./routes/auth.routes.js";
 import monitorRoutes from "./routes/monitor.routes.js";
+import incidentRoutes from "./routes/incident.routes.js";
 import { startScheduler } from "./jobs/scheduler.js";
 
 const required = ["MONGO_URI", "JWT_SECRET"];
@@ -37,6 +38,7 @@ app.use(
 
 app.use("/api/auth", authRoutes);
 app.use("/api/monitors", monitorRoutes);
+app.use("/api/incidents", incidentRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "Server is running" });

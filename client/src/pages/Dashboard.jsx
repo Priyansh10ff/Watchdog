@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import axiosInstance from "../services/api";
 import Navbar from "../components/Navbar";
 import MonitorCard from "../components/MonitorCard";
+import { formatDuration } from "../utils/time";
+
+const REFRESH_MS = 30000;
 
 const Dashboard = () => {
   const [monitors, setMonitors] = useState([]);
@@ -10,22 +13,45 @@ const Dashboard = () => {
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
   const [busyId, setBusyId] = useState(null);
+  const [openIncidents, setOpenIncidents] = useState([]);
 
-  const fetchMonitors = async () => {
-    setError("");
-    setLoading(true);
+  const fetchOpenIncidents = async () => {
+    try {
+      const response = await axiosInstance.get("/incidents", {
+        params: { status: "active", limit: 5 },
+      });
+      setOpenIncidents(response.data.incidents);
+    } catch (error) {
+      setOpenIncidents([]);
+    }
+  };
+
+  const fetchMonitors = async (silent = false) => {
+    if (!silent) {
+      setError("");
+      setLoading(true);
+    }
     try {
       const response = await axiosInstance.get("/monitors");
       setMonitors(response.data.monitors);
+      setError("");
     } catch (error) {
-      setError(error.response?.data?.message || "Could not load monitors.");
+      if (!silent) {
+        setError(error.response?.data?.message || "Could not load monitors.");
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchMonitors();
+    fetchOpenIncidents();
+    const timer = setInterval(() => {
+      fetchMonitors(true);
+      fetchOpenIncidents();
+    }, REFRESH_MS);
+    return () => clearInterval(timer);
   }, []);
 
   const handleToggle = async (id) => {
@@ -45,7 +71,7 @@ const Dashboard = () => {
 
   const handleDelete = async (monitor) => {
     const confirmed = window.confirm(
-      `Delete "${monitor.name}"? Its check history will also be deleted.`,
+      `Delete "${monitor.name}"? Its check history and incidents will also be deleted.`,
     );
     if (!confirmed) return;
 
@@ -54,6 +80,9 @@ const Dashboard = () => {
     try {
       await axiosInstance.delete(`/monitors/${monitor._id}`);
       setMonitors((prev) => prev.filter((m) => m._id !== monitor._id));
+      setOpenIncidents((prev) =>
+        prev.filter((incident) => incident.monitor?._id !== monitor._id),
+      );
     } catch (error) {
       setActionError(error.response?.data?.message || "Delete failed.");
     } finally {
@@ -91,6 +120,36 @@ const Dashboard = () => {
           </Link>
         </div>
 
+        {openIncidents.length > 0 && (
+          <div className="mt-6 rounded-3xl bg-red-50 p-5 text-[13px] text-red-800">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="font-semibold">
+                {openIncidents.length === 1
+                  ? "1 open incident"
+                  : `${openIncidents.length} open incidents`}
+              </p>
+              <Link
+                to="/incidents"
+                className="rounded-full bg-red-600 px-4 py-2 font-semibold text-white transition hover:bg-red-700"
+              >
+                View incidents
+              </Link>
+            </div>
+            <ul className="mt-3 space-y-1">
+              {openIncidents.map((incident) => (
+                <li key={incident._id}>
+                  <span className="font-medium">
+                    {incident.monitor?.name || "Deleted monitor"}
+                  </span>{" "}
+                  down for{" "}
+                  {formatDuration(Date.now() - new Date(incident.startedAt).getTime())}
+                  {incident.status === "acknowledged" && " · acknowledged"}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {actionError && (
           <p className="mt-4 text-[13px] text-red-500">{actionError}</p>
         )}
@@ -105,7 +164,7 @@ const Dashboard = () => {
           <div className="mt-10 rounded-3xl bg-white p-10 text-center">
             <p className="text-[14px] text-red-500">{error}</p>
             <button
-              onClick={fetchMonitors}
+              onClick={() => fetchMonitors()}
               className="mt-4 rounded-full bg-[#303030] px-5 py-2 text-[13px] font-medium text-white"
             >
               Try again

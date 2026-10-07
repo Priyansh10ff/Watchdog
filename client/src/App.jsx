@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import AddMonitor from "./pages/AddMonitor";
+import Incidents from "./pages/Incidents";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
@@ -31,6 +32,15 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <AddMonitor />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/incidents"
+            element={
+              <ProtectedRoute>
+                <Incidents />
               </ProtectedRoute>
             }
           />
