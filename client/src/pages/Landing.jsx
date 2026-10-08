@@ -4,6 +4,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Logo from "../components/Logo";
 import Sentry from "../components/Sentry";
+import SentryAvatar from "../components/SentryAvatar";
 import { posePair, prefersReducedMotion } from "../utils/sentryPose";
 import { butterBtn, inkBtn } from "../components/ui";
 
@@ -30,13 +31,6 @@ const MODES = [
   { id: "down", label: "Down" },
 ];
 
-const PHRASES = [
-  { text: "Sentry never sleeps on the job", dot: "#2b46ff" },
-  { text: "One incident per outage", dot: "#ff5a3c" },
-  { text: "Checks as often as every minute", dot: "#2b46ff" },
-  { text: "No false alarms", dot: "#ff5a3c" },
-];
-
 const STEPS = [
   {
     n: "1 of 4",
@@ -57,6 +51,78 @@ const STEPS = [
     n: "4 of 4",
     title: "It recovers",
     text: "When the site answers again the incident closes by itself, with its duration, and Sentry goes back to sleep.",
+  },
+];
+
+const bars = [38, 46, 34, 52, 40, 44, 36, 58, 42, 48, 36, 50];
+
+const chipBase = "inline-flex h-9 items-center rounded-full px-3.5 text-[14px] font-semibold";
+
+const CALM = [
+  {
+    title: "Checks on your schedule",
+    text: "Every monitor has its own interval, from every minute to every hour, and you can check one on demand.",
+    visual: (
+      <>
+        <div className="flex flex-wrap gap-2">
+          <span className={`${chipBase} border-2 border-ink/20 text-soft`}>1 min</span>
+          <span className={`${chipBase} bg-ink text-butter`}>5 min</span>
+          <span className={`${chipBase} border-2 border-ink/20 text-soft`}>15 min</span>
+          <span className={`${chipBase} border-2 border-ink/20 text-soft`}>1 hour</span>
+        </div>
+        <div className="mt-8 flex h-[74px] items-end gap-1.5">
+          {bars.map((height, i) => (
+            <span key={i} className="flex-1 rounded-[5px] bg-[#3ddc84]" style={{ height }} />
+          ))}
+        </div>
+      </>
+    ),
+  },
+  {
+    title: "No false alarms",
+    text: "One dropped request is not an outage. A site is called down only after the failures you choose in a row.",
+    visual: (
+      <>
+        <div className="flex items-center gap-2">
+          <span className={`${chipBase} bg-[#d3f5e2] font-bold text-[#0b5a32]`}>Up</span>
+          <span className={`${chipBase} bg-[#ffd9d0] font-bold text-[#8a1f0d]`}>Fail</span>
+          <span className={`${chipBase} bg-[#ffd9d0] font-bold text-[#8a1f0d]`}>Fail</span>
+          <span className={`${chipBase} bg-[#ffd9d0] font-bold text-[#8a1f0d]`}>Fail</span>
+        </div>
+        <div className="mt-7 flex items-center gap-3">
+          <span className="inline-flex h-10 items-center rounded-full bg-[#c8321a] px-[18px] text-[15px] font-bold text-white">
+            Down
+          </span>
+          <span className="text-[15px] font-semibold text-soft">after 3 failures in a row</span>
+        </div>
+        <div className="mt-5 h-1.5 rounded-[3px] bg-ink/10">
+          <div className="h-1.5 w-full rounded-[3px] bg-[#c8321a]" />
+        </div>
+      </>
+    ),
+  },
+  {
+    title: "One incident per outage",
+    text: "Watchdog opens one incident, tracks it with the cause, and closes it with the duration when the site recovers.",
+    visual: (
+      <>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[17px] font-bold">API</span>
+          <span className="inline-flex h-[30px] items-center rounded-full bg-[#c8321a] px-3 text-[13px] font-bold text-white">
+            Open
+          </span>
+        </div>
+        <div className="mt-1.5 text-[14px] text-soft">Started 14:02, 3 failed checks</div>
+        <div className="my-[18px] h-0.5 bg-ink/10" />
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[17px] font-bold">API</span>
+          <span className="inline-flex h-[30px] items-center rounded-full bg-[#d3f5e2] px-3 text-[13px] font-bold text-[#0b5a32]">
+            Resolved
+          </span>
+        </div>
+        <div className="mt-1.5 text-[14px] text-soft">Lasted 12 min, closed automatically</div>
+      </>
+    ),
   },
 ];
 
@@ -97,26 +163,22 @@ const Landing = () => {
   const subRef = useRef(null);
   const apiTile = useRef(null);
   const quick = useRef(null);
-  const firstMode = useRef(true);
-  const firstBreak = useRef(true);
+  const shownMode = useRef(mode);
+  const shownBroken = useRef(broken);
 
   const down = mode === "down";
 
   useEffect(() => {
-    if (firstMode.current) {
-      firstMode.current = false;
-      return;
-    }
+    if (shownMode.current === mode) return;
+    shownMode.current = mode;
     if (prefersReducedMotion()) return;
     gsap.fromTo(wordRef.current, { yPercent: 110 }, { yPercent: 0, duration: 0.55, ease: "power4.out" });
     gsap.fromTo(subRef.current, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.45 });
   }, [mode]);
 
   useEffect(() => {
-    if (firstBreak.current) {
-      firstBreak.current = false;
-      return;
-    }
+    if (shownBroken.current === broken) return;
+    shownBroken.current = broken;
     if (!broken || !apiTile.current || prefersReducedMotion()) return;
     gsap.fromTo(
       apiTile.current,
@@ -155,7 +217,7 @@ const Landing = () => {
 
       if (reduce) return;
 
-      gsap.from(all('[data-g="navi"]'), { y: -24, opacity: 0, duration: 0.7, stagger: 0.08, ease: "power3.out" });
+      gsap.from(one('[data-g="navi"]'), { y: -24, opacity: 0, duration: 0.7, ease: "power3.out" });
       gsap.from(all('[data-g="hw"]'), { yPercent: 115, duration: 1.1, ease: "power4.out", stagger: 0.12, delay: 0.15 });
       gsap.from(all('[data-g="ctl"]'), { y: 26, opacity: 0, duration: 0.8, stagger: 0.1, delay: 0.7, ease: "power3.out" });
       gsap.from(all('[data-g="chip"]'), { scale: 0, opacity: 0, duration: 0.6, ease: "back.out(2)", stagger: 0.12, delay: 1.1 });
@@ -173,32 +235,7 @@ const Landing = () => {
         });
       });
 
-      gsap.fromTo(one('[data-g="hintdot"]'), { y: -16 }, { y: 48, duration: 1.2, repeat: -1, ease: "power1.in" });
-
-      const mq = gsap.to(one('[data-g="mq"]'), { xPercent: -50, duration: 24, ease: "none", repeat: -1 });
-
-      gsap.to(one('[data-g="bar"]'), {
-        scaleX: 1,
-        ease: "none",
-        scrollTrigger: { start: 0, end: "max", scrub: 0.3 },
-      });
-
-      ScrollTrigger.create({
-        start: 0,
-        end: "max",
-        onUpdate: (self) => {
-          const v = Math.abs(self.getVelocity());
-          gsap.to(mq, { timeScale: 1 + Math.min(7, v / 260), duration: 0.2, overwrite: true });
-          gsap.to(mq, { timeScale: 1, duration: 1.2, delay: 0.25 });
-        },
-      });
-
       const hero = one('[data-g="hero"]');
-      gsap.to(one('[data-g="hint"]'), {
-        opacity: 0,
-        ease: "none",
-        scrollTrigger: { trigger: hero, start: "top top", end: "+=200", scrub: true },
-      });
       gsap.to(one('[data-g="dogwrap"]'), {
         y: -80,
         ease: "none",
@@ -213,17 +250,6 @@ const Landing = () => {
         ease: "power3.out",
         scrollTrigger: { trigger: one('[data-g="tiles"]'), start: "top 85%", toggleActions: "play none none reverse" },
       });
-
-      gsap.fromTo(
-        all('[data-g="cw"]'),
-        { opacity: 0.12 },
-        {
-          opacity: 1,
-          stagger: 0.25,
-          ease: "none",
-          scrollTrigger: { trigger: one('[data-g="cta"]'), start: "top 75%", end: "top 15%", scrub: true },
-        },
-      );
 
       if (!wide || !storyRig.current) return;
 
@@ -380,16 +406,10 @@ const Landing = () => {
 
   return (
     <div ref={rootRef} className="bg-cream font-sans text-ink">
-      <div
-        data-g="bar"
-        className="fixed inset-x-0 top-0 z-[60] h-1.5 origin-left bg-butter"
-        style={{ transform: "scaleX(0)" }}
-      />
-
       <section
         data-g="hero"
         onMouseMove={handleHeroMove}
-        className={`relative min-h-[920px] overflow-hidden transition-colors duration-500 ${
+        className={`relative overflow-hidden transition-colors duration-500 ${
           down ? "bg-coral text-ink" : "bg-cobalt text-white"
         }`}
       >
@@ -402,116 +422,131 @@ const Landing = () => {
           }}
         />
 
-        <div className="relative mx-auto flex max-w-[1312px] flex-wrap items-center justify-between gap-5 px-6 py-7 sm:px-16">
-          <Link to="/" data-g="navi">
-            <Logo />
-          </Link>
-          <div className="flex flex-wrap items-center gap-6 text-[17px] font-medium sm:gap-9">
-            <a href="#how" data-g="navi" className="hover:underline">
-              How it works
-            </a>
-            <Link to="/login" data-g="navi" className="hover:underline">
-              Log in
+        <div className="relative mx-auto max-w-[1312px] px-6 pt-5 sm:px-16">
+          <nav
+            data-g="navi"
+            className={`flex flex-wrap items-center justify-between gap-3 rounded-[34px] border px-5 py-3 backdrop-blur-md transition-colors duration-500 md:grid md:h-[68px] md:grid-cols-[1fr_auto_1fr] md:rounded-full md:py-0 md:pl-5 md:pr-3 ${
+              down ? "border-ink/20 bg-white/25" : "border-white/25 bg-white/10"
+            }`}
+          >
+            <Link to="/" className="w-fit">
+              <Logo />
             </Link>
-            <Link to="/signup" data-g="navi" className={down ? inkBtn : butterBtn}>
-              Start monitoring
-            </Link>
-          </div>
-        </div>
+            <div className="hidden items-center gap-9 text-[16px] font-medium md:flex">
+              <a href="#how" className="transition-opacity hover:opacity-70">
+                How it works
+              </a>
+              <a href="#features" className="transition-opacity hover:opacity-70">
+                Features
+              </a>
+            </div>
+            <div className="flex items-center justify-end gap-5">
+              <Link to="/login" className="text-[16px] font-semibold transition-opacity hover:opacity-70">
+                Log in
+              </Link>
+              <Link
+                to="/signup"
+                className={`inline-flex h-[46px] items-center rounded-full px-6 text-[15px] font-bold transition-colors ${
+                  down ? "bg-ink text-butter hover:bg-white hover:text-ink" : "bg-butter text-ink hover:bg-white"
+                }`}
+              >
+                Start monitoring
+              </Link>
+            </div>
+          </nav>
 
-        <div className="relative mx-auto flex max-w-[1312px] flex-wrap items-center justify-between gap-6 px-6 pt-6 sm:px-16">
-          <div className="max-w-[700px] flex-1 basis-[520px]">
-            <h1 className="font-display text-[clamp(64px,10vw,132px)] font-extrabold leading-[0.92] tracking-[-0.04em]">
-              <span className="inline-block overflow-hidden pb-[0.1em] align-top">
-                <span data-g="hw" className="inline-block">Sentry</span>
-              </span>{" "}
-              <span className="inline-block overflow-hidden pb-[0.1em] align-top">
-                <span data-g="hw" className="inline-block">is</span>
-              </span>{" "}
-              <span className="inline-block overflow-hidden pb-[0.1em] align-top">
-                <span data-g="hw" ref={wordRef} className="inline-block">
-                  {COPY[mode].word}
+          <div className="flex flex-wrap items-center justify-between gap-8 pb-20 pt-14 lg:pb-24 lg:pt-16">
+            <div className="max-w-[640px] flex-1 basis-[460px]">
+              <h1 className="font-display text-[clamp(56px,8.4vw,108px)] font-extrabold leading-[0.94] tracking-[-0.04em]">
+                <span className="inline-block overflow-hidden pb-[0.1em] align-top">
+                  <span data-g="hw" className="inline-block">Sentry</span>
+                </span>{" "}
+                <span className="inline-block overflow-hidden pb-[0.1em] align-top">
+                  <span data-g="hw" className="inline-block">is</span>
+                </span>{" "}
+                <span className="inline-block overflow-hidden pb-[0.1em] align-top">
+                  <span data-g="hw" ref={wordRef} className="inline-block">
+                    {COPY[mode].word}
+                  </span>
                 </span>
-              </span>
-            </h1>
-            <p
-              ref={subRef}
-              data-g="ctl"
-              className="mt-8 max-w-[520px] text-[clamp(18px,2vw,22px)] font-medium leading-normal"
-            >
-              {COPY[mode].sub}
-            </p>
+              </h1>
+              <p
+                ref={subRef}
+                data-g="ctl"
+                className="mt-7 max-w-[500px] text-[clamp(18px,1.6vw,21px)] font-medium leading-normal"
+              >
+                {COPY[mode].sub}
+              </p>
 
-            <div data-g="ctl" className="mt-10 flex flex-wrap items-center gap-3.5">
-              <span className="text-[17px] font-semibold">Try it</span>
-              {MODES.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  aria-pressed={mode === item.id}
-                  onClick={() => setMode(item.id)}
-                  className={`min-h-12 rounded-full border-2 border-current px-6 text-[16px] font-bold transition-colors ${
-                    mode === item.id ? "bg-butter text-ink" : "bg-transparent"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
+              <div data-g="ctl" className="mt-9 flex flex-wrap items-center gap-3">
+                <span className="mr-1 text-[16px] font-semibold">Try it</span>
+                {MODES.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    aria-pressed={mode === item.id}
+                    onClick={() => setMode(item.id)}
+                    className={`inline-flex h-12 items-center rounded-full border-2 border-current px-6 text-[16px] font-bold transition-colors ${
+                      mode === item.id ? "bg-butter text-ink" : "bg-transparent"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div data-g="dogwrap" className="relative hidden h-[500px] w-[470px] shrink-0 lg:block">
+              <div className={`${chip} bg-white text-ink`} data-g="chip" style={{ left: -40, top: 330 }}>
+                <span className="block h-3 w-3 rounded-full bg-[#3ddc84]" />
+                example.com <span className="font-medium text-soft">138 ms</span>
+              </div>
+              <div className={`${chip} bg-white text-ink`} data-g="chip" style={{ left: 330, top: 8 }}>
+                <span className="block h-3 w-3 rounded-full bg-[#3ddc84]" />
+                shop.example.com <span className="font-medium text-soft">201 ms</span>
+              </div>
+              <div
+                className={`${chip} ${down ? "bg-ink text-white" : "bg-white text-ink"}`}
+                data-g="chip"
+                style={{ left: 300, top: 440 }}
+              >
+                <span className={`block h-3 w-3 rounded-full ${down ? "bg-[#ff4b3a]" : "bg-[#3ddc84]"}`} />
+                api.example.com{" "}
+                <span className={`font-medium ${down ? "text-white/80" : "text-soft"}`}>
+                  {down ? "No reply" : mode === "slow" ? "1,840 ms" : "112 ms"}
+                </span>
+              </div>
+              <Sentry ref={heroRig} mode={mode} scale={0.83} intro />
+            </div>
+
+            <div className="mx-auto lg:hidden">
+              <Sentry mode={mode} scale={0.62} />
             </div>
           </div>
-
-          <div data-g="dogwrap" className="relative hidden h-[620px] w-[560px] shrink-0 lg:block">
-            <div className={`${chip} bg-white text-ink`} data-g="chip" style={{ left: -70, top: 410 }}>
-              <span className="block h-3 w-3 rounded-full bg-[#3ddc84]" />
-              example.com <span className="font-medium text-soft">138 ms</span>
-            </div>
-            <div className={`${chip} bg-white text-ink`} data-g="chip" style={{ left: 400, top: 14 }}>
-              <span className="block h-3 w-3 rounded-full bg-[#3ddc84]" />
-              shop.example.com <span className="font-medium text-soft">201 ms</span>
-            </div>
-            <div
-              className={`${chip} ${down ? "bg-ink text-white" : "bg-white text-ink"}`}
-              data-g="chip"
-              style={{ left: 380, top: 540 }}
-            >
-              <span className={`block h-3 w-3 rounded-full ${down ? "bg-[#ff4b3a]" : "bg-[#3ddc84]"}`} />
-              api.example.com{" "}
-              <span className={`font-medium ${down ? "text-white/80" : "text-soft"}`}>
-                {down ? "No reply" : mode === "slow" ? "1,840 ms" : "112 ms"}
-              </span>
-            </div>
-            <Sentry ref={heroRig} mode={mode} scale={1} intro />
-          </div>
-
-          <div className="mx-auto lg:hidden">
-            <Sentry mode={mode} scale={0.62} />
-          </div>
-        </div>
-
-        <div data-g="hint" className="absolute bottom-9 left-6 flex items-center gap-3.5 text-[15px] font-semibold sm:left-16">
-          <span>Scroll</span>
-          <span className="relative block h-12 w-0.5 overflow-hidden bg-current opacity-40">
-            <span data-g="hintdot" className="absolute left-0 top-0 block h-4 w-0.5 bg-butter" />
-          </span>
         </div>
       </section>
 
-      <section className="overflow-hidden bg-butter py-[30px] text-ink">
-        <div data-g="mq" className="flex w-max">
-          {[0, 1].map((copy) => (
-            <div
-              key={copy}
-              aria-hidden={copy === 1}
-              className="flex shrink-0 items-center gap-10 whitespace-nowrap pr-10 font-display text-[64px] font-extrabold tracking-[-2px]"
-            >
-              {PHRASES.map((phrase) => (
-                <span key={phrase.text} className="flex items-center gap-10">
-                  {phrase.text}
-                  <span className="block h-[22px] w-[22px] rounded-full" style={{ background: phrase.dot }} />
-                </span>
-              ))}
-            </div>
-          ))}
+      <section id="features" className="py-24 lg:py-28">
+        <div className="mx-auto max-w-[1312px] px-6 sm:px-16">
+          <h2 className="max-w-[760px] font-display text-[clamp(38px,5vw,60px)] font-extrabold leading-none tracking-[-2px]">
+            Built to stay calm when your site is not.
+          </h2>
+          <p className="mt-4 max-w-[560px] text-[20px] leading-normal text-soft">
+            Three ideas keep Watchdog quiet until something is really wrong.
+          </p>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {CALM.map((card) => (
+              <div
+                key={card.title}
+                className="flex flex-col rounded-[32px] bg-white p-8 shadow-[0_24px_48px_-28px_rgba(16,21,54,0.3)] transition-transform duration-300 hover:-translate-y-1.5"
+              >
+                <div className="min-h-[190px] flex-1 rounded-[22px] bg-cream p-[22px]">{card.visual}</div>
+                <h3 className="mt-6 font-display text-[27px] font-extrabold tracking-[-0.8px]">{card.title}</h3>
+                <p className="mt-2 text-[17px] leading-normal text-soft">{card.text}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -720,29 +755,44 @@ const Landing = () => {
         </div>
       </section>
 
-      <section data-g="cta" className="bg-cobalt px-6 pb-[130px] pt-[150px] text-white sm:px-16">
-        <div className="mx-auto max-w-[1312px]">
-          <h2 className="font-display text-[clamp(64px,13vw,190px)] font-extrabold leading-[0.9] tracking-[-0.04em]">
-            {["Put", "Sentry", "on", "watch."].map((word) => (
-              <span key={word} data-g="cw" className="inline-block pr-[0.2em]">
-                {word}
-              </span>
-            ))}
-          </h2>
-          <Link to="/signup" className={`${butterBtn} mt-14 min-h-16 px-10 text-[20px]`}>
-            Create your account
-          </Link>
+      <section className="pb-24">
+        <div className="mx-auto max-w-[1312px] px-6 sm:px-16">
+          <div
+            data-g="cta"
+            className="flex flex-wrap items-center justify-between gap-10 rounded-[44px] bg-cobalt px-8 py-12 text-white sm:px-16 sm:py-14"
+          >
+            <div className="max-w-[560px]">
+              <h2 className="font-display text-[clamp(38px,5vw,56px)] font-extrabold leading-none tracking-[-2px]">
+                Put Sentry on watch.
+              </h2>
+              <p className="mt-4 text-[19px] leading-normal">
+                Add your first site in a minute. Sentry takes it from there.
+              </p>
+              <Link to="/signup" className={`${butterBtn} mt-7 min-h-[54px] px-8 text-[17px]`}>
+                Create your account
+              </Link>
+            </div>
+
+            <div className="relative h-[200px] w-[200px] shrink-0">
+              <SentryAvatar mode="up" size={200} />
+              <span className="absolute -top-2 left-[176px] font-display text-[34px] font-extrabold text-butter">z</span>
+              <span className="absolute -top-8 left-[198px] font-display text-[24px] font-extrabold text-butter">z</span>
+            </div>
+          </div>
         </div>
       </section>
 
-      <footer className="bg-ink px-6 py-9 text-[15px] text-[#c8cbe6] sm:px-16">
-        <div className="mx-auto flex max-w-[1312px] flex-wrap justify-between gap-4">
-          <span className="font-display text-[22px] font-extrabold text-white">watchdog</span>
-          <span>
-            <Link to="/login" className="hover:text-white">Log in</Link>
-            {" · "}
-            <Link to="/signup" className="hover:text-white">Sign up</Link>
-          </span>
+      <footer className="bg-ink text-[#c8cbe6]">
+        <div className="mx-auto grid max-w-[1312px] items-center gap-6 px-6 py-9 text-white sm:px-16 md:grid-cols-[1fr_auto_1fr]">
+          <Link to="/" className="w-fit">
+            <Logo />
+          </Link>
+          <div className="flex items-center gap-8 text-[15px] text-[#c8cbe6]">
+            <a href="#how" className="transition-colors hover:text-white">How it works</a>
+            <Link to="/login" className="transition-colors hover:text-white">Log in</Link>
+            <Link to="/signup" className="transition-colors hover:text-white">Sign up</Link>
+          </div>
+          <div className="text-[14px] text-[#c8cbe6] md:text-right">Built by Priyansh</div>
         </div>
       </footer>
     </div>

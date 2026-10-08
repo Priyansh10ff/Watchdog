@@ -59,7 +59,8 @@ Both are loaded from Google Fonts in `index.html`.
 - Monitors are tiles in a grid: one column on mobile, two from `md`, three from `lg`. Problem monitors sort first.
 - The dashboard header pairs the small Sentry avatar with a headline that summarises the state ("API is down", "All 5 monitors are up").
 - Login and signup are two columns on large screens: the form on the left and a large Sentry on the right who follows the cursor. Below `lg` only the form shows.
-- The landing page is a sequence of full-width sections: hero, marquee, scroll story, tiles, closing call to action.
+- The landing page is a sequence of sections: hero, three "stay calm" cards, scroll story, tiles, a compact closing card and a slim footer.
+- The navbar is a floating rounded bar the same width as the page content, so its edges line up with the headline. It has three zones on one line: logo, links, actions. The app version shows the current page as a white pill, Add monitor in butter, a user chip with an initial, and Log out.
 
 ## 5. Components
 
@@ -71,7 +72,8 @@ Both are loaded from Google Fonts in `index.html`.
 | `StatusBadge` | Pill for monitor and incident states |
 | `IncidentList` | White card per incident: start, duration, failed checks, cause, latest error, acknowledge |
 | `AuthLayout` | Two-column layout for login and signup with the reacting Sentry |
-| `Navbar` | Brand, Monitors and Incidents links, Add monitor, user name, log out |
+| `Logo` | A small dog-face tile and the "Watchdog" wordmark in Bricolage Grotesque 700 |
+| `Navbar` | Floating bar for the app: logo, Monitors and Incidents (current page in white), Add monitor, user chip, Log out |
 | `FormField`, `ChipGroup` | Label, hint and input wrapper; radio-style chips for interval, timeout, method and threshold |
 | `ui.js` | Shared class strings for cards, inputs and buttons (butter, ink, outline) |
 
@@ -91,11 +93,9 @@ Animation uses GSAP, with ScrollTrigger on the landing page only. The landing ro
 
 | Where | What |
 |---|---|
-| Landing hero | Headline words slide in, Sentry bounces in, status chips pop in and drift, his eyes and head follow the cursor, a soft light follows the mouse, the All up, Slow and Down buttons change his mood and the page colour |
-| Marquee | A looping band that speeds up with scroll velocity |
+| Landing hero | The navbar drops in, headline words slide in, Sentry bounces in, status chips pop in and drift, his eyes and head follow the cursor, a soft light follows the mouse, the All up, Slow and Down buttons change his mood and the page colour |
 | Scroll story | A pinned four-step sequence scrubbed by the scrollbar: sites arrive, Sentry checks them, one goes down and an incident opens, it recovers. The page turns coral during the outage. Shown at 1280 px and wider, and as stacked cards below that |
 | Tiles | Rise in with a stagger, tilt toward the cursor, and the "Break the API" button turns one red |
-| Closing line | Words fade in as you scroll |
 | Dashboard and forms | Sentry avatar changes with the overall state, tiles shake briefly when down, colour changes use CSS transitions |
 
 Reduced motion: all looping and scroll animation is skipped, mode changes are instant, and the scroll story becomes the stacked cards.

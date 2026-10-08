@@ -88,7 +88,7 @@ const zLetter = (left, top, size) => (
 const Sentry = forwardRef(({ mode = "up", scale = 1, intro = false }, ref) => {
   const rootRef = useRef(null);
   const modeRef = useRef(mode);
-  const firstMode = useRef(true);
+  const shownMode = useRef(mode);
   const bark = useRef(null);
   const quick = useRef(null);
 
@@ -209,10 +209,8 @@ const Sentry = forwardRef(({ mode = "up", scale = 1, intro = false }, ref) => {
   useEffect(() => {
     modeRef.current = mode;
 
-    if (firstMode.current) {
-      firstMode.current = false;
-      return;
-    }
+    if (shownMode.current === mode) return;
+    shownMode.current = mode;
 
     const root = rootRef.current;
     if (!root) return;
