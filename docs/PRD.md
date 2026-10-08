@@ -157,8 +157,8 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | FR17 | Encrypted custom headers for authenticated checks | Could | Open |
 | FR18 | Maintenance windows | Could | Open |
 | FR19 | Second-region checker agent | Could | Open |
-| FR20 | Automated tests for the status machine, validators and incidents | Should | Open |
-| FR21 | Rate limit on the rest of the API | Should | Open |
+| FR20 | Automated tests for the status machine, validators, check engine, incidents, API and hardening | Should | Done |
+| FR21 | Rate limit on the rest of the API | Should | Done |
 | FR22 | Deployment on Render, Vercel and Atlas | Must | Open |
 | FR23 | Sentry mascot UI with animated landing page and scroll story | Could | Done |
 | FR24 | Pulse monitor cards: response time, 24 hour uptime, bars for recent checks | Should | Done |
@@ -170,13 +170,13 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | Area | Requirement |
 |---|---|
 | **Correctness** | The status machine is deterministic. Incident creation is idempotent: a unique partial index allows one unresolved incident per monitor, and a duplicate-key race falls back to the existing incident. A failure inside incident handling never breaks checking. |
-| **Security** | bcrypt password hashes never leave the server. Request types are validated, which blocks NoSQL injection. Ownership is checked on every query. CORS accepts only `CLIENT_URL`. `helmet` headers. Body limit 10 kB. Secrets only in environment variables. In production the checker blocks private addresses. |
+| **Security** | bcrypt password hashes never leave the server. Request types are validated, which blocks NoSQL injection. Ownership is checked on every query. CORS accepts only `CLIENT_URL`. `helmet` headers. Body limit 10 kB. Rate limits per IP on the whole API, on login and on the public status page. Invalid input never produces a stack trace. Secrets only in environment variables. In production the checker blocks private addresses. |
 | **Privacy** | Monitors, results and incidents are visible only to their owner. Check results are deleted after 30 days. |
 | **Reliability** | The server only listens once MongoDB is connected. A claimed monitor is leased for 2 minutes, so a crashed check is retried. The scheduler skips a run while the previous one is still going. One monitor's error never stops the others. |
 | **Performance** | Up to 200 due monitors are claimed per run and checked 10 at a time. Responses are limited to 2 MB. List endpoints are paginated. Indexes cover the dashboard, scheduler and incident queries. |
 | **Compatibility** | Latest two versions of Chrome, Edge, Firefox and Safari. Layouts work from 360 px wide. |
 | **Accessibility** | Text pairs meet WCAG AA, visible focus, labelled form fields, semantic buttons and links, reduced-motion support. Remaining gaps are listed in [DESIGN.md](./DESIGN.md) and tracked in [CHECKLIST.md](./CHECKLIST.md). |
-| **Maintainability** | Configuration from environment variables only. Logic lives in services, controllers stay thin. Manual test cases are in [TESTING.md](./TESTING.md). Automated tests are planned (FR20). |
+| **Maintainability** | Configuration from environment variables only. Logic lives in services, controllers stay thin. Automated tests (427 server and 57 client) run in CI, and manual test cases for the rest are in [TESTING.md](./TESTING.md). |
 
 ## 8. Success metrics
 
@@ -194,8 +194,8 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 
 | Version | Scope |
 |---|---|
-| **v1.0 (end-term submission)** | Everything marked Done, plus automated tests (FR20), deployment (FR22), documentation and demo video |
-| **v1.1** | Charts (FR15), SSL expiry (FR16), encrypted custom headers (FR17), rate limit on the whole API (FR21) |
+| **v1.0 (end-term submission)** | Everything marked Done, plus deployment (FR22), documentation and demo video |
+| **v1.1** | Charts (FR15), SSL expiry (FR16), encrypted custom headers (FR17) |
 | **v1.2** | Maintenance windows (FR18), second-region checker (FR19) |
 | **Later** | Outbound notifications (email, Slack, Discord), teams, status page custom domains |
 
@@ -211,4 +211,3 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | Single scheduler process | One process does all checking | Atomic claiming already makes extra instances safe. Scaling out is a later step |
 | No outbound notifications | Users must open the app to notice an incident | Out of scope for now. The dashboard and status page show incidents |
 | Showcase checks of big sites are blocked by their bot protection | A well-known site looks down on the public landing page | Check the dashboard for a day before publishing, add the code the site returns to its status codes, or leave the site out |
-| No automated tests yet | Regressions are caught only by manual testing | FR20 before submission |

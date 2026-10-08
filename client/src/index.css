@@ -15,6 +15,18 @@
   --color-sand: #ffcf86;
 
   --animate-shake3: shake 0.45s linear 3;
+  --animate-pop: pop 0.18s ease-out;
+
+  @keyframes pop {
+    0% {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 
   @keyframes shake {
     0% {

@@ -5,6 +5,7 @@ const BATCH_SIZE = 10;
 const MAX_PER_RUN = 200;
 
 let running = false;
+let task = null;
 
 export const runDueChecks = async () => {
   if (running) return;
@@ -34,7 +35,14 @@ export const runDueChecks = async () => {
 };
 
 export const startScheduler = () => {
-  cron.schedule("* * * * *", runDueChecks);
+  task = cron.schedule("* * * * *", runDueChecks);
   runDueChecks();
   console.log("Scheduler started");
+};
+
+export const stopScheduler = () => {
+  if (task) {
+    task.stop();
+    task = null;
+  }
 };

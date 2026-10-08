@@ -37,8 +37,10 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [x] Landing page ticker (FR26)
 - [ ] Response time chart and uptime bar (FR15)
 - [ ] Run the interface and status page test cases in [TESTING.md](./TESTING.md)
-- [ ] Automated tests (FR20)
-- [ ] Rate limit on the rest of the API (FR21)
+- [x] Automated tests (FR20)
+- [x] Rate limit on the rest of the API (FR21)
+- [x] GitHub Actions runs both test suites and the client build
+- [ ] `npm test` passes in `server` and in `client` on the final commit
 
 ## 3. Security review
 
@@ -50,10 +52,13 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [x] `helmet`, restricted CORS, 10 kB body limit
 - [x] Private-address blocking in production (DNS, IP literals, redirects)
 - [x] Rate limit on the public status page
-- [ ] Rate limit on the rest of the API
+- [x] Rate limit on the rest of the API
+- [x] Invalid input returns clean JSON errors and never a stack trace
+- [x] Graceful shutdown on SIGTERM
 - [ ] `JWT_SECRET` is a long random value in production **(verify)**
 - [ ] Atlas database user has a strong password and only the access it needs **(verify)**
-- [ ] `npm audit` reviewed for both `server` and `client`
+- [x] `npm audit` reviewed: no vulnerabilities in the client or in the server's production dependencies. Three advisories remain in `nodemon`'s dev dependencies ([TESTING.md](./TESTING.md))
+- [ ] Unused packages removed: `npm uninstall jest nodemailer` in `server`
 
 ## 4. Production readiness
 

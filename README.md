@@ -53,9 +53,6 @@ Watchdog is an uptime and incident tracker for websites and APIs. It checks your
 - A public status page you can share: choose monitors, get a link, and visitors see live status, uptime, recent checks and past incidents without logging in. URLs and error details are never shown.
 - Protection against server-side request forgery: in production the checker refuses private, loopback and link-local addresses.
 
-**In progress**
-- Automated tests
-
 **Planned**
 - SSL certificate expiry warnings, encrypted custom headers for authenticated checks, maintenance windows and a second-region checker
 
@@ -163,6 +160,7 @@ Server (`server/.env`):
 | `NODE_ENV` | no | | `production` enables secure cookies, trust proxy and private-address blocking |
 | `CLIENT_URL` | no | `http://localhost:5173` | Allowed browser origin, no trailing slash |
 | `DISABLE_SCHEDULER` | no | `false` | `true` runs the API without the scheduler |
+| `API_RATE_LIMIT` | no | `600` | Requests per IP every 15 minutes across the API, except the health check |
 | `TRUST_PROXY` | no | `1` | Proxy hops in front of the API in production, for rate limiting. Use `2` behind the Vercel proxy option |
 
 Client (`client/.env`):
@@ -214,7 +212,9 @@ The sites are Google, YouTube, Wikipedia, GitHub, Cloudflare, Amazon, Reddit, Ne
 |---|---|---|
 | `server` | `npm run dev` | Start the API with nodemon |
 | `server` | `npm start` | Start the API |
+| `server` | `npm test` | Run the server tests |
 | `client` | `npm run dev` | Start the Vite dev server |
+| `client` | `npm test` | Run the client tests |
 | `client` | `npm run build` | Production build into `dist` |
 | `client` | `npm run preview` | Serve the production build locally |
 | `demo-target` | `npm start` | Start the demo site |
@@ -236,7 +236,12 @@ Bodies, filters and error codes are in [docs/api.md](docs/api.md).
 
 ## Testing
 
-Manual test cases with expected results for every endpoint are in [docs/TESTING.md](docs/TESTING.md). Automated tests are planned and tracked in [docs/CHECKLIST.md](docs/CHECKLIST.md).
+```bash
+cd server && npm test
+cd client && npm test
+```
+
+427 server tests and 57 client tests, using Node's built-in test runner, so there is nothing extra to install. The server tests need no database or internet. A GitHub Actions workflow runs both suites and the client build on every push. `docs/TESTING.md` lists what is covered and also holds the manual test cases for the React components and the real database.
 
 ## Deployment
 
@@ -253,7 +258,7 @@ Live app: not deployed yet.
 - Passwords are hashed with bcrypt and never returned by the API.
 - The session is an httpOnly cookie, `secure` and `sameSite: none` in production.
 - Request types are validated, which blocks NoSQL injection. Every monitor and incident query is scoped to the logged-in user.
-- Register and login are rate limited. Monitors are limited to 20 per user.
+- Rate limits per IP: 600 requests per 15 minutes across the API, 10 per 15 minutes on register and login, and 60 per minute on the public status page. Monitors are limited to 20 per user.
 - helmet headers, CORS restricted to `CLIENT_URL`, 10 kB body limit.
 - In production the checker blocks private, loopback and link-local addresses at DNS lookup time, for IP-literal URLs and for redirect targets.
 - Secrets live only in environment variables.
@@ -263,9 +268,8 @@ Live app: not deployed yet.
 - One scheduler process. Atomic claiming already makes extra instances safe.
 - HTTP and HTTPS only, GET and HEAD only.
 - No outbound notifications (email, SMS, chat). Incidents are shown in the dashboard and on the status page.
-- Only the auth routes are rate limited so far.
 
-Next: automated tests, deployment, then the optional extras. Then SSL expiry warnings, encrypted custom headers, maintenance windows and a second-region checker. The full plan is in [docs/PRD.md](docs/PRD.md).
+Next: deployment, then the optional extras. Then SSL expiry warnings, encrypted custom headers, maintenance windows and a second-region checker. The full plan is in [docs/PRD.md](docs/PRD.md).
 
 ## Documentation
 

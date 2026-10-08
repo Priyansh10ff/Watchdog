@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import axiosInstance from "../services/api";
 import Navbar from "../components/Navbar";
 import SentryAvatar from "../components/SentryAvatar";
+import { useConfirm } from "../components/ConfirmDialog";
 import MonitorTile from "../components/MonitorTile";
 import { butterBtn, cardClass, inkBtn } from "../components/ui";
 import { sortMonitors, summarize } from "../utils/monitorState";
@@ -17,6 +18,7 @@ const Dashboard = () => {
   const [actionError, setActionError] = useState("");
   const [busyId, setBusyId] = useState(null);
   const [openIncidents, setOpenIncidents] = useState([]);
+  const { confirm, dialog } = useConfirm();
 
   const fetchOpenIncidents = async () => {
     try {
@@ -76,9 +78,11 @@ const Dashboard = () => {
   };
 
   const handleDelete = async (monitor) => {
-    const confirmed = window.confirm(
-      `Delete "${monitor.name}"? Its check history and incidents will also be deleted.`,
-    );
+    const confirmed = await confirm({
+      title: `Delete ${monitor.name}?`,
+      message: "Its check history and incidents will also be deleted. This cannot be undone.",
+      confirmLabel: "Delete monitor",
+    });
     if (!confirmed) return;
 
     setActionError("");
@@ -209,6 +213,8 @@ const Dashboard = () => {
           </>
         )}
       </main>
+
+      {dialog}
     </div>
   );
 };

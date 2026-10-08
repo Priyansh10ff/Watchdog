@@ -50,6 +50,7 @@ Environment variables:
 | `JWT_EXPIRES_IN` | `7d` |
 | `CLIENT_URL` | your Vercel URL, with no trailing slash |
 | `TRUST_PROXY` | `1` for option A below, `2` for option B (see section 5) |
+| `API_RATE_LIMIT` | optional, requests per IP every 15 minutes across the API. Default `600`. Raise it if many people share one address, such as a campus network |
 
 After the deploy, open `https://YOUR-SERVICE.onrender.com/api/health`. It should return `{"success":true,"message":"Server is running"}`. The logs should show `DB Connected` and `Scheduler started`.
 
@@ -106,6 +107,10 @@ The landing page ticker reads a public status page called `world`. After deployi
 
 The ticker shows each site's own icon, which the visitor's browser loads from Google's favicon service by default. To use a different service, set `VITE_FAVICON_URL` in Vercel with `{domain}` where the host name goes.
 
+Render sends `SIGTERM` when it redeploys. The server then stops the scheduler, finishes open requests, closes the database connection and exits, so a deploy does not cut a check in half.
+
+CI (`.github/workflows/ci.yml`) runs the tests and the client build on every push. Make sure it is green before you deploy.
+
 ## 7. Verification
 
 Run these on the deployed app and note the results in [TESTING.md](./TESTING.md).
@@ -118,6 +123,7 @@ Run these on the deployed app and note the results in [TESTING.md](./TESTING.md)
 - [ ] Break the demo target: after the failure threshold the monitor goes down and an incident opens
 - [ ] Restore it: the incident resolves with a duration
 - [ ] Refresh `/dashboard` and `/incidents` directly: no 404
+- [ ] The Render logs show one line per request and no repeated errors
 - [ ] Publish a status page, then open its link in a private window: it loads without logging in
 - [ ] Landing page shows the ticker once the `world` page has at least 5 monitors
 - [ ] Render logs show checks running without errors

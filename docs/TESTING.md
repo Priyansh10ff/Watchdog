@@ -4,6 +4,52 @@ Every test below was designed against the real endpoints. Run them with Postman 
 
 Base URL: `http://localhost:5000/api`. Demo site: `http://localhost:4000`.
 
+## Automated tests
+
+Run them from the project folder:
+
+```bash
+cd server
+npm test
+
+cd ../client
+npm test
+```
+
+Both use Node's built-in test runner, so they need no extra packages. The server tests need no database and no network: models are replaced with in-memory stand-ins, and the check engine is tested against a small web server started on a random local port. A GitHub Actions workflow (`.github/workflows/ci.yml`) runs both suites and the client build on every push and pull request.
+
+Server: 427 tests in 13 files, about 11 seconds.
+
+| File | Tests | What it covers |
+|---|---|---|
+| `isPrivateIp.test.js` | 55 | Every private, loopback, link-local and IPv4-mapped IPv6 range, and the public addresses next to them |
+| `validateUrl.test.js` | 47 | Schemes, credentials, bad input, local addresses in and out of production, number-encoded addresses |
+| `status.machine.test.js` | 20 | The failure threshold, quick re-checks, recovery, and the schedule after each result |
+| `incident.flow.test.js` | 16 | Opening an incident at the right check, updating it, the race between two checks, resolving with the duration |
+| `checker.test.js` | 43 | The check engine against a real local web server: status codes, keyword, redirects, timeouts, refused and reset connections, DNS failure, large bodies and private addresses in production |
+| `checker.flow.test.js` | 9 | A whole outage from first check to recovery, and claiming monitors safely |
+| `scheduler.test.js` | 9 | At most 10 checks at once, at most 200 per run, one failing monitor does not stop the rest, no overlapping runs |
+| `auth.test.js` | 43 | Registration, login, logout, the session cookie, and the login middleware |
+| `monitors.api.test.js` | 90 | Every monitor and incident route over HTTP: validation, ownership, limits, mass-assignment, delete cascade, check-now cooldown |
+| `statusPage.test.js` | 50 | The owner's status page routes and the public page: privacy, ordering, states, domains, caching |
+| `showcase.test.js` | 16 | The one-command showcase setup |
+| `hardening.test.js` | 26 | JSON errors, body limit, security headers, CORS, production proxy setting and the API-wide and login rate limits |
+| `publicLimit.test.js` | 3 | The 60 requests a minute limit on the public status page |
+
+Client: 57 tests in 3 files.
+
+| File | Tests | What it covers |
+|---|---|---|
+| `monitorState.test.js` | 21 | A monitor's state, the sort order of the dashboard and the headline for the overall state |
+| `time.test.js` | 24 | "5 min ago", durations such as `2m 5s`, and dates |
+| `sentryPose.test.js` | 12 | The three moods of Sentry and how a pose is applied |
+
+Not covered by automated tests: the React components, the animations and anything that needs a real MongoDB. Those are covered by the manual cases below.
+
+Dependency audit (`npm audit`): the client has no known vulnerabilities, and the server has none in its production dependencies. Removing the unused `jest` and `nodemailer` packages leaves three advisories in `nodemon`'s dev-only dependency chain (a denial of service in `braces` that needs attacker-controlled glob patterns), with no upstream fix yet. They are never installed in production.
+
+## Manual tests
+
 ## Auth
 
 | # | Request | Body | Expected | Result |

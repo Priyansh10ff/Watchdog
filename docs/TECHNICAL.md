@@ -148,12 +148,12 @@ The `/status/:slug` page in the client polls this endpoint every 60 seconds. The
 | Session | JWT in an httpOnly cookie, 7 days. In production the cookie is `secure` and `sameSite: none` |
 | Input | Types are checked before use, which blocks NoSQL injection through objects. Ranges and lengths are validated. Unknown fields are never copied into documents |
 | Authorization | Every monitor and incident query is scoped to the logged-in user. Another user's resource returns 404 |
-| Abuse | 10 requests per 15 minutes per IP on register and login, 60 requests per minute per IP on the public status page. Monitors limited to 20 per user. Check-now has a 10 second cooldown |
+| Abuse | Three limits per IP: 600 requests per 15 minutes across the API (`API_RATE_LIMIT`), 10 per 15 minutes on register and login, and 60 per minute on the public status page. Monitors limited to 20 per user. Check-now has a 10 second cooldown |
 | Transport | CORS allows only `CLIENT_URL` with credentials. `helmet` headers. 10 kB body limit |
 | SSRF | In production the checker refuses loopback, private and link-local addresses. The check runs inside a custom DNS lookup, so the address that was validated is the one connected to. IP-literal URLs and redirect targets are checked too. URLs with embedded credentials are rejected |
 | Secrets | Only in environment variables. `.env` files are ignored by Git |
 
-Known gap: only the auth routes are rate limited. A limiter for the rest of the API is planned (FR21).
+The API-wide limiter runs before the body is read, so requests with invalid or oversized bodies count too. CORS preflights and the health check are not counted.
 
 ## 11. Configuration
 
@@ -168,6 +168,7 @@ Server (`server/.env`):
 | `NODE_ENV` | no | none | `production` enables secure cookies, trust proxy and private-address blocking |
 | `CLIENT_URL` | no | `http://localhost:5173` | Allowed browser origin, no trailing slash |
 | `DISABLE_SCHEDULER` | no | `false` | Set to `true` to run the API without the scheduler |
+| `API_RATE_LIMIT` | no | `600` | Requests allowed per IP every 15 minutes across the whole API, except the health check |
 | `TRUST_PROXY` | no | `1` | Number of proxy hops in front of the API in production, used to find the visitor's IP for rate limiting. Use `2` behind the Vercel proxy option |
 
 Client (`client/.env`):
@@ -188,9 +189,19 @@ See the README for the commands. Notes:
 - If your network blocks MongoDB SRV lookups, use the non-SRV connection string from Atlas locally.
 - `npx nodemon` restarts the API on file changes. Changing `.env` needs a manual restart (`rs`).
 
+## 12a. Production behaviour
+
+`app.js` builds the Express app and `index.js` connects to the database, starts the server and the scheduler, and handles shutdown. Splitting them lets the tests load the whole app without a database.
+
+Middleware order matters: `helmet`, then CORS (so preflights are answered first), then the health check, then the API-wide rate limiter, then the body and cookie parsers, then the routes, then a JSON 404 and an error handler. The error handler turns an invalid JSON body into a 400, an oversized body into a 413, other client errors such as a malformed path into a 400, and everything else into a generic 500 that never shows internals.
+
+Requests are logged with `morgan` (`combined` format in production, without the health check and in tests).
+
+On `SIGTERM` or `SIGINT`, which Render sends when it redeploys, the server stops the scheduler, stops accepting connections, finishes open requests, closes the database connection and exits. It forces an exit after 10 seconds.
+
 ## 13. Testing
 
-Manual test cases with expected results are in [TESTING.md](./TESTING.md). Automated tests are not written yet (FR20). The planned first targets are the status machine, `isPrivateIp`, `validateUrl` and the incident transitions, since they are pure logic.
+Automated tests use Node's built-in test runner: 427 server tests and 57 client tests, run with `npm test` in each folder and in CI on every push. The server tests replace the database models with in-memory stand-ins and test the check engine against a local web server, so they need no database or internet. The full list is in [TESTING.md](./TESTING.md), which also holds the manual cases for the parts the automated tests do not cover (the React components, the animations and the real database).
 
 ## 13a. Client animation
 

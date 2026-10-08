@@ -155,3 +155,21 @@ Rules and errors:
 - 409: the link is already taken.
 - 404 on DELETE when the user has no page.
 - Deleting a monitor removes it from every status page.
+
+## Errors and limits
+
+These apply to every route under `/api`.
+
+| Status | Message | When |
+|---|---|---|
+| 400 | `Invalid JSON` | The body is not valid JSON |
+| 400 | `Bad request` | Another client error, such as a malformed path |
+| 401 | `Not authenticated`, `Unauthorized` | No session, or an invalid or expired one |
+| 404 | `Route not found` | No such route |
+| 413 | `Request body is too large` | The body is over 10 kB |
+| 429 | `Too many requests, slow down and try again later` | More than 600 requests in 15 minutes from one IP (`API_RATE_LIMIT`). The health check is not counted |
+| 429 | `Too many attempts, try again in 15 minutes` | More than 10 register or login attempts in 15 minutes from one IP |
+| 429 | `Too many requests, try again in a minute` | More than 60 requests a minute to `GET /status/:slug` from one IP |
+| 500 | `Internal Server Error` | Anything unexpected. Details are only written to the server log |
+
+Every error body is `{ "success": false, "message": "..." }`. A 429 carries `Retry-After` and `X-RateLimit-*` headers.

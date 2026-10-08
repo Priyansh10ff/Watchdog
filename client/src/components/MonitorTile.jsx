@@ -10,6 +10,7 @@ const readout = (monitor, state) => {
   if (state === "down") return "No reply";
   if (state === "paused") return "Off";
   if (state === "waiting") return "Waiting";
+  if (monitor.lastResponseTimeMs == null) return "No reply";
   return `${monitor.lastResponseTimeMs} ms`;
 };
 
@@ -39,10 +40,10 @@ const MonitorTile = ({ monitor, busy, onToggle, onDelete }) => {
       </div>
 
       <div className="mt-6 flex items-end justify-between gap-3">
-        <div className="font-display text-[48px] font-extrabold leading-none tracking-[-2px]">
+        <div className="min-w-0 truncate whitespace-nowrap font-display text-[clamp(32px,3.4vw,48px)] font-extrabold leading-none tracking-[-2px]">
           {readout(monitor, state)}
         </div>
-        <div className="text-right">
+        <div className="shrink-0 whitespace-nowrap text-right">
           <div className="font-display text-[24px] font-extrabold leading-none tracking-[-0.5px]">
             {uptime == null ? "-" : `${uptime}%`}
           </div>

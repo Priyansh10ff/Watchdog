@@ -40,7 +40,7 @@ const listIncidents = async (filter, query) => {
 
 const readStatusFilter = (status) => {
   if (status === undefined || status === "all") return { filter: {} };
-  if (typeof status !== "string" || !STATUS_FILTERS[status]) {
+  if (typeof status !== "string" || !Object.hasOwn(STATUS_FILTERS, status)) {
     return { error: "Status must be active, open, acknowledged, resolved or all" };
   }
   return { filter: STATUS_FILTERS[status] };

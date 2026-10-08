@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "jest",
+    "test": "node --test",
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
@@ -28,11 +28,9 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.10.3",
     "morgan": "^1.12.1",
-    "node-cron": "^4.6.0",
-    "nodemailer": "^10.0.13"
+    "node-cron": "^4.6.0"
   },
   "devDependencies": {
-    "jest": "^30.5.2",
     "nodemon": "^3.1.14",
     "supertest": "^7.3.0"
   }
