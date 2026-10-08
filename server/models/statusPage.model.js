@@ -31,6 +31,10 @@ const statusPageSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    showDomains: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );

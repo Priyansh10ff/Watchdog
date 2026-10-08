@@ -76,6 +76,7 @@ Indexes: unique `monitor` where `isResolved` is false (one unresolved incident p
 | title | String | up to 60 characters |
 | monitors | [ObjectId] | the monitors shown, in display order |
 | isPublished | Boolean | `false` hides the page without deleting it |
+| showDomains | Boolean | default `false`. When `true` the public page shows each monitor's host name, never the full URL |
 | createdAt, updatedAt | Date | |
 
 Indexes: unique `user` and unique `slug`.

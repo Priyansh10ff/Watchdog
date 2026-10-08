@@ -129,3 +129,42 @@ Interface:
 | 26 | Delete the page and confirm | The form resets and the link stops working | |
 | 27 | Open the public page with a monitor down | The page and headline turn red, the bar shows red failures and the incident reads Ongoing | |
 | 28 | Open the public page and read every line | No URL, error message or cause is shown | |
+
+## Landing page ticker
+
+| # | Action | Expected | Result |
+|---|---|---|---|
+| 29 | Open the landing page before running the showcase script | No ticker section, and the rest of the page is normal. `GET /api/status/world` returns 404 | |
+| 30 | Run `node scripts/seedShowcase.js` in `server`, wait a minute, then reload the landing page | A yellow section after the story shows the chips and five rows | |
+| 31 | Watch for 10 seconds | Every few seconds the top row slides out and a new one comes in from the bottom, with no jump when the list wraps | |
+| 32 | Move the pointer over the ticker | The scrolling stops. Moving away resumes it | |
+| 33 | Scroll the section out of view and back | It does not keep running off screen and picks up when visible | |
+| 34 | Break one showcase monitor | The chip says 1 down right now and its row says Not responding | |
+| 35 | Hide the showcase page or delete it | The section disappears from the landing page within a minute | |
+| 36 | Turn on reduced motion in the system settings | The five first sites show and nothing moves | |
+| 37 | Log in and open the landing page | The button says Add your own site and opens Add monitor | |
+
+## Confirmation and card readout
+
+| # | Action | Expected | Result |
+|---|---|---|---|
+| 38 | Press Delete on a monitor card | A dialog appears inside the page, naming the monitor. No browser pop-up appears | |
+| 39 | Press Cancel, then Delete again and press Escape, then again and click the dark area | Each closes the dialog, the monitor stays and focus returns to the Delete button | |
+| 40 | Open the dialog and press Tab and Shift+Tab repeatedly | Focus stays on the two dialog buttons. The page behind does not scroll | |
+| 41 | Confirm the deletion | The card disappears and its incidents and history are gone | |
+| 42 | Stop the server and confirm a deletion | The dialog closes and a red message on the page says it could not be deleted | |
+| 43 | Press Delete page on the status page settings | The same kind of dialog asks about the status page | |
+| 44 | Point a monitor at a site that times out and watch the card after the first failed check | The card says "No reply", never "undefined ms", and its size does not change | |
+| 45 | Run `node scripts/seedShowcase.js` a second time | It says 0 monitors added and 12 already there, and the page is unchanged | |
+| 46 | Run it with `SHOWCASE_PASSWORD` set on a fresh database, then log in as `showcase@watchdog.local` | The dashboard shows the 12 monitors | |
+
+## Icons and domains
+
+| # | Action | Expected | Result |
+|---|---|---|---|
+| 47 | Re-run `node scripts/seedShowcase.js`, wait for the 30 second cache, then reload the landing page | Each ticker row shows the site's own icon and its domain | |
+| 48 | Block the icon service (for example with the network tab set to offline for that host) and reload | Rows fall back to their coloured letter tiles and the page still works | |
+| 49 | GET /status/world and read the JSON | Each monitor has a `domain` such as `github.com`. No full URL or path appears | |
+| 50 | On the status page settings, turn off Show site domains and save, then GET /status/world | Every `domain` is `null` and the ticker shows letter tiles | |
+| 51 | Turn it on for a monitor whose URL has a path or query, then read the public page | Only the host name is shown | |
+| 52 | Open a public status page whose owner turned domains on | The domain shows under each monitor name | |

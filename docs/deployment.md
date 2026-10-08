@@ -100,6 +100,12 @@ The session is an httpOnly cookie. When the client and the API are on different 
 
 `NODE_ENV=production` blocks private addresses, so a monitor for `http://localhost:4000` is refused. For the demo video, deploy `demo-target` as a second Render web service (root directory `demo-target`, build `npm install`, start `npm start`) and monitor its public `/health` URL. Switch it with `/control/down`, `/control/slow` and `/control/up`.
 
+## 6a. Landing page ticker
+
+The landing page ticker reads a public status page called `world`. After deploying, create it on the production database by running the showcase script with the Atlas connection string (the steps and options are in the README under "Landing page ticker setup"). Sites can answer the production server differently from your own computer, because some block data centre addresses, so check the results for a day before relying on the numbers. To use another link name, set `SHOWCASE_SLUG` for the script and `VITE_SHOWCASE_SLUG` in the Vercel environment variables.
+
+The ticker shows each site's own icon, which the visitor's browser loads from Google's favicon service by default. To use a different service, set `VITE_FAVICON_URL` in Vercel with `{domain}` where the host name goes.
+
 ## 7. Verification
 
 Run these on the deployed app and note the results in [TESTING.md](./TESTING.md).
@@ -113,6 +119,7 @@ Run these on the deployed app and note the results in [TESTING.md](./TESTING.md)
 - [ ] Restore it: the incident resolves with a duration
 - [ ] Refresh `/dashboard` and `/incidents` directly: no 404
 - [ ] Publish a status page, then open its link in a private window: it loads without logging in
+- [ ] Landing page shows the ticker once the `world` page has at least 5 monitors
 - [ ] Render logs show checks running without errors
 
 ## 8. Troubleshooting

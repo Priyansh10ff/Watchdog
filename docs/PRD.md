@@ -79,7 +79,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 
 **M3. As a user, I can pause and resume a monitor.** A paused monitor is not checked. Resuming checks it immediately.
 
-**M4. As a user, I can delete a monitor.** Its check history and incidents are deleted with it.
+**M4. As a user, I can delete a monitor.** Its check history and incidents are deleted with it. A dialog inside the page asks first and names the monitor. Cancel is the default choice, Escape or a click outside cancels, and no browser pop-up is used.
 
 **M5. As a user, I can see all my monitors with their status.** Each card shows status, response time, 24 hour uptime, a bar for each of the last 24 checks, the interval and the last check time, with Edit, Pause or Resume and Delete. The dashboard refreshes by itself every 30 seconds and has loading, empty and error states.
 
@@ -128,9 +128,11 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 
 **P2. As a visitor, I can read a status page without logging in.**
 - It shows the overall state, and for each monitor its status, 24 hour uptime, response time and a bar for each of the last 30 checks, then incidents from the last 14 days.
-- It never shows URLs, error messages or causes.
+- It never shows URLs, error messages or causes. If the owner turns on Show site domains, it also shows each monitor's host name, such as github.com, and nothing more of the address.
 - An unknown or hidden page shows "Status page not found".
 - It refreshes every minute. The data is cached for up to 30 seconds and limited to 60 requests per minute per IP.
+
+**P3. As a visitor on the landing page, I see how popular websites are doing right now.** A ticker shows five sites at a time and slides to the next one every few seconds, with each site's uptime, response time and recent checks. Each row shows the site's own icon, loaded in the visitor's browser, and falls back to a letter tile if the icon cannot be loaded. It uses real checks from a showcase status page and is hidden when that page does not exist or has fewer than 5 monitors.
 
 ## 6. Functional requirements
 
@@ -161,6 +163,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | FR23 | Sentry mascot UI with animated landing page and scroll story | Could | Done |
 | FR24 | Pulse monitor cards: response time, 24 hour uptime, bars for recent checks | Should | Done |
 | FR25 | Edit monitor page and interval dial with a custom interval | Should | Done |
+| FR26 | Landing page ticker of popular sites, from a showcase status page | Could | Done |
 
 ## 7. Non-functional requirements
 
@@ -207,4 +210,5 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | Large check history on the free database | Storage fills up | 30 day automatic retention. Estimate: a 1-minute monitor stores about 43,000 results per month |
 | Single scheduler process | One process does all checking | Atomic claiming already makes extra instances safe. Scaling out is a later step |
 | No outbound notifications | Users must open the app to notice an incident | Out of scope for now. The dashboard and status page show incidents |
+| Showcase checks of big sites are blocked by their bot protection | A well-known site looks down on the public landing page | Check the dashboard for a day before publishing, add the code the site returns to its status codes, or leave the site out |
 | No automated tests yet | Regressions are caught only by manual testing | FR20 before submission |

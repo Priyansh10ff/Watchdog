@@ -5,6 +5,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Logo from "../components/Logo";
 import { useAuth } from "../context/AuthContext";
 import Sentry from "../components/Sentry";
+import LiveTicker from "../components/LiveTicker";
 import SentryAvatar from "../components/SentryAvatar";
 import { posePair, prefersReducedMotion } from "../utils/sentryPose";
 import { butterBtn, inkBtn } from "../components/ui";
@@ -726,6 +727,8 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      <LiveTicker />
 
       <section className="bg-cream px-6 py-24 sm:px-16">
         <div className="mx-auto max-w-[1312px]">

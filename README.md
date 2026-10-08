@@ -16,6 +16,7 @@ Watchdog is an uptime and incident tracker for websites and APIs. It checks your
 - [Project structure](#project-structure)
 - [Getting started](#getting-started)
 - [Configuration](#configuration)
+- [Landing page ticker setup](#landing-page-ticker-setup)
 - [Scripts](#scripts)
 - [API overview](#api-overview)
 - [Testing](#testing)
@@ -48,6 +49,7 @@ Watchdog is an uptime and incident tracker for websites and APIs. It checks your
 - Check history for 30 days, with response time and 24 hour uptime statistics.
 - Dashboard with live status that refreshes every 30 seconds, an open-incident banner and an incidents page.
 - Sentry, a watchdog mascot whose mood shows the status (napping, listening, barking), and an animated landing page with a scroll-driven story.
+- A landing page with a live ticker of popular websites that slides through five sites at a time, built from real checks on a showcase status page.
 - A public status page you can share: choose monitors, get a link, and visitors see live status, uptime, recent checks and past incidents without logging in. URLs and error details are never shown.
 - Protection against server-side request forgery: in production the checker refuses private, loopback and link-local addresses.
 
@@ -168,8 +170,43 @@ Client (`client/.env`):
 | Variable | Default | Description |
 |---|---|---|
 | `VITE_API_URL` | `http://localhost:5000/api` | API base URL |
+| `VITE_SHOWCASE_SLUG` | `world` | Link name of the status page used for the landing page ticker |
+| `VITE_FAVICON_URL` | Google's favicon service | Icon service for the ticker, with `{domain}` where the host name goes |
 
 Generate a secret with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Never commit real secrets. `.env` files are ignored by Git.
+
+## Landing page ticker setup
+
+The landing page shows a ticker of popular websites when a status page called `world` exists with at least 5 monitors. Without that page the section is not shown. One command creates everything:
+
+```bash
+cd server
+node scripts/seedShowcase.js
+```
+
+It creates a showcase account (`showcase@watchdog.local`), adds a monitor for each of 12 popular sites with a 5 minute interval, and publishes them as the status page `world` with site domains switched on, so every row shows the site's own icon and domain. If you ran the script before icons were added, run it again to turn domains on. It is safe to run again: nothing is duplicated, and monitors you have edited keep their settings. Keep the server running, because its scheduler runs the first checks within a minute.
+
+To check it, open `http://localhost:5000/api/status/world`. JSON with the sites means it works, and then reloading the landing page shows the ticker (the answer is cached for 30 seconds). A "Status page not found" message means the script has not run against this database.
+
+Options, as environment variables:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `SHOWCASE_EMAIL` | `showcase@watchdog.local` | Account that owns the monitors. Using your own account replaces that account's status page, because each account has one |
+| `SHOWCASE_PASSWORD` | random | Password for a new showcase account, 8 to 72 characters. Set it before the first run if you want to log in and edit the monitors. It is ignored if the account already exists |
+| `SHOWCASE_SLUG` | `world` | Link name of the page. Set `VITE_SHOWCASE_SLUG` in the client to match |
+| `SHOWCASE_TITLE` | `Popular websites` | Title of the page |
+
+For the live site, run the same script against the production database. In PowerShell:
+
+```powershell
+$env:MONGO_URI = "your Atlas connection string"
+node scripts/seedShowcase.js
+```
+
+The icons are loaded by each visitor's browser from Google's favicon service (set `VITE_FAVICON_URL` to use another one), and a row falls back to a letter tile if its icon does not load.
+
+The sites are Google, YouTube, Wikipedia, GitHub, Cloudflare, Amazon, Reddit, Netflix, LinkedIn, Stack Overflow, Microsoft and Spotify. Reddit, LinkedIn and Stack Overflow also accept the codes they use to block automated checks (403, 429 and 999). Some sites may still block your server, so watch the results for a day, log in to the showcase account to adjust a monitor's status codes, or leave a site out. A site that shows down only because it blocks the checker would look like an outage on your public landing page.
 
 ## Scripts
 

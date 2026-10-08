@@ -133,7 +133,12 @@ const StatusPage = () => {
                   className="rounded-[28px] bg-white p-6 text-ink shadow-[0_24px_48px_-24px_rgba(16,21,54,0.35)]"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h2 className="text-[21px] font-bold">{monitor.name}</h2>
+                    <div className="min-w-0">
+                      <h2 className="text-[21px] font-bold">{monitor.name}</h2>
+                      {monitor.domain && (
+                        <p className="truncate text-[14px] text-soft">{monitor.domain}</p>
+                      )}
+                    </div>
                     <StatusBadge status={monitor.status} />
                   </div>
 

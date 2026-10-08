@@ -66,6 +66,7 @@ Large operations that need on-call rotation, SMS or phone alerts, or monitoring 
 **Status page**
 - A public page you choose monitors for and share by link, showing live status, uptime, recent checks and past incidents
 - Names and status only: URLs and error details are never shown
+- The landing page can show a live ticker of popular websites, built from the same public page
 
 **Safety**
 - In production the checker refuses private and internal addresses, so a monitor cannot be pointed at the host's own network

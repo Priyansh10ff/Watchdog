@@ -34,6 +34,7 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [x] Dashboard and incidents page
 - [x] Pulse monitor cards, edit monitor page and interval dial with a custom interval
 - [x] Public status page (FR14)
+- [x] Landing page ticker (FR26)
 - [ ] Response time chart and uptime bar (FR15)
 - [ ] Run the interface and status page test cases in [TESTING.md](./TESTING.md)
 - [ ] Automated tests (FR20)
@@ -64,6 +65,10 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [ ] `TRUST_PROXY` set to `2` if the Vercel proxy option is used
 - [ ] `client/vercel.json` added so direct page refreshes do not return 404
 - [ ] Public demo target deployed for the video
+- [ ] Showcase script run locally and the ticker visible on the landing page ([README](../README.md))
+- [ ] Showcase script run against the production database
+- [ ] Ticker icons checked in a private window, and the choice of icon service accepted (default: Google's favicon service)
+- [ ] Showcase monitors watched for a day: no site shows down only because it blocks the checker
 - [ ] Logs checked after deploy: `DB Connected`, `Scheduler started`, no repeated errors
 - [ ] A monitor on a public site runs for at least one hour without problems
 

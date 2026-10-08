@@ -134,7 +134,7 @@ A user owns at most one `StatusPage` (slug, title, chosen monitors, published fl
 2. A cached answer (30 seconds, up to 500 pages) is returned if there is one.
 3. Otherwise the page is loaded, its monitors are read in the owner's order, and the shared history service (`services/history.service.js`) adds the last 30 checks and the 24 hour uptime. Incidents of those monitors from the last 14 days are added, up to 10.
 4. The overall state is `outage` if any monitor is down, `degraded` if any is slow (over 1.5 seconds), `paused` if all are paused, `empty` with no monitors, otherwise `operational`.
-5. The answer is built from an allow-list of fields, so URLs, ids, causes and error messages are never sent. It is cached and returned.
+5. The answer is built from an allow-list of fields, so URLs, ids, causes and error messages are never sent. The one optional exception is the host name: when the owner turns on `showDomains`, each monitor carries `domain`, the host without `www`, port, path or query, taken with `new URL`. An address that cannot be parsed gives `null`. It is cached and returned.
 
 Saving or deleting a page clears its cached answer, and so does deleting a monitor that was on it, so changes show immediately. The route is limited to 60 requests per minute per IP. Unknown, malformed and unpublished pages all give the same 404 so a visitor cannot tell a private page from a missing one. The owner endpoints validate the slug with a pattern, check that every chosen monitor belongs to the user and turn a duplicate-key error into a 409.
 
@@ -175,6 +175,8 @@ Client (`client/.env`):
 | Variable | Default | Purpose |
 |---|---|---|
 | `VITE_API_URL` | `http://localhost:5000/api` | API base URL |
+| `VITE_SHOWCASE_SLUG` | `world` | Link name of the status page shown as the landing page ticker |
+| `VITE_FAVICON_URL` | Google's favicon service | Address of the icon service for the ticker, with `{domain}` where the host name goes. For example `https://icons.duckduckgo.com/ip3/{domain}.ico` |
 
 The server refuses to start if `MONGO_URI` or `JWT_SECRET` is missing.
 
@@ -202,6 +204,16 @@ Manual test cases with expected results are in [TESTING.md](./TESTING.md). Autom
 `GET /monitors` adds two fields to every monitor so the dashboard cards need one request: `recentChecks` (the last 24 check results, oldest first) and `uptime24h`. The controller runs one indexed query per monitor on `(monitor, checkedAt)` for the recent checks and one aggregation over the last 24 hours for all of the user's monitors, so a list call costs at most 20 small queries plus one grouped read. The dashboard polls it every 30 seconds.
 
 The edit page loads `GET /monitors/:id`, compares the form with the saved monitor and sends only the changed fields to `PATCH /monitors/:id`. The `IntervalDial` component maps the interval to the knob angle on a logarithmic scale between 1 and 60 minutes and snaps to a preset when the value is within about 8 percent of it.
+
+## 13c. Landing page ticker
+
+`components/LiveTicker.jsx` fetches `GET /api/status/<slug>` (the `VITE_SHOWCASE_SLUG` page, `world` by default) when the landing page loads and again every 60 seconds. If the request fails, the page does not exist or it has fewer than 5 monitors, the section renders nothing, so the landing page never shows made-up data.
+
+With data, it shows summary chips (sites watched, how many are down or slow, average response time) and a window five rows tall. The rows are the monitors followed by the first five again. A GSAP timeline slides the track up one row every 3.2 seconds (2.5 seconds still, 0.7 seconds moving) and, after the last row, restarts from the identical repeated view, so the loop has no jump. It pauses when the section is off screen and when the pointer is over it. With reduced motion it shows the first five sites without scrolling. The repeated rows are hidden from screen readers. When the page shares domains, each row shows the site's own icon: the browser loads it from a favicon service (Google's by default, or `VITE_FAVICON_URL`) using the host name, encoded, at 64 pixels shown at 32, with no referrer sent. If an icon fails to load, that row falls back to its coloured letter tile. The cost of this is that every visitor's browser contacts the icon service, which is a third party. When the section first appears, ScrollTrigger positions are refreshed because the page below it moves.
+
+## 13d. Showcase setup script
+
+`server/scripts/seedShowcase.js` connects with `MONGO_URI` and calls `seedShowcase` in `services/showcase.service.js`. That function finds or creates the showcase account (the password is hashed with bcrypt, random unless `SHOWCASE_PASSWORD` is given), adds a monitor for each site that is missing (matched by account and URL, so re-running never duplicates), refuses to go past the limit of 20 monitors per account, and creates or updates that account's status page with the monitors in order. A link already used by another account stops it with a clear message.
 
 ## 14. Limits and known limitations
 

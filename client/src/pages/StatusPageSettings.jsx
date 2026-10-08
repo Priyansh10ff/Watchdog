@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import axiosInstance from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
+import Switch from "../components/Switch";
+import { useConfirm } from "../components/ConfirmDialog";
 import FormField from "../components/FormField";
 import { cardClass, inkBtn, inputClass, smallDangerBtn } from "../components/ui";
 
@@ -34,6 +36,7 @@ const StatusPageSettings = () => {
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { confirm, dialog } = useConfirm();
 
   const origin = window.location.origin;
 
@@ -44,12 +47,14 @@ const StatusPageSettings = () => {
           title: saved.title,
           monitors: saved.monitors,
           isPublished: saved.isPublished,
+          showDomains: Boolean(saved.showDomains),
         }
       : {
           slug: slugify(user?.name),
           title: "Service status",
           monitors: [],
           isPublished: true,
+          showDomains: false,
         };
 
   const load = async () => {
@@ -118,9 +123,11 @@ const StatusPageSettings = () => {
   };
 
   const handleDelete = async () => {
-    const confirmed = window.confirm(
-      "Delete your status page? The public link will stop working.",
-    );
+    const confirmed = await confirm({
+      title: "Delete your status page?",
+      message: "The public link will stop working. You can publish a new page later.",
+      confirmLabel: "Delete page",
+    });
     if (!confirmed) return;
 
     setErr("");
@@ -158,7 +165,7 @@ const StatusPageSettings = () => {
         </h1>
         <p className="mt-3 max-w-xl text-[18px]">
           Share the live status of chosen monitors with anyone. Visitors see names,
-          status and response times, never your URLs.
+          status and response times. Full URLs are never shown.
         </p>
 
         {loading && (
@@ -251,22 +258,28 @@ const StatusPageSettings = () => {
                         Turn off to hide the page without deleting it.
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={form.isPublished}
-                      aria-label="Visible to everyone"
-                      onClick={() => change({ isPublished: !form.isPublished })}
-                      className={`relative h-[30px] w-[52px] shrink-0 rounded-full transition-colors ${
-                        form.isPublished ? "bg-ink" : "bg-[#d3d1e0]"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-[3px] h-6 w-6 rounded-full bg-white transition-all ${
-                          form.isPublished ? "left-[25px]" : "left-[3px]"
-                        }`}
-                      />
-                    </button>
+                    <Switch
+                      checked={form.isPublished}
+                      onChange={(value) => change({ isPublished: value })}
+                      label="Visible to everyone"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <h2 className="font-display text-[24px] font-extrabold tracking-[-0.5px]">
+                        Show site domains
+                      </h2>
+                      <p className="text-[14px] text-soft">
+                        Visitors see a domain such as github.com next to each name, and its icon on
+                        the landing ticker. Full addresses are never shown.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={form.showDomains}
+                      onChange={(value) => change({ showDomains: value })}
+                      label="Show site domains"
+                    />
                   </div>
 
                   <FormField label="Page title" htmlFor="title">
@@ -380,6 +393,8 @@ const StatusPageSettings = () => {
           </>
         )}
       </main>
+
+      {dialog}
     </div>
   );
 };

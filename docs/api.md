@@ -118,6 +118,7 @@ Response:
   "monitors": [
     {
       "name": "Website",
+      "domain": null,
       "status": "up",
       "responseTimeMs": 120,
       "lastCheckedAt": "...",
@@ -131,7 +132,7 @@ Response:
 }
 ```
 
-`overall` is `operational`, `degraded` (a monitor is slow), `outage` (a monitor is down), `paused` or `empty`. A monitor `status` is `up`, `slow`, `down`, `paused` or `unknown`. Monitors appear in the order chosen by the owner, with the last 30 checks oldest first. `incidents` are the last 14 days, up to 10, newest first, with `ongoing` or `resolved`. Monitor URLs, ids, error messages and causes are never included. An unknown slug, a malformed slug or an unpublished page returns 404 with the same message.
+`overall` is `operational`, `degraded` (a monitor is slow), `outage` (a monitor is down), `paused` or `empty`. A monitor `status` is `up`, `slow`, `down`, `paused` or `unknown`. Monitors appear in the order chosen by the owner, with the last 30 checks oldest first. `incidents` are the last 14 days, up to 10, newest first, with `ongoing` or `resolved`. Monitor URLs, ids, error messages and causes are never included. `domain` is `null` unless the owner turned on `showDomains`, and then it is the host name only, such as `github.com`, without `www`, the port, the path or the query. An unknown slug, a malformed slug or an unpublished page returns 404 with the same message.
 
 Owner endpoints (login required, one page per user):
 
@@ -144,12 +145,12 @@ Owner endpoints (login required, one page per user):
 PUT body:
 
 ```json
-{ "slug": "acme", "title": "Acme status", "monitors": ["<monitor id>"], "isPublished": true }
+{ "slug": "acme", "title": "Acme status", "monitors": ["<monitor id>"], "isPublished": true, "showDomains": false }
 ```
 
 Rules and errors:
 - `slug`: 3 to 40 characters, lowercase letters, numbers and hyphens, starting and ending with a letter or number. It is trimmed and lowercased.
-- `title`: 1 to 60 characters. `monitors`: up to 20 ids, all owned by the user, duplicates collapsed. `isPublished` defaults to `true`.
+- `title`: 1 to 60 characters. `monitors`: up to 20 ids, all owned by the user, duplicates collapsed. `isPublished` defaults to `true` and `showDomains` to `false`. Both must be true or false when given.
 - 400: invalid fields, or a monitor that does not exist or belongs to someone else.
 - 409: the link is already taken.
 - 404 on DELETE when the user has no page.

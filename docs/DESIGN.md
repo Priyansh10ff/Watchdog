@@ -59,7 +59,7 @@ Both are loaded from Google Fonts in `index.html`.
 - Monitors are tiles in a grid: one column on mobile, two from `md`, three from `lg`. Problem monitors sort first.
 - The dashboard header pairs the small Sentry avatar with a headline that summarises the state ("API is down", "All 5 monitors are up").
 - Login and signup are two columns on large screens: the form on the left and a large Sentry on the right who follows the cursor. Below `lg` only the form shows.
-- The landing page is a sequence of sections: hero, three "stay calm" cards, scroll story, tiles, a compact closing card and a slim footer.
+- The landing page is a sequence of sections: hero, three "stay calm" cards, scroll story, the live ticker, tiles, a compact closing card and a slim footer.
 - The navbar is a floating rounded bar the same width as the page content, so its edges line up with the headline. It has three zones on one line: logo, links, actions. On the landing page a logged-in user sees a profile chip (initial and name) instead of Log in, with Start monitoring opening Add monitor, and the closing card and footer point to the dashboard. The app version shows the current page as a white pill, Add monitor in butter, a user chip with an initial, and Log out.
 
 ## 5. Components
@@ -72,6 +72,9 @@ Both are loaded from Google Fonts in `index.html`.
 | `IntervalDial` | A rotary knob for the check interval with seven detents (1, 2, 5, 10, 15, 30 minutes and 1 hour), preset chips and a custom field for any whole number from 1 to 60. Drag it, use the arrow keys, tap a chip or type |
 | `MonitorForm` | The form shared by Add monitor and Edit monitor: target, schedule (the dial and the timeout), detection and the "What will run" panel |
 | `Icon` | Small stroke icons for edit, pause, resume and delete |
+| `ConfirmDialog` | White card with a worried Sentry, a title, a message, Cancel and a red confirm button, over a dimmed and blurred page. Used through the `useConfirm` hook, which returns a promise, so a handler can write `await confirm({...})` |
+| `LiveTicker` | The butter-yellow landing section: a "Live now" tag, the heading, a button, summary chips and a window of five site rows that slides up one row at a time. Rows are white with the site's own icon on a light tile (a coloured letter tile if there is no icon), the name and domain, 28 bars, uptime and response time |
+| `Switch` | The on and off toggle used on the status page settings |
 | `CheckBars` | The bars for recent checks, used on the monitor card (24 bars) and the public status page (30 bars) |
 | `StatusBadge` | Pill for monitor and incident states |
 | `IncidentList` | White card per incident: start, duration, failed checks, cause, latest error, acknowledge |
@@ -93,13 +96,15 @@ Bars show the last 24 checks, oldest on the left. Height follows the response ti
 | Pale | No check yet in that slot |
 | Grey | The monitor is paused |
 
-Cards stay white in every state. The status pill, the bars, the page colour and a short shake when down carry the state. Uptime is the share of checks that were up in the last 24 hours, or a dash when there are none.
+Cards stay white in every state. A card never prints a missing value: when the last check got no reply, the readout says "No reply", and long readouts stay on one line instead of stretching the card. The status pill, the bars, the page colour and a short shake when down carry the state. Uptime is the share of checks that were up in the last 24 hours, or a dash when there are none.
 
 ## 5b. Public status page
 
 The public page (`/status/:slug`) uses the same look without the app navbar: the logo, the page title, Sentry with a headline for the overall state, a white card per monitor with its pill, 30 bars, uptime and response time, then past incidents. The background is the calm blue and turns the outage red when something is down. It ends with "Powered by Watchdog".
 
-The owner's page (`/status-page`) shows the live link with Copy link and Open page, a switch to hide the page, the title, the link name and a checklist of monitors.
+A monitor card on the public page shows its domain under the name when the owner turned that on.
+
+The owner's page (`/status-page`) shows the live link with Copy link and Open page, two switches (visible to everyone, show site domains), the title, the link name and a checklist of monitors.
 
 ## 6. Sentry
 
@@ -119,6 +124,7 @@ Animation uses GSAP, with ScrollTrigger on the landing page only. The landing ro
 |---|---|
 | Landing hero | The navbar drops in, headline words slide in, Sentry bounces in, status chips pop in and drift, his eyes and head follow the cursor, a soft light follows the mouse, the All up, Slow and Down buttons change his mood and the page colour |
 | Scroll story | A pinned four-step sequence scrubbed by the scrollbar: sites arrive, Sentry checks them, one goes down and an incident opens, it recovers. The page turns coral during the outage. Shown at 1280 px and wider, and as stacked cards below that |
+| Live ticker | Rows slide up one at a time, 2.5 seconds still and 0.7 seconds moving, fading in at the bottom and out at the top. It pauses on hover and while off screen |
 | Tiles | Rise in with a stagger, tilt toward the cursor, and the "Break the API" button turns one red |
 | Dashboard and forms | Sentry avatar changes with the overall state, tiles shake briefly when down, colour changes use CSS transitions |
 
@@ -133,7 +139,7 @@ Reduced motion: all looping and scroll animation is skipped, mode changes are in
 | Error (page) | A white card with the message in red and a Try again button |
 | Error (action) | An ink banner above the content with `role="alert"` |
 | Error (form) | A red banner above the fields with `role="alert"` and the server's message |
-| Confirm | The browser confirm dialog before deleting a monitor |
+| Confirm | A dialog inside the page (`ConfirmDialog`) before deleting a monitor or a status page. It names the item, explains what is lost and has Cancel and a red confirm button. Focus starts on Cancel, Escape or a click outside cancels, Tab stays inside, and the page behind cannot scroll |
 | Live change | The dashboard and incidents refresh every 30 seconds without a loading state |
 
 ## 9. Writing

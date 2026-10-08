@@ -28,11 +28,20 @@ const overallState = (states) => {
   return "operational";
 };
 
+const domainOf = (url) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch (error) {
+    return null;
+  }
+};
+
 const pageJson = (page) => ({
   slug: page.slug,
   title: page.title,
   monitors: page.monitors.map(String),
   isPublished: page.isPublished,
+  showDomains: Boolean(page.showDomains),
 });
 
 export const getPublicStatus = async (req, res) => {
@@ -62,7 +71,7 @@ export const getPublicStatus = async (req, res) => {
     }
 
     const found = await Monitor.find({ _id: { $in: page.monitors } }).select(
-      "name status isActive lastResponseTimeMs lastCheckedAt",
+      "name url status isActive lastResponseTimeMs lastCheckedAt",
     );
 
     const order = new Map(page.monitors.map((id, index) => [String(id), index]));
@@ -96,6 +105,7 @@ export const getPublicStatus = async (req, res) => {
 
         return {
           name: monitor.name,
+          domain: page.showDomains ? domainOf(monitor.url) : null,
           status: states[index],
           responseTimeMs:
             states[index] === "up" || states[index] === "slow"
@@ -149,7 +159,7 @@ export const getMyStatusPage = async (req, res) => {
 
 export const saveMyStatusPage = async (req, res) => {
   try {
-    const { slug, title, monitors, isPublished } = req.body || {};
+    const { slug, title, monitors, isPublished, showDomains } = req.body || {};
 
     if (typeof slug !== "string" || typeof title !== "string") {
       return res.status(400).json({
@@ -176,7 +186,10 @@ export const saveMyStatusPage = async (req, res) => {
       });
     }
 
-    if (isPublished !== undefined && typeof isPublished !== "boolean") {
+    if (
+      (isPublished !== undefined && typeof isPublished !== "boolean") ||
+      (showDomains !== undefined && typeof showDomains !== "boolean")
+    ) {
       return res.status(400).json({
         success: false,
         message: "Invalid input",
@@ -226,6 +239,7 @@ export const saveMyStatusPage = async (req, res) => {
           title: cleanTitle,
           monitors: ids,
           isPublished: isPublished ?? true,
+          showDomains: showDomains ?? false,
         },
         { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
       );
