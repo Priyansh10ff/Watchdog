@@ -73,7 +73,7 @@ Both are loaded from Google Fonts in `index.html`.
 | `MonitorForm` | The form shared by Add monitor and Edit monitor: target, schedule (the dial and the timeout), detection and the "What will run" panel |
 | `Icon` | Small stroke icons for edit, pause, resume and delete |
 | `ConfirmDialog` | White card with a worried Sentry, a title, a message, Cancel and a red confirm button, over a dimmed and blurred page. Used through the `useConfirm` hook, which returns a promise, so a handler can write `await confirm({...})` |
-| `LiveTicker` | The butter-yellow landing section: a "Live now" tag, the heading, a button, summary chips and a window of five site rows that slides up one row at a time. Rows are white with the site's own icon on a light tile (a coloured letter tile if there is no icon), the name and domain, 28 bars, uptime and response time |
+| `LiveTicker` | The butter-yellow landing section: a "Live now" tag, the heading, a button and a window of five site rows that slides up one row at a time. Rows are white with the site's own icon on a light tile (a coloured letter tile if there is no icon), the name and domain, 28 bars, uptime and response time |
 | `Switch` | The on and off toggle used on the status page settings |
 | `CheckBars` | The bars for recent checks, used on the monitor card (24 bars) and the public status page (30 bars) |
 | `StatusBadge` | Pill for monitor and incident states |

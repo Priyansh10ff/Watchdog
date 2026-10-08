@@ -220,20 +220,6 @@ const LiveTicker = () => {
   if (!enough) return null;
 
   const monitors = data.monitors;
-  const down = monitors.filter((m) => m.status === "down").length;
-  const slow = monitors.filter((m) => m.status === "slow").length;
-  const timed = monitors.filter((m) => m.responseTimeMs != null);
-  const average = timed.length
-    ? Math.round(timed.reduce((sum, m) => sum + m.responseTimeMs, 0) / timed.length)
-    : null;
-
-  const health =
-    down > 0
-      ? { text: `${down} down right now`, color: DOT.down }
-      : slow > 0
-        ? { text: `${slow} slow right now`, color: DOT.slow }
-        : { text: "All up right now", color: DOT.up };
-
   const animated = !prefersReducedMotion();
   const rows = animated ? [...monitors, ...monitors.slice(0, VISIBLE)] : monitors;
 
@@ -241,9 +227,6 @@ const LiveTicker = () => {
   const resume = () => {
     if (trigger.current?.isActive) timeline.current?.play();
   };
-
-  const chip =
-    "inline-flex h-[38px] items-center gap-[9px] rounded-full bg-ink/10 px-4 text-[14px] font-bold";
 
   return (
     <section ref={rootRef} className="bg-butter px-6 py-24 text-ink lg:py-28 sm:px-16">
@@ -274,15 +257,6 @@ const LiveTicker = () => {
         </div>
 
         <div onMouseEnter={pause} onMouseLeave={resume}>
-          <div className="mb-5 flex flex-wrap gap-2.5">
-            <span className={chip}>{count} sites watched</span>
-            <span className={chip}>
-              <span className="block h-[9px] w-[9px] rounded-full" style={{ background: health.color }} />
-              {health.text}
-            </span>
-            {average != null && <span className={chip}>Average {average} ms</span>}
-          </div>
-
           <div
             role="region"
             aria-label="Live status of popular websites"

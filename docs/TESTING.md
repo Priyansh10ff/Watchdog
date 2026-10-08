@@ -181,11 +181,11 @@ Interface:
 | # | Action | Expected | Result |
 |---|---|---|---|
 | 29 | Open the landing page before running the showcase script | No ticker section, and the rest of the page is normal. `GET /api/status/world` returns 404 | |
-| 30 | Run `node scripts/seedShowcase.js` in `server`, wait a minute, then reload the landing page | A yellow section after the story shows the chips and five rows | |
+| 30 | Run `node scripts/seedShowcase.js` in `server`, wait a minute, then reload the landing page | A yellow section after the story shows five rows | |
 | 31 | Watch for 10 seconds | Every few seconds the top row slides out and a new one comes in from the bottom, with no jump when the list wraps | |
 | 32 | Move the pointer over the ticker | The scrolling stops. Moving away resumes it | |
 | 33 | Scroll the section out of view and back | It does not keep running off screen and picks up when visible | |
-| 34 | Break one showcase monitor | The chip says 1 down right now and its row says Not responding | |
+| 34 | Break one showcase monitor | Its row says Not responding with a red dot and red bars | |
 | 35 | Hide the showcase page or delete it | The section disappears from the landing page within a minute | |
 | 36 | Turn on reduced motion in the system settings | The five first sites show and nothing moves | |
 | 37 | Log in and open the landing page | The button says Add your own site and opens Add monitor | |
