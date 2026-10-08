@@ -119,11 +119,18 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 
 **S2. As a user, my data is private.** Every monitor and incident query is filtered by my account. Another user's resource, or an invalid id, returns 404.
 
-### Public status page (planned)
+### Public status page
 
-**P1. As a user, I can publish a status page** for chosen monitors and share its link.
+**P1. As a user, I can publish a status page** for monitors I choose and share its link.
+- I set a title and a link name (3 to 40 characters: lowercase letters, numbers and hyphens). A taken link returns "That link is already taken".
+- I can choose up to 20 of my own monitors, hide the page without deleting it, and delete it.
+- Deleting a monitor removes it from the page.
 
-**P2. As a visitor, I can read a status page without logging in.** It shows overall status, each monitor's status and recent incidents, and exposes names and status only.
+**P2. As a visitor, I can read a status page without logging in.**
+- It shows the overall state, and for each monitor its status, 24 hour uptime, response time and a bar for each of the last 30 checks, then incidents from the last 14 days.
+- It never shows URLs, error messages or causes.
+- An unknown or hidden page shows "Status page not found".
+- It refreshes every minute. The data is cached for up to 30 seconds and limited to 60 requests per minute per IP.
 
 ## 6. Functional requirements
 
@@ -142,7 +149,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | FR11 | Dashboard with live refresh, open-incident banner and incidents page | Must | Done |
 | FR12 | SSRF protection in production | Must | Done |
 | FR13 | Demo target app for demonstrations | Should | Done |
-| FR14 | Public status page | Must | **Open** (next) |
+| FR14 | Public status page | Must | Done |
 | FR15 | Response time chart and uptime bar | Should | Open |
 | FR16 | SSL certificate expiry warnings | Could | Open |
 | FR17 | Encrypted custom headers for authenticated checks | Could | Open |
@@ -184,7 +191,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 
 | Version | Scope |
 |---|---|
-| **v1.0 (end-term submission)** | Everything marked Done, plus the public status page (FR14), automated tests (FR20), deployment (FR22), documentation and demo video |
+| **v1.0 (end-term submission)** | Everything marked Done, plus automated tests (FR20), deployment (FR22), documentation and demo video |
 | **v1.1** | Charts (FR15), SSL expiry (FR16), encrypted custom headers (FR17), rate limit on the whole API (FR21) |
 | **v1.2** | Maintenance windows (FR18), second-region checker (FR19) |
 | **Later** | Outbound notifications (email, Slack, Discord), teams, status page custom domains |

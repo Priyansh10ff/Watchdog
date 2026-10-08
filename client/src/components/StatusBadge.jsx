@@ -6,6 +6,7 @@ const styles = {
   waiting: { label: "Pending", cls: "bg-[#e6e3ee] text-[#3b3a52]" },
   unknown: { label: "Pending", cls: "bg-[#e6e3ee] text-[#3b3a52]" },
   open: { label: "Open", cls: "bg-[#c8321a] text-white" },
+  ongoing: { label: "Ongoing", cls: "bg-[#c8321a] text-white" },
   acknowledged: { label: "Acknowledged", cls: "bg-butter text-ink" },
   resolved: { label: "Resolved", cls: "bg-[#d3f5e2] text-[#0b5a32]" },
 };

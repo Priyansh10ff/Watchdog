@@ -2,11 +2,13 @@ import mongoose from "mongoose";
 import Monitor from "../models/monitor.model.js";
 import CheckResult from "../models/checkResult.model.js";
 import Incident from "../models/incident.model.js";
+import StatusPage from "../models/statusPage.model.js";
+import statusCache from "../utils/statusCache.js";
+import { getMonitorHistory } from "../services/history.service.js";
 import validateUrl from "../utils/validateUrl.js";
 import { checkSoon, processMonitor } from "../services/checker.service.js";
 
 const MAX_MONITORS_PER_USER = 20;
-const RECENT_CHECKS = 24;
 
 const isWhole = (value, min, max) =>
   Number.isInteger(value) && value >= min && value <= max;
@@ -182,46 +184,12 @@ export const getMonitors = async (req, res) => {
       createdAt: -1,
     });
 
-    const ids = monitors.map((monitor) => monitor._id);
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const history = await getMonitorHistory(monitors.map((monitor) => monitor._id));
 
-    const [recent, stats] = await Promise.all([
-      Promise.all(
-        ids.map((id) =>
-          CheckResult.find({ monitor: id })
-            .sort({ checkedAt: -1 })
-            .limit(RECENT_CHECKS)
-            .select("isUp responseTimeMs checkedAt")
-            .lean(),
-        ),
-      ),
-      ids.length
-        ? CheckResult.aggregate([
-            { $match: { monitor: { $in: ids }, checkedAt: { $gte: since } } },
-            {
-              $group: {
-                _id: "$monitor",
-                total: { $sum: 1 },
-                up: { $sum: { $cond: ["$isUp", 1, 0] } },
-              },
-            },
-          ])
-        : [],
-    ]);
-
-    const statsById = new Map(stats.map((item) => [String(item._id), item]));
-
-    const withHistory = monitors.map((monitor, index) => {
-      const summary = statsById.get(String(monitor._id));
-
-      return {
-        ...monitor.toJSON(),
-        recentChecks: [...recent[index]].reverse(),
-        uptime24h: summary
-          ? Math.round((summary.up / summary.total) * 1000) / 10
-          : null,
-      };
-    });
+    const withHistory = monitors.map((monitor) => ({
+      ...monitor.toJSON(),
+      ...history.get(String(monitor._id)),
+    }));
 
     return res.status(200).json({
       success: true,
@@ -378,11 +346,19 @@ export const deleteMonitor = async (req, res) => {
       });
     }
 
+    const pages = await StatusPage.find({ monitors: monitor._id }).select("slug");
+
     await monitor.deleteOne();
     await Promise.all([
       CheckResult.deleteMany({ monitor: monitor._id }),
       Incident.deleteMany({ monitor: monitor._id }),
+      StatusPage.updateMany(
+        { monitors: monitor._id },
+        { $pull: { monitors: monitor._id } },
+      ),
     ]);
+
+    pages.forEach((page) => statusCache.delete(page.slug));
 
     return res.status(200).json({
       success: true,

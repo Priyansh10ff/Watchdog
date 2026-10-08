@@ -121,9 +121,24 @@ Endpoints, bodies and error codes are in [api.md](./api.md). Summary:
 | Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout` |
 | Monitors | `POST /monitors`, `GET /monitors` (with recent checks and 24 hour uptime), `GET/PATCH/DELETE /monitors/:id`, `PATCH /monitors/:id/toggle`, `GET /monitors/:id/results`, `GET /monitors/:id/incidents`, `POST /monitors/:id/check` |
 | Incidents | `GET /incidents`, `GET /incidents/:id`, `PATCH /incidents/:id/acknowledge` |
+| Status page | `GET /status/:slug` (public), `GET`, `PUT`, `DELETE /status-page` (owner) |
 | Health | `GET /health` |
 
 Error codes: 400 invalid input, 401 not logged in or bad credentials, 403 monitor limit, 404 missing or not yours, 409 duplicate, 429 too many requests, 500 unexpected.
+
+## 9a. Public status page
+
+A user owns at most one `StatusPage` (slug, title, chosen monitors, published flag). `GET /api/status/:slug` is public and works like this:
+
+1. A malformed slug returns 404 without touching the database.
+2. A cached answer (30 seconds, up to 500 pages) is returned if there is one.
+3. Otherwise the page is loaded, its monitors are read in the owner's order, and the shared history service (`services/history.service.js`) adds the last 30 checks and the 24 hour uptime. Incidents of those monitors from the last 14 days are added, up to 10.
+4. The overall state is `outage` if any monitor is down, `degraded` if any is slow (over 1.5 seconds), `paused` if all are paused, `empty` with no monitors, otherwise `operational`.
+5. The answer is built from an allow-list of fields, so URLs, ids, causes and error messages are never sent. It is cached and returned.
+
+Saving or deleting a page clears its cached answer, and so does deleting a monitor that was on it, so changes show immediately. The route is limited to 60 requests per minute per IP. Unknown, malformed and unpublished pages all give the same 404 so a visitor cannot tell a private page from a missing one. The owner endpoints validate the slug with a pattern, check that every chosen monitor belongs to the user and turn a duplicate-key error into a 409.
+
+The `/status/:slug` page in the client polls this endpoint every 60 seconds. The owner manages the page at `/status-page`.
 
 ## 10. Security
 
@@ -133,7 +148,7 @@ Error codes: 400 invalid input, 401 not logged in or bad credentials, 403 monito
 | Session | JWT in an httpOnly cookie, 7 days. In production the cookie is `secure` and `sameSite: none` |
 | Input | Types are checked before use, which blocks NoSQL injection through objects. Ranges and lengths are validated. Unknown fields are never copied into documents |
 | Authorization | Every monitor and incident query is scoped to the logged-in user. Another user's resource returns 404 |
-| Abuse | 10 requests per 15 minutes per IP on register and login. Monitors limited to 20 per user. Check-now has a 10 second cooldown |
+| Abuse | 10 requests per 15 minutes per IP on register and login, 60 requests per minute per IP on the public status page. Monitors limited to 20 per user. Check-now has a 10 second cooldown |
 | Transport | CORS allows only `CLIENT_URL` with credentials. `helmet` headers. 10 kB body limit |
 | SSRF | In production the checker refuses loopback, private and link-local addresses. The check runs inside a custom DNS lookup, so the address that was validated is the one connected to. IP-literal URLs and redirect targets are checked too. URLs with embedded credentials are rejected |
 | Secrets | Only in environment variables. `.env` files are ignored by Git |
@@ -153,6 +168,7 @@ Server (`server/.env`):
 | `NODE_ENV` | no | none | `production` enables secure cookies, trust proxy and private-address blocking |
 | `CLIENT_URL` | no | `http://localhost:5173` | Allowed browser origin, no trailing slash |
 | `DISABLE_SCHEDULER` | no | `false` | Set to `true` to run the API without the scheduler |
+| `TRUST_PROXY` | no | `1` | Number of proxy hops in front of the API in production, used to find the visitor's IP for rate limiting. Use `2` behind the Vercel proxy option |
 
 Client (`client/.env`):
 

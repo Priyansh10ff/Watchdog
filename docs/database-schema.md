@@ -66,3 +66,16 @@ Indexes: `(monitor, checkedAt)` and a TTL index that deletes documents 30 days a
 | createdAt, updatedAt | Date | |
 
 Indexes: unique `monitor` where `isResolved` is false (one unresolved incident per monitor), `(user, startedAt)`, `(user, status, startedAt)` and `(monitor, startedAt)`.
+
+## StatusPage
+
+| Field | Type | Notes |
+|---|---|---|
+| user | ObjectId | owner, unique: one page per user |
+| slug | String | unique, lowercase, the public link name |
+| title | String | up to 60 characters |
+| monitors | [ObjectId] | the monitors shown, in display order |
+| isPublished | Boolean | `false` hides the page without deleting it |
+| createdAt, updatedAt | Date | |
+
+Indexes: unique `user` and unique `slug`.

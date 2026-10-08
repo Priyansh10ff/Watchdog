@@ -7,6 +7,8 @@ import helmet from "helmet";
 import authRoutes from "./routes/auth.routes.js";
 import monitorRoutes from "./routes/monitor.routes.js";
 import incidentRoutes from "./routes/incident.routes.js";
+import statusRoutes from "./routes/status.routes.js";
+import statusPageRoutes from "./routes/statusPage.routes.js";
 import { startScheduler } from "./jobs/scheduler.js";
 
 const required = ["MONGO_URI", "JWT_SECRET"];
@@ -20,7 +22,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV === "production") {
-  app.set("trust proxy", 1);
+  app.set("trust proxy", Number(process.env.TRUST_PROXY) || 1);
 }
 
 app.use(helmet());
@@ -39,6 +41,8 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/monitors", monitorRoutes);
 app.use("/api/incidents", incidentRoutes);
+app.use("/api/status", statusRoutes);
+app.use("/api/status-page", statusPageRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "Server is running" });

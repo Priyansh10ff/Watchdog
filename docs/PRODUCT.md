@@ -63,6 +63,10 @@ Large operations that need on-call rotation, SMS or phone alerts, or monitoring 
 - Updated while it lasts, resolved automatically on recovery with the duration
 - Acknowledge, list with filters and pagination, and detail view with the checks recorded during the incident
 
+**Status page**
+- A public page you choose monitors for and share by link, showing live status, uptime, recent checks and past incidents
+- Names and status only: URLs and error details are never shown
+
 **Safety**
 - In production the checker refuses private and internal addresses, so a monitor cannot be pointed at the host's own network
 

@@ -48,11 +48,10 @@ Watchdog is an uptime and incident tracker for websites and APIs. It checks your
 - Check history for 30 days, with response time and 24 hour uptime statistics.
 - Dashboard with live status that refreshes every 30 seconds, an open-incident banner and an incidents page.
 - Sentry, a watchdog mascot whose mood shows the status (napping, listening, barking), and an animated landing page with a scroll-driven story.
+- A public status page you can share: choose monitors, get a link, and visitors see live status, uptime, recent checks and past incidents without logging in. URLs and error details are never shown.
 - Protection against server-side request forgery: in production the checker refuses private, loopback and link-local addresses.
 
 **In progress**
-- Public status page
-- Response time chart and uptime bar
 - Automated tests
 
 **Planned**
@@ -162,6 +161,7 @@ Server (`server/.env`):
 | `NODE_ENV` | no | | `production` enables secure cookies, trust proxy and private-address blocking |
 | `CLIENT_URL` | no | `http://localhost:5173` | Allowed browser origin, no trailing slash |
 | `DISABLE_SCHEDULER` | no | `false` | `true` runs the API without the scheduler |
+| `TRUST_PROXY` | no | `1` | Proxy hops in front of the API in production, for rate limiting. Use `2` behind the Vercel proxy option |
 
 Client (`client/.env`):
 
@@ -191,6 +191,7 @@ All routes are under `/api`. Everything except health, register and login needs 
 | Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout` |
 | Monitors | `POST /monitors`, `GET /monitors` (with recent checks and uptime), `GET /monitors/:id`, `PATCH /monitors/:id`, `PATCH /monitors/:id/toggle`, `DELETE /monitors/:id` |
 | Checks | `GET /monitors/:id/results`, `POST /monitors/:id/check` |
+| Status page | `GET /status/:slug` (public), `GET`, `PUT`, `DELETE /status-page` |
 | Incidents | `GET /incidents`, `GET /incidents/:id`, `PATCH /incidents/:id/acknowledge`, `GET /monitors/:id/incidents` |
 | Health | `GET /health` |
 
@@ -227,7 +228,7 @@ Live app: not deployed yet.
 - No outbound notifications (email, SMS, chat). Incidents are shown in the dashboard and on the status page.
 - Only the auth routes are rate limited so far.
 
-Next: public status page, charts, automated tests, deployment. Then SSL expiry warnings, encrypted custom headers, maintenance windows and a second-region checker. The full plan is in [docs/PRD.md](docs/PRD.md).
+Next: automated tests, deployment, then the optional extras. Then SSL expiry warnings, encrypted custom headers, maintenance windows and a second-region checker. The full plan is in [docs/PRD.md](docs/PRD.md).
 
 ## Documentation
 

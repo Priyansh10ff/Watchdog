@@ -49,6 +49,7 @@ Environment variables:
 | `JWT_SECRET` | the generated random value |
 | `JWT_EXPIRES_IN` | `7d` |
 | `CLIENT_URL` | your Vercel URL, with no trailing slash |
+| `TRUST_PROXY` | `1` for option A below, `2` for option B (see section 5) |
 
 After the deploy, open `https://YOUR-SERVICE.onrender.com/api/health`. It should return `{"success":true,"message":"Server is running"}`. The logs should show `DB Connected` and `Scheduler started`.
 
@@ -93,6 +94,7 @@ The session is an httpOnly cookie. When the client and the API are on different 
   }
   ```
 - Requests through the proxy wait for a sleeping Render instance to wake. Keep the instance awake (section 3).
+- Set `TRUST_PROXY=2` on Render. The API then sees two proxy hops (Render and Vercel) and reads the visitor's real IP. With the default of `1` every visitor looks like Vercel's IP, so the login limit (10 per 15 minutes) and the status page limit (60 per minute) would be shared by everyone.
 
 ## 6. Demo target in production
 
@@ -110,6 +112,7 @@ Run these on the deployed app and note the results in [TESTING.md](./TESTING.md)
 - [ ] Break the demo target: after the failure threshold the monitor goes down and an incident opens
 - [ ] Restore it: the incident resolves with a duration
 - [ ] Refresh `/dashboard` and `/incidents` directly: no 404
+- [ ] Publish a status page, then open its link in a private window: it loads without logging in
 - [ ] Render logs show checks running without errors
 
 ## 8. Troubleshooting

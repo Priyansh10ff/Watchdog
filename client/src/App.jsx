@@ -7,6 +7,8 @@ import Dashboard from "./pages/Dashboard";
 import AddMonitor from "./pages/AddMonitor";
 import EditMonitor from "./pages/EditMonitor";
 import Incidents from "./pages/Incidents";
+import StatusPage from "./pages/StatusPage";
+import StatusPageSettings from "./pages/StatusPageSettings";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
@@ -59,6 +61,17 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+
+            <Route
+              path="/status-page"
+              element={
+                <ProtectedRoute>
+                  <StatusPageSettings />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route path="/status/:slug" element={<StatusPage />} />
 
             <Route
               path="/login"

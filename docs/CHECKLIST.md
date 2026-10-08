@@ -33,9 +33,9 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [x] Status machine and incidents
 - [x] Dashboard and incidents page
 - [x] Pulse monitor cards, edit monitor page and interval dial with a custom interval
-- [ ] Public status page (FR14)
+- [x] Public status page (FR14)
 - [ ] Response time chart and uptime bar (FR15)
-- [ ] Run the interface test cases in [TESTING.md](./TESTING.md)
+- [ ] Run the interface and status page test cases in [TESTING.md](./TESTING.md)
 - [ ] Automated tests (FR20)
 - [ ] Rate limit on the rest of the API (FR21)
 
@@ -48,6 +48,7 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [x] Rate limit on register and login
 - [x] `helmet`, restricted CORS, 10 kB body limit
 - [x] Private-address blocking in production (DNS, IP literals, redirects)
+- [x] Rate limit on the public status page
 - [ ] Rate limit on the rest of the API
 - [ ] `JWT_SECRET` is a long random value in production **(verify)**
 - [ ] Atlas database user has a strong password and only the access it needs **(verify)**
@@ -60,6 +61,7 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [ ] Health check path `/api/health` configured on the host
 - [ ] API instance stays awake, or an external ping runs every 5 minutes
 - [ ] Cookie approach chosen and tested on Chrome and Safari ([deployment.md](./deployment.md) section 5)
+- [ ] `TRUST_PROXY` set to `2` if the Vercel proxy option is used
 - [ ] `client/vercel.json` added so direct page refreshes do not return 404
 - [ ] Public demo target deployed for the video
 - [ ] Logs checked after deploy: `DB Connected`, `Scheduler started`, no repeated errors

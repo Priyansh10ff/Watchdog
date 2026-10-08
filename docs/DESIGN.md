@@ -72,6 +72,7 @@ Both are loaded from Google Fonts in `index.html`.
 | `IntervalDial` | A rotary knob for the check interval with seven detents (1, 2, 5, 10, 15, 30 minutes and 1 hour), preset chips and a custom field for any whole number from 1 to 60. Drag it, use the arrow keys, tap a chip or type |
 | `MonitorForm` | The form shared by Add monitor and Edit monitor: target, schedule (the dial and the timeout), detection and the "What will run" panel |
 | `Icon` | Small stroke icons for edit, pause, resume and delete |
+| `CheckBars` | The bars for recent checks, used on the monitor card (24 bars) and the public status page (30 bars) |
 | `StatusBadge` | Pill for monitor and incident states |
 | `IncidentList` | White card per incident: start, duration, failed checks, cause, latest error, acknowledge |
 | `AuthLayout` | Two-column layout for login and signup with the reacting Sentry |
@@ -92,7 +93,13 @@ Bars show the last 24 checks, oldest on the left. Height follows the response ti
 | Pale | No check yet in that slot |
 | Grey | The monitor is paused |
 
-The tile colour follows the state (white up, cream slow, pink down, beige paused). Uptime is the share of checks that were up in the last 24 hours, or a dash when there are none.
+Cards stay white in every state. The status pill, the bars, the page colour and a short shake when down carry the state. Uptime is the share of checks that were up in the last 24 hours, or a dash when there are none.
+
+## 5b. Public status page
+
+The public page (`/status/:slug`) uses the same look without the app navbar: the logo, the page title, Sentry with a headline for the overall state, a white card per monitor with its pill, 30 bars, uptime and response time, then past incidents. The background is the calm blue and turns the outage red when something is down. It ends with "Powered by Watchdog".
+
+The owner's page (`/status-page`) shows the live link with Copy link and Open page, a switch to hide the page, the title, the link name and a checklist of monitors.
 
 ## 6. Sentry
 
