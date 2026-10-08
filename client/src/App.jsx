@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import AddMonitor from "./pages/AddMonitor";
+import EditMonitor from "./pages/EditMonitor";
 import Incidents from "./pages/Incidents";
 
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -21,14 +22,7 @@ const App = () => {
       <BrowserRouter>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route
-              path="/"
-              element={
-                <PublicRoute>
-                  <Landing />
-                </PublicRoute>
-              }
-            />
+            <Route path="/" element={<Landing />} />
 
             <Route
               path="/dashboard"
@@ -44,6 +38,15 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <AddMonitor />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/monitors/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditMonitor />
                 </ProtectedRoute>
               }
             />

@@ -32,8 +32,10 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [x] Scheduled checks with safe claiming
 - [x] Status machine and incidents
 - [x] Dashboard and incidents page
+- [x] Pulse monitor cards, edit monitor page and interval dial with a custom interval
 - [ ] Public status page (FR14)
 - [ ] Response time chart and uptime bar (FR15)
+- [ ] Run the interface test cases in [TESTING.md](./TESTING.md)
 - [ ] Automated tests (FR20)
 - [ ] Rate limit on the rest of the API (FR21)
 

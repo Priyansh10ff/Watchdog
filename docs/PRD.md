@@ -63,7 +63,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 - The session lasts 7 days and survives a page refresh.
 - Logging out clears the session.
 
-**A3. As a user, I only see pages I am allowed to see.** Protected pages send me to login. Login and signup send a logged-in user to the dashboard.
+**A3. As a user, I only see pages I am allowed to see.** Protected pages send me to login. Login and signup send a logged-in user to the dashboard. The landing page stays open to everyone: a logged-in user sees a profile chip with their initial and name in place of Log in, and the chip opens the dashboard.
 
 ### Monitors
 
@@ -73,13 +73,15 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 - Adding the same URL twice returns "You are already monitoring this URL". More than 20 monitors is refused.
 - A new monitor is checked immediately.
 
-**M2. As a user, I can change a monitor's settings** (name, method, interval, timeout, status codes, keyword, threshold). The URL cannot change. Changing the interval schedules the next check right away.
+**M2. As a user, I can change a monitor's settings** from an Edit page opened from its card (name, method, interval, timeout, status codes, keyword, threshold). The URL cannot change. Saving sends only the fields that changed, and saving with no changes sends nothing. Changing the interval schedules the next check right away.
+
+**M2a. As a user, I can set the schedule with a dial.** The interval is set with a rotary dial, preset chips (1, 2, 5, 10, 15, 30 minutes, 1 hour) or a custom whole number of minutes from 1 to 60, both when adding and when editing a monitor. The dial can be dragged or used with the arrow keys.
 
 **M3. As a user, I can pause and resume a monitor.** A paused monitor is not checked. Resuming checks it immediately.
 
 **M4. As a user, I can delete a monitor.** Its check history and incidents are deleted with it.
 
-**M5. As a user, I can see all my monitors with their status.** The dashboard shows status, interval, last check time and response time for each monitor, refreshes by itself every 30 seconds, and has loading, empty and error states.
+**M5. As a user, I can see all my monitors with their status.** Each card shows status, response time, 24 hour uptime, a bar for each of the last 24 checks, the interval and the last check time, with Edit, Pause or Resume and Delete. The dashboard refreshes by itself every 30 seconds and has loading, empty and error states.
 
 **M6. As a user, I can check a monitor on demand.** Paused monitors are refused, and a monitor checked in the last 10 seconds returns "Wait a few seconds before checking again".
 
@@ -150,6 +152,8 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | FR21 | Rate limit on the rest of the API | Should | Open |
 | FR22 | Deployment on Render, Vercel and Atlas | Must | Open |
 | FR23 | Sentry mascot UI with animated landing page and scroll story | Could | Done |
+| FR24 | Pulse monitor cards: response time, 24 hour uptime, bars for recent checks | Should | Done |
+| FR25 | Edit monitor page and interval dial with a custom interval | Should | Done |
 
 ## 7. Non-functional requirements
 

@@ -119,7 +119,7 @@ Endpoints, bodies and error codes are in [api.md](./api.md). Summary:
 | Group | Paths |
 |---|---|
 | Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout` |
-| Monitors | `POST /monitors`, `GET /monitors`, `GET/PATCH/DELETE /monitors/:id`, `PATCH /monitors/:id/toggle`, `GET /monitors/:id/results`, `GET /monitors/:id/incidents`, `POST /monitors/:id/check` |
+| Monitors | `POST /monitors`, `GET /monitors` (with recent checks and 24 hour uptime), `GET/PATCH/DELETE /monitors/:id`, `PATCH /monitors/:id/toggle`, `GET /monitors/:id/results`, `GET /monitors/:id/incidents`, `POST /monitors/:id/check` |
 | Incidents | `GET /incidents`, `GET /incidents/:id`, `PATCH /incidents/:id/acknowledge` |
 | Health | `GET /health` |
 
@@ -180,6 +180,12 @@ Manual test cases with expected results are in [TESTING.md](./TESTING.md). Autom
 - When the `mode` prop changes, `Sentry` tweens to the new pose and starts or stops its barking loops (shake, jaw, waves). Idle loops (breathing, blinking, floating z's) run inside a `gsap.context`, which is reverted on unmount.
 - The landing page (`pages/Landing.jsx`) is lazy-loaded so ScrollTrigger is not part of the main bundle. Its scroll story is one scrubbed timeline over a pinned (sticky) stage. It is created only at 1280 px and wider and when reduced motion is off. Below that, or with reduced motion, the story is shown as stacked cards.
 - React owns the markup and the colour classes. GSAP owns transforms and the properties it tweens, so React state never writes to the same inline styles.
+
+## 13b. Monitor list history
+
+`GET /monitors` adds two fields to every monitor so the dashboard cards need one request: `recentChecks` (the last 24 check results, oldest first) and `uptime24h`. The controller runs one indexed query per monitor on `(monitor, checkedAt)` for the recent checks and one aggregation over the last 24 hours for all of the user's monitors, so a list call costs at most 20 small queries plus one grouped read. The dashboard polls it every 30 seconds.
+
+The edit page loads `GET /monitors/:id`, compares the form with the saved monitor and sends only the changed fields to `PATCH /monitors/:id`. The `IntervalDial` component maps the interval to the knob angle on a logarithmic scale between 1 and 60 minutes and snaps to a preset when the value is within about 8 percent of it.
 
 ## 14. Limits and known limitations
 

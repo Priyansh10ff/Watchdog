@@ -66,7 +66,7 @@ const Dashboard = () => {
     try {
       const response = await axiosInstance.patch(`/monitors/${id}/toggle`);
       setMonitors((prev) =>
-        prev.map((m) => (m._id === id ? response.data.monitor : m)),
+        prev.map((m) => (m._id === id ? { ...m, ...response.data.monitor } : m)),
       );
     } catch (error) {
       setActionError(error.response?.data?.message || "Could not update the monitor.");

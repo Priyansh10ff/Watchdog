@@ -38,6 +38,8 @@ Base URL: `http://localhost:5000/api`. Demo site: `http://localhost:4000`.
 | 10 | PATCH /monitors/:id | `{}` | 400 | |
 | 11 | PATCH /monitors/:id/toggle (twice) | none | paused, then resumed | |
 | 12 | DELETE /monitors/:id | none | 200, its results and incidents are deleted | |
+| 13 | GET /monitors after a monitor has been checked several times | none | each monitor has `recentChecks` (at most 24, oldest first) and `uptime24h` | |
+| 14 | GET /monitors for a monitor that has not been checked | none | `recentChecks` is `[]` and `uptime24h` is `null` | |
 
 ## Checker
 
@@ -69,3 +71,23 @@ Base URL: `http://localhost:5000/api`. Demo site: `http://localhost:4000`.
 | 8 | GET /incidents?status=wrong | 400 | |
 | 9 | GET /monitors/:id/incidents | only that monitor's incidents | |
 | 10 | Break the site again | a new incident is opened, the old one is unchanged | |
+
+## Interface
+
+| # | Action | Expected | Result |
+|---|---|---|---|
+| 1 | Open the dashboard with a monitor that has been checked | The card shows the response time, 24 hour uptime, 24 bars (green when up) and Edit, Pause and Delete | |
+| 2 | Click Edit on a card | The edit page opens with every field filled in, and the URL is shown but cannot be changed | |
+| 3 | Drag the dial | The readout, the highlighted preset and the custom field follow the dial | |
+| 4 | Focus the dial and press the arrow keys | The interval steps through 1, 2, 5, 10, 15, 30 and 60 | |
+| 5 | Click a preset, then type 17 in the custom field | The dial moves to 17 minutes and the "What will run" panel says every 17 min | |
+| 6 | Type 75 or 0 in the custom field | The interval does not change | |
+| 7 | Save the edit page without changing anything | Returns to the dashboard and sends no request | |
+| 8 | Change only the interval and save | Only that field is sent. The card shows the new "Every N min" and a check runs soon | |
+| 9 | Change the keyword while the method is HEAD and save | The server's message is shown in a red alert and the page stays | |
+| 10 | Add a monitor with a custom interval of 17 | The new card says "Every 17 min" | |
+| 11 | Pause a monitor | The card turns beige, shows "Off" and grey bars. Resume restores it without losing the bars | |
+| 12 | Break the demo target and wait for the failure threshold | Red bars appear at the right end of the card, the card turns red and shows "No reply" | |
+| 13 | Open `/monitors/123/edit` | "Monitor not found" with a Try again button | |
+| 14 | Log in, then open the landing page `/` | The page stays open. The nav shows your initial and name instead of Log in, and the chip opens the dashboard | |
+| 15 | Log out, then open `/` | The nav shows Log in and Start monitoring | |

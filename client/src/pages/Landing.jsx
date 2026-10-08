@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Logo from "../components/Logo";
+import { useAuth } from "../context/AuthContext";
 import Sentry from "../components/Sentry";
 import SentryAvatar from "../components/SentryAvatar";
 import { posePair, prefersReducedMotion } from "../utils/sentryPose";
@@ -155,6 +156,7 @@ const Landing = () => {
   const [mode, setMode] = useState("up");
   const [broken, setBroken] = useState(false);
   const [flat, setFlat] = useState(false);
+  const { user, loading } = useAuth();
 
   const rootRef = useRef(null);
   const heroRig = useRef(null);
@@ -440,18 +442,47 @@ const Landing = () => {
                 Features
               </a>
             </div>
-            <div className="flex items-center justify-end gap-5">
-              <Link to="/login" className="text-[16px] font-semibold transition-opacity hover:opacity-70">
-                Log in
-              </Link>
-              <Link
-                to="/signup"
-                className={`inline-flex h-[46px] items-center rounded-full px-6 text-[15px] font-bold transition-colors ${
-                  down ? "bg-ink text-butter hover:bg-white hover:text-ink" : "bg-butter text-ink hover:bg-white"
-                }`}
-              >
-                Start monitoring
-              </Link>
+            <div className="flex items-center justify-end gap-3 sm:gap-5">
+              {loading ? (
+                <span className="block h-[46px] w-[190px]" aria-hidden="true" />
+              ) : user ? (
+                <>
+                  <Link
+                    to="/dashboard"
+                    aria-label="Open your dashboard"
+                    className={`inline-flex h-[46px] items-center gap-2.5 rounded-full pl-1.5 pr-1.5 text-[15px] font-semibold transition-colors sm:pr-4 ${
+                      down ? "bg-white/30 hover:bg-white/50" : "bg-white/15 hover:bg-white/25"
+                    }`}
+                  >
+                    <span className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-white font-extrabold text-ink">
+                      {user.name?.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="hidden max-w-[140px] truncate sm:inline">{user.name}</span>
+                  </Link>
+                  <Link
+                    to="/monitors/new"
+                    className={`inline-flex h-[46px] items-center rounded-full px-6 text-[15px] font-bold transition-colors ${
+                      down ? "bg-ink text-butter hover:bg-white hover:text-ink" : "bg-butter text-ink hover:bg-white"
+                    }`}
+                  >
+                    Start monitoring
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="text-[16px] font-semibold transition-opacity hover:opacity-70">
+                    Log in
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className={`inline-flex h-[46px] items-center rounded-full px-6 text-[15px] font-bold transition-colors ${
+                      down ? "bg-ink text-butter hover:bg-white hover:text-ink" : "bg-butter text-ink hover:bg-white"
+                    }`}
+                  >
+                    Start monitoring
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
 
@@ -768,8 +799,11 @@ const Landing = () => {
               <p className="mt-4 text-[19px] leading-normal">
                 Add your first site in a minute. Sentry takes it from there.
               </p>
-              <Link to="/signup" className={`${butterBtn} mt-7 min-h-[54px] px-8 text-[17px]`}>
-                Create your account
+              <Link
+                to={user ? "/dashboard" : "/signup"}
+                className={`${butterBtn} mt-7 min-h-[54px] px-8 text-[17px]`}
+              >
+                {user ? "Open your dashboard" : "Create your account"}
               </Link>
             </div>
 
@@ -789,8 +823,14 @@ const Landing = () => {
           </Link>
           <div className="flex items-center gap-8 text-[15px] text-[#c8cbe6]">
             <a href="#how" className="transition-colors hover:text-white">How it works</a>
-            <Link to="/login" className="transition-colors hover:text-white">Log in</Link>
-            <Link to="/signup" className="transition-colors hover:text-white">Sign up</Link>
+            {user ? (
+              <Link to="/dashboard" className="transition-colors hover:text-white">Dashboard</Link>
+            ) : (
+              <>
+                <Link to="/login" className="transition-colors hover:text-white">Log in</Link>
+                <Link to="/signup" className="transition-colors hover:text-white">Sign up</Link>
+              </>
+            )}
           </div>
           <div className="text-[14px] text-[#c8cbe6] md:text-right">Built by Priyansh</div>
         </div>

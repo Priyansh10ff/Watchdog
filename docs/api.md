@@ -26,7 +26,7 @@ Register and login share a rate limit of 10 requests per 15 minutes per IP and r
 | Method | Path | Description |
 |---|---|---|
 | POST | /monitors | Create a monitor. Starts an immediate check |
-| GET | /monitors | List the user's monitors, newest first |
+| GET | /monitors | List the user's monitors, newest first. Each monitor also has `recentChecks` and `uptime24h` |
 | GET | /monitors/:id | One monitor |
 | PATCH | /monitors/:id | Update `name`, `method`, `intervalMinutes`, `timeoutMs`, `expectedStatusCodes`, `keyword`, `failureThreshold`. The URL cannot change |
 | PATCH | /monitors/:id/toggle | Pause or resume. Resuming starts an immediate check |
@@ -58,6 +58,17 @@ Rules and errors:
 - 404: unknown id or a monitor that belongs to another user.
 - 409: the user already monitors that URL.
 - Check now returns 400 for a paused monitor and 429 if the monitor was checked in the last 10 seconds. The response includes `result`, `transition`, `incidentEvent`, `incident` and the updated `monitor`.
+
+List response, per monitor, in addition to the monitor fields:
+
+```json
+{
+  "recentChecks": [{ "isUp": true, "responseTimeMs": 138, "checkedAt": "..." }],
+  "uptime24h": 99.8
+}
+```
+
+`recentChecks` holds the last 24 checks, oldest first, and is an empty list for a monitor that has not been checked. `uptime24h` is the percentage of checks that were up in the last 24 hours with one decimal, or `null` when there are none.
 
 Results response:
 

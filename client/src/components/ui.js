@@ -21,3 +21,12 @@ export const smallInkBtn =
 
 export const smallDangerBtn =
   "inline-flex min-h-11 items-center justify-center rounded-full border-2 border-[#c8321a] px-5 text-[14px] font-bold text-[#c8321a] transition-colors hover:bg-[#c8321a] hover:text-white disabled:pointer-events-none disabled:opacity-50";
+
+const tileBtnBase =
+  "inline-flex min-h-11 items-center gap-2 rounded-full border-2 px-4 text-[14px] font-bold transition-colors disabled:pointer-events-none disabled:opacity-50";
+
+export const tileEditBtn = `${tileBtnBase} border-ink text-ink hover:bg-ink hover:text-butter`;
+
+export const tileToggleBtn = `${tileBtnBase} border-ink/35 text-ink hover:border-ink hover:bg-ink hover:text-butter`;
+
+export const tileDeleteBtn = `${tileBtnBase} border-[#c8321a] text-[#c8321a] hover:bg-[#c8321a] hover:text-white`;

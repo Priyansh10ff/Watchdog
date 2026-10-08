@@ -60,7 +60,7 @@ Both are loaded from Google Fonts in `index.html`.
 - The dashboard header pairs the small Sentry avatar with a headline that summarises the state ("API is down", "All 5 monitors are up").
 - Login and signup are two columns on large screens: the form on the left and a large Sentry on the right who follows the cursor. Below `lg` only the form shows.
 - The landing page is a sequence of sections: hero, three "stay calm" cards, scroll story, tiles, a compact closing card and a slim footer.
-- The navbar is a floating rounded bar the same width as the page content, so its edges line up with the headline. It has three zones on one line: logo, links, actions. The app version shows the current page as a white pill, Add monitor in butter, a user chip with an initial, and Log out.
+- The navbar is a floating rounded bar the same width as the page content, so its edges line up with the headline. It has three zones on one line: logo, links, actions. On the landing page a logged-in user sees a profile chip (initial and name) instead of Log in, with Start monitoring opening Add monitor, and the closing card and footer point to the dashboard. The app version shows the current page as a white pill, Add monitor in butter, a user chip with an initial, and Log out.
 
 ## 5. Components
 
@@ -68,7 +68,10 @@ Both are loaded from Google Fonts in `index.html`.
 |---|---|
 | `Sentry` | The large animated dog. Props `mode` (`up`, `slow`, `down`), `scale`, `intro`. Exposes `lookAt` so a parent can make his eyes follow the cursor |
 | `SentryAvatar` | A small flat version used in the dashboard header and the page loader |
-| `MonitorTile` | Name, URL, status pill, big response time, interval, last check, pause or resume, delete. Shakes briefly when down |
+| `MonitorTile` | The Pulse card: name, URL and status pill, the big response time with 24 hour uptime beside it, a bar for each of the last 24 checks, the interval and last check time, and Edit, Pause or Resume and Delete with icons. Shakes briefly when down |
+| `IntervalDial` | A rotary knob for the check interval with seven detents (1, 2, 5, 10, 15, 30 minutes and 1 hour), preset chips and a custom field for any whole number from 1 to 60. Drag it, use the arrow keys, tap a chip or type |
+| `MonitorForm` | The form shared by Add monitor and Edit monitor: target, schedule (the dial and the timeout), detection and the "What will run" panel |
+| `Icon` | Small stroke icons for edit, pause, resume and delete |
 | `StatusBadge` | Pill for monitor and incident states |
 | `IncidentList` | White card per incident: start, duration, failed checks, cause, latest error, acknowledge |
 | `AuthLayout` | Two-column layout for login and signup with the reacting Sentry |
@@ -76,6 +79,20 @@ Both are loaded from Google Fonts in `index.html`.
 | `Navbar` | Floating bar for the app: logo, Monitors and Incidents (current page in white), Add monitor, user chip, Log out |
 | `FormField`, `ChipGroup` | Label, hint and input wrapper; radio-style chips for interval, timeout, method and threshold |
 | `ui.js` | Shared class strings for cards, inputs and buttons (butter, ink, outline) |
+
+## 5a. Monitor card
+
+Bars show the last 24 checks, oldest on the left. Height follows the response time, so a slow stretch is visible at a glance.
+
+| Bar | Meaning |
+|---|---|
+| Green | Up and answered in under 1.5 seconds |
+| Amber | Up but slower than 1.5 seconds |
+| Short red | The check failed |
+| Pale | No check yet in that slot |
+| Grey | The monitor is paused |
+
+The tile colour follows the state (white up, cream slow, pink down, beige paused). Uptime is the share of checks that were up in the last 24 hours, or a dash when there are none.
 
 ## 6. Sentry
 

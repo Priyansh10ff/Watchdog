@@ -38,6 +38,8 @@ Watchdog is an uptime and incident tracker for websites and APIs. It checks your
 **Implemented**
 - Register, login and logout. The session is a JWT in an httpOnly cookie and survives a refresh. Passwords are hashed with bcrypt.
 - Add, edit, pause, resume and delete monitors (up to 20 per user), and check on demand.
+- Monitor cards show the response time, 24 hour uptime and a bar for each of the last 24 checks.
+- Set the check interval with a rotary dial, a preset or any whole number of minutes from 1 to 60.
 - Per-monitor interval (1 to 60 minutes), timeout, expected status codes, optional keyword and failure threshold.
 - Scheduled checks every minute. Due monitors are claimed atomically, so a restart or a second instance never double-checks a monitor.
 - Redirects handled, keyword check, readable failure reasons such as "Timed out after 5000 ms" or "Connection refused".
@@ -187,7 +189,7 @@ All routes are under `/api`. Everything except health, register and login needs 
 | Group | Endpoints |
 |---|---|
 | Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout` |
-| Monitors | `POST /monitors`, `GET /monitors`, `GET /monitors/:id`, `PATCH /monitors/:id`, `PATCH /monitors/:id/toggle`, `DELETE /monitors/:id` |
+| Monitors | `POST /monitors`, `GET /monitors` (with recent checks and uptime), `GET /monitors/:id`, `PATCH /monitors/:id`, `PATCH /monitors/:id/toggle`, `DELETE /monitors/:id` |
 | Checks | `GET /monitors/:id/results`, `POST /monitors/:id/check` |
 | Incidents | `GET /incidents`, `GET /incidents/:id`, `PATCH /incidents/:id/acknowledge`, `GET /monitors/:id/incidents` |
 | Health | `GET /health` |
