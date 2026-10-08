@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import AuthSidePanel from "../components/AuthSidePanel";
+import AuthLayout from "../components/AuthLayout";
 
-// Input styles live in one constant instead of being repeated on every input
 const inputClass =
-  "w-full h-[44px] rounded-full border border-[#d5d5d5] px-6 text-[13px] text-[#333] outline-none focus:border-[#aaaaaa] placeholder:text-[#c4c4c4]";
+  "w-full h-[44px] rounded-full border border-[#d5d5d5] bg-white px-6 text-[13px] text-[#333] outline-none focus:border-[#aaaaaa] placeholder:text-[#c4c4c4]";
+
+const labelClass = "mb-2 ml-2 block text-[12px] font-medium text-[#777777]";
 
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -16,22 +17,19 @@ const Login = () => {
   const navigate = useNavigate();
   const { setUser } = useAuth();
 
-  // One handler for every input: the input's name attribute picks the field
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // stops the browser from reloading the page
+    e.preventDefault();
     setErr("");
     setLoader(true);
     try {
       const response = await axiosInstance.post("/auth/login", form);
-
       setUser(response.data.user);
       navigate("/dashboard");
     } catch (error) {
-      // ?. keeps this safe when there is no response at all (server down, no network)
       setErr(error.response?.data?.message || "Login failed. Try again.");
     } finally {
       setLoader(false);
@@ -39,74 +37,50 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#D8D0C4] p-4 sm:p-8">
-      {/* Main Card */}
-      <div className="flex min-h-[640px] w-full max-w-[1080px] overflow-hidden rounded-[36px] bg-white p-4 md:rounded-[52px]">
-        {/* ================= LEFT SIDE ================= */}
-        <div className="flex w-full items-center justify-center py-10 md:w-1/2">
-          <form onSubmit={handleSubmit} className="w-full max-w-[340px]">
-            <div className="mb-12 text-center">
-              <h1 className="text-[34px] font-semibold tracking-[-1.5px] text-[#303030]">
-                Welcome back 👋
-              </h1>
-              <p className="mt-4 text-[13px] text-[#999999]">
-                Please enter your details.
-              </p>
-            </div>
+    <AuthLayout
+      title="Log in"
+      subtitle="Welcome back. Enter your details to see your monitors."
+      switchText="Don't have an account?"
+      switchLabel="Sign up"
+      switchTo="/signup"
+    >
+      <form onSubmit={handleSubmit} className="mt-8">
+        {err && <p className="mb-4 text-center text-[13px] text-red-500">{err}</p>}
 
-            {err && (
-              <p className="mb-3 text-center text-[13px] text-red-500">{err}</p>
-            )}
+        <label className={labelClass}>Email</label>
+        <input
+          type="email"
+          name="email"
+          placeholder="you@example.com"
+          autoComplete="email"
+          value={form.email}
+          onChange={handleChange}
+          required
+          className={`${inputClass} mb-4`}
+        />
 
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              autoComplete="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-              className={`${inputClass} mb-3`}
-            />
+        <label className={labelClass}>Password</label>
+        <input
+          type="password"
+          name="password"
+          placeholder="Your password"
+          autoComplete="current-password"
+          value={form.password}
+          onChange={handleChange}
+          required
+          className={inputClass}
+        />
 
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              autoComplete="current-password"
-              value={form.password}
-              onChange={handleChange}
-              required
-              className={inputClass}
-            />
-
-            <button
-              type="submit"
-              disabled={loader}
-              className="mt-8 h-[44px] w-full rounded-full bg-[#ff9918] text-[13px] font-medium text-white transition hover:bg-[#f58c08] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loader ? "Logging in..." : "Log In"}
-            </button>
-
-            <p className="mt-5 text-center text-[13px] text-[#aaaaaa]">
-              Don't have an account?{" "}
-              <Link to="/signup" className="font-medium text-[#333333]">
-                Sign Up
-              </Link>
-            </p>
-          </form>
-        </div>
-
-        {/* ================= RIGHT SIDE ================= */}
-        <AuthSidePanel />
-      </div>
-    </div>
+        <button
+          type="submit"
+          disabled={loader}
+          className="mt-8 h-[44px] w-full rounded-full bg-[#ff9918] text-[13px] font-medium text-white transition hover:bg-[#f58c08] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loader ? "Logging in..." : "Log in"}
+        </button>
+      </form>
+    </AuthLayout>
   );
 };
 
 export default Login;
-
-// VIVA
-// Q: Why e.preventDefault()?   A form submit reloads the page by default.
-// Q: Why one handleChange?     [e.target.name] is a computed key, so it updates the matching field.
-// Q: Why error.response?.data? When the server is down there is no response object, and a plain access would crash.

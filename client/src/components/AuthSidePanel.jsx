@@ -1,32 +1,42 @@
-// Right-hand panel shared by the Login and SignUp pages.
-// Hidden on small screens so the form gets the full width.
+import StatusBadge from "./StatusBadge";
+
+const samples = [
+  { name: "Marketing site", url: "example.com", status: "up", ms: "138 ms" },
+  { name: "API", url: "api.example.com", status: "down", ms: "-" },
+  { name: "Docs", url: "docs.example.com", status: "paused", ms: "-" },
+];
+
 const AuthSidePanel = () => {
   return (
-    <div className="hidden w-1/2 md:block">
-      <div className="flex h-full w-full flex-col justify-end rounded-[38px] bg-[#303030] p-10 text-white">
-        <h2 className="text-[28px] font-semibold leading-tight tracking-[-1px]">
+    <div className="hidden flex-col justify-between rounded-3xl bg-[#303030] p-8 text-white md:flex">
+      <div>
+        <h2 className="text-[26px] font-semibold leading-tight tracking-[-1px]">
           Know when your site goes down, before your users do.
         </h2>
-
         <p className="mt-3 text-[13px] text-[#bdbdbd]">
-          Checks run every minute. You get one alert per incident and a full
+          Checks run every minute. Every outage becomes an incident with a full
           history of what happened.
         </p>
+      </div>
 
-        <div className="mt-8 flex gap-5 text-[12px] text-[#bdbdbd]">
-          <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-green-500" />
-            Up
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[#ff9918]" />
-            Slow
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-red-500" />
-            Down
-          </span>
-        </div>
+      <div className="mt-8 space-y-3">
+        {samples.map((sample) => (
+          <div
+            key={sample.name}
+            className="flex items-center justify-between gap-4 rounded-2xl bg-white px-4 py-3"
+          >
+            <div className="min-w-0">
+              <p className="truncate text-[14px] font-semibold text-[#303030]">
+                {sample.name}
+              </p>
+              <p className="truncate text-[12px] text-[#999999]">{sample.url}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-[12px] font-medium text-[#303030]">{sample.ms}</span>
+              <StatusBadge status={sample.status} />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
