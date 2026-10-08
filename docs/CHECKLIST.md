@@ -65,7 +65,8 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [ ] `NODE_ENV=production` set on the API host
 - [ ] `CLIENT_URL` matches the deployed client origin exactly
 - [ ] Health check path `/api/health` configured on the host
-- [ ] API instance stays awake, or an external ping runs every 5 minutes
+- [ ] `render.yaml` applied: `watchdog-api` and `watchdog-demo-target` are live
+- [ ] External pinger set to call `/api/health` every 5 minutes (never more than 14)
 - [ ] Cookie approach chosen and tested on Chrome and Safari ([deployment.md](./deployment.md) section 5)
 - [ ] `TRUST_PROXY` set to `2` if the Vercel proxy option is used
 - [ ] `client/vercel.json` added so direct page refreshes do not return 404

@@ -1,6 +1,21 @@
 # Deployment
 
-Plan: MongoDB Atlas for the database, Render for the API, Vercel for the client. All three have free tiers. Nothing here has been deployed yet, so follow the steps in order and tick the verification list at the end.
+Plan: MongoDB Atlas for the database, Render for the API, Vercel for the client. All three have free tiers.
+
+## Order of steps
+
+About 40 minutes. The order matters because each step needs a value from the one before.
+
+1. Push everything to GitHub and wait for the CI run to turn green.
+2. Atlas: create the cluster, a database user and network access, and copy the connection string (section 2).
+3. Render: create the services from `render.yaml` and open `/api/health` (section 3).
+4. Keep the API awake with an external pinger (section 3).
+5. Vercel: add `client/vercel.json` with the Render address, then import the repository (sections 4 and 5).
+6. Render: set `CLIENT_URL` to the Vercel address and redeploy.
+7. Run the showcase script against the Atlas database (section 6a).
+8. Go through the verification list (section 7), then put the live links in the README.
+
+Never paste the Atlas connection string, `JWT_SECRET` or any password into a chat, an issue or a commit. Share only the public addresses and the text of error messages.
 
 Related: [TECHNICAL.md](./TECHNICAL.md) · [CHECKLIST.md](./CHECKLIST.md)
 
@@ -30,7 +45,9 @@ Atlas M0 has no automatic backups. Export anything you cannot afford to lose.
 
 ## 3. API: Render
 
-Create a **Web Service** from the GitHub repository.
+**Fastest: the blueprint.** The repository contains `render.yaml`. In the Render dashboard choose New, then Blueprint, pick the repository and apply it. Render asks for two values: `MONGO_URI` (the Atlas string) and `CLIENT_URL` (type `https://placeholder.vercel.app` for now and change it in step 6). It creates `watchdog-api` and `watchdog-demo-target` in Singapore on the free plan, generates `JWT_SECRET` for you and sets everything else in the table below, including `TRUST_PROXY=2` for the Vercel proxy option. If you choose option A in section 5, change `TRUST_PROXY` to `1`.
+
+**By hand:** create a **Web Service** from the GitHub repository.
 
 | Setting | Value |
 |---|---|
@@ -54,7 +71,11 @@ Environment variables:
 
 After the deploy, open `https://YOUR-SERVICE.onrender.com/api/health`. It should return `{"success":true,"message":"Server is running"}`. The logs should show `DB Connected` and `Scheduler started`.
 
-**Keep it awake.** The scheduler runs inside the API process. Free instances sleep after a period without traffic (about 15 minutes, check Render's current terms), and checks stop while it sleeps. Either use an always-on instance, or point an external pinger at `/api/health` every 5 minutes.
+**Keep it awake.** The scheduler runs inside the API process, so checks stop while the service sleeps. According to Render's documentation, a free web service spins down after 15 minutes without inbound traffic, and the first request after that can take around 30 seconds. Point an external pinger (UptimeRobot, cron-job.org or Better Stack, all with free plans) at `https://YOUR-SERVICE.onrender.com/api/health` with an interval of 5 minutes, and certainly no more than 14.
+
+Free usage is capped at 750 instance hours per workspace per calendar month, and a service uses hours only while it is running. One always-on service uses about 744 hours in a 31-day month, so it fits, but a second always-on service would not. Leave `watchdog-demo-target` asleep and open its address a minute before you record. Render may also restart a free service at any time. That is safe here, because checks are claimed with a lease and a restart never double-checks a monitor.
+
+Render may suspend a free service that makes an unusually high volume of outbound traffic. The checker makes one small request per monitor per interval, so keep the number of monitors modest.
 
 ## 4. Client: Vercel
 
@@ -99,7 +120,7 @@ The session is an httpOnly cookie. When the client and the API are on different 
 
 ## 6. Demo target in production
 
-`NODE_ENV=production` blocks private addresses, so a monitor for `http://localhost:4000` is refused. For the demo video, deploy `demo-target` as a second Render web service (root directory `demo-target`, build `npm install`, start `npm start`) and monitor its public `/health` URL. Switch it with `/control/down`, `/control/slow` and `/control/up`.
+`NODE_ENV=production` blocks private addresses, so a monitor for `http://localhost:4000` is refused. The blueprint already creates `watchdog-demo-target` as a second free web service. Monitor its public `/health` address and switch it with `/control/down`, `/control/slow` and `/control/up`. Its state is kept in memory, so it returns to up whenever the service restarts or sleeps. Anyone who knows the address can use those links, so treat it as a throwaway demo site.
 
 ## 6a. Landing page ticker
 
