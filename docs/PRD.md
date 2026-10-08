@@ -1,0 +1,199 @@
+# Watchdog: Product Requirements Document
+
+| | |
+|---|---|
+| **Product** | Watchdog uptime and incident tracker |
+| **Owner** | Priyansh |
+| **Status** | v1.0 in development |
+| **Live** | Not deployed yet. See [deployment.md](./deployment.md) |
+| **Last updated** | October 2026 |
+
+Related: [PRODUCT.md](./PRODUCT.md) (overview) · [TECHNICAL.md](./TECHNICAL.md) (implementation) · [DESIGN.md](./DESIGN.md) (interface) · [CHECKLIST.md](./CHECKLIST.md) (readiness)
+
+---
+
+## 1. Problem
+
+People who run websites and APIs usually find out about an outage from their users. Hosted monitoring services exist, but the free ones are limited and the simple ones are noisy: a single dropped request raises an alarm, and a long outage keeps raising it.
+
+Real sites also do not behave like a plain page that always answers 200. A login-protected site answers 401 or 403 and is still alive. A page can answer 200 and show an error. Some sites redirect. A monitor that cannot handle this gives false alarms or misses real failures.
+
+Watchdog checks each address on a schedule, waits for several failures in a row before calling a site down, opens one incident per outage, and closes it automatically on recovery.
+
+## 2. Goals
+
+| # | Goal | How we know |
+|---|---|---|
+| G1 | A new user has a monitor running within 2 minutes of signing up | Timed walkthrough: sign up, add monitor, first check result appears |
+| G2 | A single failed check never raises an incident | Status machine tests: failures below the threshold keep the monitor up |
+| G3 | One outage produces exactly one incident, with the right start time and cause | Incident tests, including the race where two checks try to open it at once |
+| G4 | A check never runs twice for the same monitor, even after a restart or with two server instances | Atomic claiming tests |
+| G5 | A monitor cannot be used to reach the host's internal network | Private-address tests in production mode |
+| G6 | The whole product runs at zero hosting cost to start | Vercel Hobby, Render free, Atlas M0 |
+
+## 3. Non-goals
+
+- Email, SMS, push or chat notifications
+- Teams, roles or shared workspaces
+- Monitoring of non-HTTP services (ping, TCP ports)
+- Logging in to a site with a headless browser
+- Custom domains for status pages
+- Native mobile apps (the web app is responsive)
+
+## 4. Users
+
+| Persona | Description | Main needs |
+|---|---|---|
+| **Riya, freelance developer** | Hosts three client sites. No budget for a monitoring service | Add sites in seconds, know quickly when one is down, show clients a record |
+| **Arjun, backend developer at a startup** | Owns an API whose health endpoint is behind auth | Count 401 and 403 as alive, avoid false alarms from one dropped request |
+| **Meera, student** | Has a deployed project for her portfolio and college demo | A dashboard and history that prove the project stays up |
+
+## 5. User stories and acceptance criteria
+
+### Accounts
+
+**A1. As a new user, I can sign up and start straight away.**
+- Name, email and password (8 to 72 characters) are required.
+- The email is trimmed and lowercased. Registering an email that already exists returns "Email already exists".
+- Input that is not a string is rejected with "Invalid input".
+- On success I am logged in and land on the dashboard.
+
+**A2. As a user, I can log in and log out.**
+- A wrong email or password shows one generic message, "Invalid email or password".
+- The session lasts 7 days and survives a page refresh.
+- Logging out clears the session.
+
+**A3. As a user, I only see pages I am allowed to see.** Protected pages send me to login. Login and signup send a logged-in user to the dashboard.
+
+### Monitors
+
+**M1. As a user, I can add a monitor.**
+- Name (1 to 60 characters) and URL (http or https, no credentials in the URL) are required.
+- Optional: method GET or HEAD, interval 1 to 60 minutes, timeout 1 to 30 seconds, 1 to 20 expected status codes between 100 and 599, a keyword of up to 100 characters (needs GET), and a failure threshold of 1 to 10.
+- Adding the same URL twice returns "You are already monitoring this URL". More than 20 monitors is refused.
+- A new monitor is checked immediately.
+
+**M2. As a user, I can change a monitor's settings** (name, method, interval, timeout, status codes, keyword, threshold). The URL cannot change. Changing the interval schedules the next check right away.
+
+**M3. As a user, I can pause and resume a monitor.** A paused monitor is not checked. Resuming checks it immediately.
+
+**M4. As a user, I can delete a monitor.** Its check history and incidents are deleted with it.
+
+**M5. As a user, I can see all my monitors with their status.** The dashboard shows status, interval, last check time and response time for each monitor, refreshes by itself every 30 seconds, and has loading, empty and error states.
+
+**M6. As a user, I can check a monitor on demand.** Paused monitors are refused, and a monitor checked in the last 10 seconds returns "Wait a few seconds before checking again".
+
+### Checking
+
+**C1. As a user, my monitors are checked on the schedule I set.** A scheduler runs every minute and checks every monitor that is due. Each monitor is claimed atomically, so it is never checked twice at the same time.
+
+**C2. As a user, I choose what counts as up.** A check is up when the response status is in my expected list and, if I set a keyword, the page contains it. Redirects are followed (up to 3) when the redirect itself is not in my expected list. A request that exceeds the timeout fails.
+
+**C3. As a user, one failure does not raise an alarm.** The monitor becomes down only after my failure threshold of checks in a row fail. A success resets the count.
+
+**C4. As a user, outages are confirmed quickly.** After a failure, or while down, the next check happens within a minute even if my interval is longer.
+
+**C5. As a user, I can see how a monitor has performed.** The results endpoint returns the latest checks and, for the last 24 hours, the number of checks, uptime percentage and average response time. Check history is deleted automatically after 30 days.
+
+### Incidents
+
+**I1. As a user, an outage creates one incident.** It opens when the monitor becomes down, starts at the first failing check after the last success, and records the cause (status code and message).
+
+**I2. As a user, the incident tracks the outage.** The failed check count and the latest error update while the outage lasts. No second incident is created for the same outage.
+
+**I3. As a user, recovery closes the incident.** The first successful check resolves it and stores the duration.
+
+**I4. As a user, I can acknowledge an open incident.** Acknowledging twice, or acknowledging a resolved incident, is refused with a clear message.
+
+**I5. As a user, I can list incidents.** Filters: active, open, acknowledged, resolved or all, and by monitor. Results are paginated (up to 50 per page).
+
+**I6. As a user, I can open an incident** and see the checks recorded during it.
+
+**I7. As a user, the dashboard shows open incidents** with the monitor name and how long it has been down, and links to the incidents page.
+
+### Safety and privacy
+
+**S1. As the operator, I want monitors to be unable to reach internal networks.** In production, addresses in private, loopback and link-local ranges are refused at DNS lookup, for IP-literal URLs and for redirect targets.
+
+**S2. As a user, my data is private.** Every monitor and incident query is filtered by my account. Another user's resource, or an invalid id, returns 404.
+
+### Public status page (planned)
+
+**P1. As a user, I can publish a status page** for chosen monitors and share its link.
+
+**P2. As a visitor, I can read a status page without logging in.** It shows overall status, each monitor's status and recent incidents, and exposes names and status only.
+
+## 6. Functional requirements
+
+| ID | Requirement | Priority | Status |
+|---|---|---|---|
+| FR1 | Register, login, logout, session in an httpOnly cookie, bcrypt hashing | Must | Done |
+| FR2 | Rate limit on register and login | Must | Done |
+| FR3 | Monitor CRUD with validation, duplicate protection and a 20 monitor limit | Must | Done |
+| FR4 | Pause, resume and on-demand check | Must | Done |
+| FR5 | Scheduler with atomic claiming of due monitors | Must | Done |
+| FR6 | Check engine: status codes, keyword, redirects, timeout, readable errors | Must | Done |
+| FR7 | Status machine with failure threshold and quick re-check | Must | Done |
+| FR8 | Check results, 24 hour statistics, 30 day retention | Must | Done |
+| FR9 | Incidents: open, update, resolve, acknowledge | Must | Done |
+| FR10 | Incident list, filters, pagination and detail | Must | Done |
+| FR11 | Dashboard with live refresh, open-incident banner and incidents page | Must | Done |
+| FR12 | SSRF protection in production | Must | Done |
+| FR13 | Demo target app for demonstrations | Should | Done |
+| FR14 | Public status page | Must | **Open** (next) |
+| FR15 | Response time chart and uptime bar | Should | Open |
+| FR16 | SSL certificate expiry warnings | Could | Open |
+| FR17 | Encrypted custom headers for authenticated checks | Could | Open |
+| FR18 | Maintenance windows | Could | Open |
+| FR19 | Second-region checker agent | Could | Open |
+| FR20 | Automated tests for the status machine, validators and incidents | Should | Open |
+| FR21 | Rate limit on the rest of the API | Should | Open |
+| FR22 | Deployment on Render, Vercel and Atlas | Must | Open |
+| FR23 | UI redesign | Could | Open (last) |
+
+## 7. Non-functional requirements
+
+| Area | Requirement |
+|---|---|
+| **Correctness** | The status machine is deterministic. Incident creation is idempotent: a unique partial index allows one unresolved incident per monitor, and a duplicate-key race falls back to the existing incident. A failure inside incident handling never breaks checking. |
+| **Security** | bcrypt password hashes never leave the server. Request types are validated, which blocks NoSQL injection. Ownership is checked on every query. CORS accepts only `CLIENT_URL`. `helmet` headers. Body limit 10 kB. Secrets only in environment variables. In production the checker blocks private addresses. |
+| **Privacy** | Monitors, results and incidents are visible only to their owner. Check results are deleted after 30 days. |
+| **Reliability** | The server only listens once MongoDB is connected. A claimed monitor is leased for 2 minutes, so a crashed check is retried. The scheduler skips a run while the previous one is still going. One monitor's error never stops the others. |
+| **Performance** | Up to 200 due monitors are claimed per run and checked 10 at a time. Responses are limited to 2 MB. List endpoints are paginated. Indexes cover the dashboard, scheduler and incident queries. |
+| **Compatibility** | Latest two versions of Chrome, Edge, Firefox and Safari. Layouts work from 360 px wide. |
+| **Accessibility** | Visible focus, labelled form fields, semantic buttons and links. Contrast gaps are listed in [DESIGN.md](./DESIGN.md) and tracked in [CHECKLIST.md](./CHECKLIST.md). |
+| **Maintainability** | Configuration from environment variables only. Logic lives in services, controllers stay thin. Manual test cases are in [TESTING.md](./TESTING.md). Automated tests are planned (FR20). |
+
+## 8. Success metrics
+
+| Metric | Target |
+|---|---|
+| Time from adding a monitor to its first result | under 1 minute |
+| Incidents opened by a single failed check | 0 |
+| Outage confirmed after | failure threshold × about 1 minute |
+| Incidents per outage | exactly 1 |
+| Duplicate checks of one monitor | 0 |
+| p95 API latency (excluding host cold start) | under 300 ms |
+| Private-address checks that succeed in production | 0 |
+
+## 9. Release plan
+
+| Version | Scope |
+|---|---|
+| **v1.0 (end-term submission)** | Everything marked Done, plus the public status page (FR14), automated tests (FR20), deployment (FR22), documentation and demo video |
+| **v1.1** | Charts (FR15), SSL expiry (FR16), encrypted custom headers (FR17), rate limit on the whole API (FR21) |
+| **v1.2** | Maintenance windows (FR18), second-region checker (FR19), UI redesign (FR23) |
+| **Later** | Outbound notifications (email, Slack, Discord), teams, status page custom domains |
+
+## 10. Risks and open questions
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| Free hosting sleeps | The scheduler lives in the API process, so checks stop while the server is asleep | Always-on instance, or an external ping on `/api/health` at least every 10 minutes |
+| Sites that block bots or datacenter IPs | False "down" results | A clear User-Agent, and users can list 403 or 429 as expected status codes |
+| Geo-blocked sites | A site looks down from one region | Documented limitation. The second-region agent (FR19) addresses it |
+| Cross-site cookies between Vercel and Render | Browsers that block third-party cookies may break login | Proxy `/api` through the client host so cookies are first-party (see [deployment.md](./deployment.md)) |
+| Large check history on the free database | Storage fills up | 30 day automatic retention. Estimate: a 1-minute monitor stores about 43,000 results per month |
+| Single scheduler process | One process does all checking | Atomic claiming already makes extra instances safe. Scaling out is a later step |
+| No outbound notifications | Users must open the app to notice an incident | Out of scope for now. The dashboard and status page show incidents |
+| No automated tests yet | Regressions are caught only by manual testing | FR20 before submission |
