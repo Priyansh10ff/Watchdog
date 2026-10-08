@@ -202,7 +202,7 @@ $env:MONGO_URI = "your Atlas connection string"
 node scripts/seedShowcase.js
 ```
 
-The icons are loaded by each visitor's browser from Google's favicon service (set `VITE_FAVICON_URL` to use another one), and a row falls back to a letter tile if its icon does not load.
+The icons are loaded by each visitor's browser, which tries Google's favicon service first (set `VITE_FAVICON_URL` to use another one), then DuckDuckGo's, then the site's own `/favicon.ico`, and shows a letter tile only if all three fail. The 12 sites above are recognised by name, so their icons appear even if the page does not share domains.
 
 The sites are Google, YouTube, Wikipedia, GitHub, Cloudflare, Amazon, Reddit, Netflix, LinkedIn, Stack Overflow, Microsoft and Spotify. Reddit, LinkedIn and Stack Overflow also accept the codes they use to block automated checks (403, 429 and 999). Some sites may still block your server, so watch the results for a day, log in to the showcase account to adjust a monitor's status codes, or leave a site out. A site that shows down only because it blocks the checker would look like an outage on your public landing page.
 

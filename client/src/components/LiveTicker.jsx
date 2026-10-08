@@ -36,10 +36,38 @@ const TILES = [
 
 const DOT = { up: "#3ddc84", slow: "#ffb020", down: "#ff4b3a" };
 
-const iconFor = (domain) => ICON_URL.replace("{domain}", encodeURIComponent(domain));
+const KNOWN_DOMAINS = {
+  google: "google.com",
+  youtube: "youtube.com",
+  wikipedia: "wikipedia.org",
+  github: "github.com",
+  cloudflare: "cloudflare.com",
+  amazon: "amazon.com",
+  reddit: "reddit.com",
+  netflix: "netflix.com",
+  linkedin: "linkedin.com",
+  "stack overflow": "stackoverflow.com",
+  microsoft: "microsoft.com",
+  spotify: "spotify.com",
+};
 
-const subline = (monitor) => {
-  const base = monitor.domain;
+const DUCKDUCKGO = "https://icons.duckduckgo.com/ip3/{domain}.ico";
+
+const domainFor = (monitor) =>
+  monitor.domain || KNOWN_DOMAINS[monitor.name.trim().toLowerCase()] || null;
+
+const iconSources = (domain) => {
+  const encoded = encodeURIComponent(domain);
+  const sources = [
+    ICON_URL.replace("{domain}", encoded),
+    DUCKDUCKGO.replace("{domain}", encoded),
+    `https://${domain}/favicon.ico`,
+  ];
+
+  return sources.filter((source, index) => sources.indexOf(source) === index);
+};
+
+const subline = (monitor, base) => {
 
   if (monitor.status === "down") return base ? `${base} · Not responding` : "Not responding";
   if (monitor.status === "slow") {
@@ -51,11 +79,13 @@ const subline = (monitor) => {
 
 const Row = ({ monitor, index, hidden }) => {
   const [tileBg, tileFg] = TILES[index % TILES.length];
-  const [broken, setBroken] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const domain = domainFor(monitor);
+  const source = domain ? iconSources(domain)[attempt] : null;
 
   useEffect(() => {
-    setBroken(false);
-  }, [monitor.domain]);
+    setAttempt(0);
+  }, [domain]);
 
   return (
     <div
@@ -63,15 +93,16 @@ const Row = ({ monitor, index, hidden }) => {
       className="flex items-center gap-4 rounded-[26px] bg-white px-4 text-ink shadow-[0_14px_28px_-18px_rgba(16,21,54,0.45)] transition-[transform,box-shadow] duration-200 hover:-translate-y-[3px] hover:shadow-[0_20px_34px_-18px_rgba(16,21,54,0.55)] sm:gap-5 sm:px-6"
       style={{ height: ROW, marginBottom: GAP }}
     >
-      {monitor.domain && !broken ? (
+      {source ? (
         <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[18px] bg-cream">
           <img
-            src={iconFor(monitor.domain)}
+            key={source}
+            src={source}
             alt=""
             width="32"
             height="32"
             referrerPolicy="no-referrer"
-            onError={() => setBroken(true)}
+            onError={() => setAttempt((value) => value + 1)}
             className="h-8 w-8 object-contain"
           />
         </span>
@@ -91,7 +122,7 @@ const Row = ({ monitor, index, hidden }) => {
             className="block h-[7px] w-[7px] shrink-0 rounded-full"
             style={{ background: DOT[monitor.status] || "#c9c4b4" }}
           />
-          <span className="truncate">{subline(monitor)}</span>
+          <span className="truncate">{subline(monitor, domain)}</span>
         </span>
       </span>
 

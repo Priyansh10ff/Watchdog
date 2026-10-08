@@ -208,8 +208,8 @@ Interface:
 
 | # | Action | Expected | Result |
 |---|---|---|---|
-| 47 | Re-run `node scripts/seedShowcase.js`, wait for the 30 second cache, then reload the landing page | Each ticker row shows the site's own icon and its domain | |
-| 48 | Block the icon service (for example with the network tab set to offline for that host) and reload | Rows fall back to their coloured letter tiles and the page still works | |
+| 47 | Open the landing page with the `world` page published | Each ticker row shows the site's own icon and its domain. This works even before you re-run the showcase script, because the 12 sites are recognised by name | |
+| 48 | Block `www.google.com` for the page (network tab, block request domain) and reload | Rows switch to DuckDuckGo's icon service and still show icons. Block that too and they use each site's own favicon, and with all three blocked they show their coloured letter tiles | |
 | 49 | GET /status/world and read the JSON | Each monitor has a `domain` such as `github.com`. No full URL or path appears | |
 | 50 | On the status page settings, turn off Show site domains and save, then GET /status/world | Every `domain` is `null` and the ticker shows letter tiles | |
 | 51 | Turn it on for a monitor whose URL has a path or query, then read the public page | Only the host name is shown | |
