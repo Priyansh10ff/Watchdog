@@ -3,10 +3,16 @@ import User from "../models/user.model.js";
 import genToken from "../utils/generateToken.js";
 
 const isProd = process.env.NODE_ENV === "production";
+const requested = (process.env.COOKIE_SAMESITE || "").toLowerCase();
+const sameSite = ["lax", "strict", "none"].includes(requested)
+  ? requested
+  : isProd
+    ? "none"
+    : "lax";
 const cookieOptions = {
   httpOnly: true,
-  secure: isProd,
-  sameSite: isProd ? "none" : "lax",
+  secure: isProd || sameSite === "none",
+  sameSite,
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 

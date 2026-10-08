@@ -199,6 +199,57 @@ describe("register", () => {
   });
 });
 
+describe("cookie SameSite setting", () => {
+  const optionsFor = async (env, tag) => {
+    const saved = { NODE_ENV: process.env.NODE_ENV, COOKIE_SAMESITE: process.env.COOKIE_SAMESITE };
+
+    process.env.NODE_ENV = env.NODE_ENV;
+
+    if (env.COOKIE_SAMESITE === undefined) delete process.env.COOKIE_SAMESITE;
+    else process.env.COOKIE_SAMESITE = env.COOKIE_SAMESITE;
+
+    try {
+      const controller = await import(`../controllers/auth.controller.js?${tag}`);
+      stubRegisterModels();
+
+      const registered = mockRes();
+      await controller.registerUser({ body: valid }, registered);
+
+      const loggedOut = mockRes();
+      await controller.logoutUser({}, loggedOut);
+
+      return { set: registered.cookies.token.options, cleared: loggedOut.cleared.token };
+    } finally {
+      process.env.NODE_ENV = saved.NODE_ENV;
+      if (saved.COOKIE_SAMESITE === undefined) delete process.env.COOKIE_SAMESITE;
+      else process.env.COOKIE_SAMESITE = saved.COOKIE_SAMESITE;
+    }
+  };
+
+  const cases = [
+    ["production with no setting keeps cross-site cookies working", { NODE_ENV: "production" }, "none", true],
+    ["production with lax, for the Vercel proxy", { NODE_ENV: "production", COOKIE_SAMESITE: "lax" }, "lax", true],
+    ["production with strict", { NODE_ENV: "production", COOKIE_SAMESITE: "strict" }, "strict", true],
+    ["a setting in capitals", { NODE_ENV: "production", COOKIE_SAMESITE: "LAX" }, "lax", true],
+    ["production with an unknown value falls back to none", { NODE_ENV: "production", COOKIE_SAMESITE: "banana" }, "none", true],
+    ["production with an empty value falls back to none", { NODE_ENV: "production", COOKIE_SAMESITE: "" }, "none", true],
+    ["development with no setting is lax and not secure", { NODE_ENV: "development" }, "lax", false],
+    ["none is always secure, because browsers refuse it otherwise", { NODE_ENV: "development", COOKIE_SAMESITE: "none" }, "none", true],
+  ];
+
+  cases.forEach(([label, env, sameSite, secure], index) => {
+    it(`${label}`, async () => {
+      const { set, cleared } = await optionsFor(env, `samesite${index}`);
+
+      assert.equal(set.sameSite, sameSite);
+      assert.equal(set.secure, secure);
+      assert.equal(set.httpOnly, true);
+      assert.equal(cleared.sameSite, sameSite);
+      assert.equal(cleared.secure, secure);
+    });
+  });
+});
+
 describe("login", () => {
   const stored = async () => {
     const password = await bcrypt.hash("correct horse", 4);

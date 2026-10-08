@@ -45,7 +45,7 @@ Atlas M0 has no automatic backups. Export anything you cannot afford to lose.
 
 ## 3. API: Render
 
-**Fastest: the blueprint.** The repository contains `render.yaml`. In the Render dashboard choose New, then Blueprint, pick the repository and apply it. Render asks for two values: `MONGO_URI` (the Atlas string) and `CLIENT_URL` (type `https://placeholder.vercel.app` for now and change it in step 6). It creates `watchdog-api` and `watchdog-demo-target` in Singapore on the free plan, generates `JWT_SECRET` for you and sets everything else in the table below, including `TRUST_PROXY=2` for the Vercel proxy option. If you choose option A in section 5, change `TRUST_PROXY` to `1`.
+**Fastest: the blueprint.** The repository contains `render.yaml`. In the Render dashboard choose New, then Blueprint, pick the repository and apply it. Render asks for two values: `MONGO_URI` (the Atlas string) and `CLIENT_URL` (type `https://placeholder.vercel.app` for now and change it in step 6). It creates `watchdog-api` and `watchdog-demo-target` in Singapore on the free plan, generates `JWT_SECRET` for you and sets everything else in the table below, including `TRUST_PROXY=2` and `COOKIE_SAMESITE=lax` for the Vercel proxy option. If you choose option A in section 5, change `TRUST_PROXY` to `1` and delete `COOKIE_SAMESITE`.
 
 **By hand:** create a **Web Service** from the GitHub repository.
 
@@ -67,6 +67,7 @@ Environment variables:
 | `JWT_EXPIRES_IN` | `7d` |
 | `CLIENT_URL` | your Vercel URL, with no trailing slash |
 | `TRUST_PROXY` | `1` for option A below, `2` for option B (see section 5) |
+| `COOKIE_SAMESITE` | `lax` for option B. Leave it unset for option A, which needs `none` |
 | `API_RATE_LIMIT` | optional, requests per IP every 15 minutes across the API. Default `600`. Raise it if many people share one address, such as a campus network |
 
 After the deploy, open `https://YOUR-SERVICE.onrender.com/api/health`. It should return `{"success":true,"message":"Server is running"}`. The logs should show `DB Connected` and `Scheduler started`.
@@ -116,6 +117,7 @@ The session is an httpOnly cookie. When the client and the API are on different 
   }
   ```
 - Requests through the proxy wait for a sleeping Render instance to wake. Keep the instance awake (section 3).
+- Set `COOKIE_SAMESITE=lax` on Render. Because the browser only ever talks to the Vercel address, the cookie no longer has to work across sites. With `lax`, other websites cannot make your browser send it, which closes the door on cross-site request forgery. The default, `none`, is only needed for option A.
 - Set `TRUST_PROXY=2` on Render. The API then sees two proxy hops (Render and Vercel) and reads the visitor's real IP. With the default of `1` every visitor looks like Vercel's IP, so the login limit (10 per 15 minutes) and the status page limit (60 per minute) would be shared by everyone.
 
 ## 6. Demo target in production

@@ -23,6 +23,8 @@ services:
         sync: false
       - key: TRUST_PROXY
         value: "2"
+      - key: COOKIE_SAMESITE
+        value: lax
 
   - type: web
     name: watchdog-demo-target

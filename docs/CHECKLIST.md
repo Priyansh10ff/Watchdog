@@ -69,6 +69,7 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [ ] External pinger set to call `/api/health` every 5 minutes (never more than 14)
 - [ ] Cookie approach chosen and tested on Chrome and Safari ([deployment.md](./deployment.md) section 5)
 - [ ] `TRUST_PROXY` set to `2` if the Vercel proxy option is used
+- [ ] `COOKIE_SAMESITE` set to `lax` on Render if the Vercel proxy option is used
 - [ ] `client/vercel.json` added so direct page refreshes do not return 404
 - [ ] Public demo target deployed for the video
 - [ ] Showcase script run locally and the ticker visible on the landing page ([README](../README.md))

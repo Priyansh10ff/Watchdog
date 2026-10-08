@@ -145,7 +145,7 @@ The `/status/:slug` page in the client polls this endpoint every 60 seconds. The
 | Area | Measure |
 |---|---|
 | Passwords | bcrypt, 8 to 72 characters, never returned by the API |
-| Session | JWT in an httpOnly cookie, 7 days. In production the cookie is `secure` and `sameSite: none` |
+| Session | JWT in an httpOnly cookie, 7 days. In production the cookie is `secure`. `SameSite` is `none` by default so a separate client domain can use it, and `lax` with `COOKIE_SAMESITE=lax`, which is what the Vercel proxy setup uses: other websites then cannot make the browser send the cookie, which blocks cross-site request forgery on the routes that take no JSON body |
 | Input | Types are checked before use, which blocks NoSQL injection through objects. Ranges and lengths are validated. Unknown fields are never copied into documents |
 | Authorization | Every monitor and incident query is scoped to the logged-in user. Another user's resource returns 404 |
 | Abuse | Three limits per IP: 600 requests per 15 minutes across the API (`API_RATE_LIMIT`), 10 per 15 minutes on register and login, and 60 per minute on the public status page. Monitors limited to 20 per user. Check-now has a 10 second cooldown |
@@ -169,6 +169,7 @@ Server (`server/.env`):
 | `CLIENT_URL` | no | `http://localhost:5173` | Allowed browser origin, no trailing slash |
 | `DISABLE_SCHEDULER` | no | `false` | Set to `true` to run the API without the scheduler |
 | `API_RATE_LIMIT` | no | `600` | Requests allowed per IP every 15 minutes across the whole API, except the health check |
+| `COOKIE_SAMESITE` | no | `none` in production, `lax` otherwise | `SameSite` of the session cookie: `lax`, `strict` or `none`. Use `lax` behind the Vercel proxy, where the cookie is first-party. `none` is always sent as secure |
 | `TRUST_PROXY` | no | `1` | Number of proxy hops in front of the API in production, used to find the visitor's IP for rate limiting. Use `2` behind the Vercel proxy option |
 
 Client (`client/.env`):
@@ -201,7 +202,7 @@ On `SIGTERM` or `SIGINT`, which Render sends when it redeploys, the server stops
 
 ## 13. Testing
 
-Automated tests use Node's built-in test runner: 427 server tests and 57 client tests, run with `npm test` in each folder and in CI on every push. The server tests replace the database models with in-memory stand-ins and test the check engine against a local web server, so they need no database or internet. The full list is in [TESTING.md](./TESTING.md), which also holds the manual cases for the parts the automated tests do not cover (the React components, the animations and the real database).
+Automated tests use Node's built-in test runner: 435 server tests and 57 client tests, run with `npm test` in each folder and in CI on every push. The server tests replace the database models with in-memory stand-ins and test the check engine against a local web server, so they need no database or internet. The full list is in [TESTING.md](./TESTING.md), which also holds the manual cases for the parts the automated tests do not cover (the React components, the animations and the real database).
 
 ## 13a. Client animation
 
@@ -220,7 +221,7 @@ The edit page loads `GET /monitors/:id`, compares the form with the saved monito
 
 `components/LiveTicker.jsx` fetches `GET /api/status/<slug>` (the `VITE_SHOWCASE_SLUG` page, `world` by default) when the landing page loads and again every 60 seconds. If the request fails, the page does not exist or it has fewer than 5 monitors, the section renders nothing, so the landing page never shows made-up data.
 
-With data, it shows a window five rows tall. The rows are the monitors followed by the first five again. A GSAP timeline slides the track up one row every 3.2 seconds (2.5 seconds still, 0.7 seconds moving) and, after the last row, restarts from the identical repeated view, so the loop has no jump. It pauses when the section is off screen and when the pointer is over it. With reduced motion it shows the first five sites without scrolling. The repeated rows are hidden from screen readers. Each row shows the site's own icon, loaded by the visitor's browser with no referrer sent. The domain comes from the status page when the owner turned on `showDomains`, and otherwise from a built-in list of the 12 showcase sites matched by name (ignoring case and spaces), so the icons appear even before the setting is on. The browser tries three sources in turn, moving on when one fails to load: a favicon service (Google's by default, or `VITE_FAVICON_URL`) at 64 pixels shown at 32, then DuckDuckGo's icon service, then the site's own `/favicon.ico`. If all three fail, that row shows its coloured letter tile. The cost is that visitors' browsers contact those services, which are third parties. When the section first appears, ScrollTrigger positions are refreshed because the page below it moves.
+With data, it shows summary chips (sites watched, how many are down or slow, average response time) and a window five rows tall. The rows are the monitors followed by the first five again. A GSAP timeline slides the track up one row every 3.2 seconds (2.5 seconds still, 0.7 seconds moving) and, after the last row, restarts from the identical repeated view, so the loop has no jump. It pauses when the section is off screen and when the pointer is over it. With reduced motion it shows the first five sites without scrolling. The repeated rows are hidden from screen readers. When the page shares domains, each row shows the site's own icon: the browser loads it from a favicon service (Google's by default, or `VITE_FAVICON_URL`) using the host name, encoded, at 64 pixels shown at 32, with no referrer sent. If an icon fails to load, that row falls back to its coloured letter tile. The cost of this is that every visitor's browser contacts the icon service, which is a third party. When the section first appears, ScrollTrigger positions are refreshed because the page below it moves.
 
 ## 13d. Showcase setup script
 
