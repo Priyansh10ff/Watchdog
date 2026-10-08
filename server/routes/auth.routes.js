@@ -10,7 +10,6 @@ import authLimiter from "../middlewares/rateLimit.middleware.js";
 
 const authRoutes = express.Router();
 
-// Middleware runs left to right: limiter first, then the controller
 authRoutes.post("/register", authLimiter, registerUser);
 authRoutes.post("/login", authLimiter, loginUser);
 authRoutes.get("/me", isAuthenticated, getUser);

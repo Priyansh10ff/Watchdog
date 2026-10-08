@@ -1,7 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-// Wrap pages like login and signup. A logged-in user is sent to the dashboard instead.
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
@@ -21,6 +20,3 @@ const PublicRoute = ({ children }) => {
 };
 
 export default PublicRoute;
-
-// NOTE: this is UX only. Real protection is the isAuthenticated middleware on the server.
-// Anyone can edit frontend code, but they cannot get data from protected API routes.

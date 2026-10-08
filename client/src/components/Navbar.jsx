@@ -13,7 +13,6 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      // The cookie is httpOnly, so only the server can clear it
       await axiosInstance.post("/auth/logout");
     } catch (error) {
       console.log(error);
@@ -26,9 +25,8 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/90 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        {/* Logo */}
         <Link to="/dashboard" className="text-2xl font-bold tracking-tight">
-          Uptime<span className="text-[#ff6b35]">Tracker</span>
+          Watch<span className="text-[#ff6b35]">dog</span>
         </Link>
 
         <div className="flex items-center gap-7">

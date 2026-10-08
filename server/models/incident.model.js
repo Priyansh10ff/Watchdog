@@ -47,14 +47,6 @@ const incidentSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    downEmailSent: {
-      type: Boolean,
-      default: false,
-    },
-    recoveryEmailSent: {
-      type: Boolean,
-      default: false,
-    },
   },
   { timestamps: true },
 );
