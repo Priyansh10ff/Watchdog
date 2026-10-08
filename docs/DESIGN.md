@@ -1,8 +1,6 @@
 # Watchdog: Design System
 
-The interface is warm, rounded and calm. Pages sit on a soft beige background, content lives on white cards, and a single orange accent marks the main action and the brand. Status is the only place colour carries meaning: green for up, red for down, orange for paused, yellow for acknowledged.
-
-This document describes the interface as built. A planned redesign is described at the end.
+The interface is bright, rounded and alive. A cobalt page, white cards, one butter-yellow action colour, and a mascot, **Sentry**, a watchdog whose mood is the status of your sites. He naps when everything is up, listens when something is slow, and barks when something is down, and the whole page turns coral with him.
 
 Related: [PRODUCT.md](./PRODUCT.md) · [TECHNICAL.md](./TECHNICAL.md) · [PRD.md](./PRD.md)
 
@@ -10,119 +8,133 @@ Related: [PRODUCT.md](./PRODUCT.md) · [TECHNICAL.md](./TECHNICAL.md) · [PRD.md
 
 ## 1. Principles
 
-- **Status is colour, everything else is quiet.** Green, red, orange and yellow appear only on status badges, banners and error text.
-- **One orange action per view.** Orange (`#ff9918`) is for the primary button. The brand and active links use a deeper orange (`#ff6b35`).
-- **Soft and rounded.** Cards use large radii, buttons and inputs are pills. Separation comes from white cards on a beige page, not from heavy borders.
-- **Say what is happening.** Every list has a loading, empty and error state. Errors say what failed and offer a retry.
-- **Live without being noisy.** Data refreshes silently every 30 seconds, with no spinner flashing.
+- **The mascot is the status.** Sentry's mood and the page colour carry the overall state. Everything else stays quiet so the state is the first thing you see.
+- **Colour means something.** Coral is an outage. Butter is the main action. Green, amber and red appear only on status pills.
+- **Soft and rounded.** Large radii, pill buttons, white cards with a soft shadow on a saturated background.
+- **Motion has a job.** Animation shows state changes (Sentry waking up), guides attention (the scroll story) or adds delight on the landing page. App screens stay calm.
+- **Say what is happening.** Every list has loading, empty and error states with a retry, and errors say what failed.
+- **Accessible by default.** Text pairs meet WCAG AA, focus is always visible, and motion switches off under `prefers-reduced-motion`.
 
 ## 2. Colour
 
-Colours are applied with Tailwind utilities and arbitrary values.
+Tokens live in `client/src/index.css` under `@theme`, so Tailwind classes such as `bg-cobalt` and `text-soft` exist.
 
-| Role | Value | Use |
+| Token | Hex | Use |
 |---|---|---|
-| Page background | `#f5f2ed` | Dashboard, incidents, add monitor |
-| Auth background | `#D8D0C4` | Login and signup |
-| Surface | `#ffffff` | Cards, auth card |
-| Ink | `#303030` | Primary text, dark buttons, side panel |
-| Secondary text | `#999999` | Descriptions and meta text |
-| Label text | `#aaaaaa` | Small labels above values |
-| Form input border | `#d5d5d5`, focus `#aaaaaa` | Inputs |
-| Accent | `#ff9918`, hover `#f58c08` | Primary buttons |
-| Brand and active | `#ff6b35` | Logo, active nav link, link hover |
-| Neutral button | `#f5f2ed`, hover `#303030` with white text | Secondary buttons, logout |
-| Danger | `bg-red-50` with `text-red-600`, hover solid red | Delete, error text |
+| `cobalt` | `#2b46ff` | Landing hero, login and signup |
+| `deep` | `#1f35d9` | App pages (dashboard, incidents, add monitor) |
+| `coral` | `#ff5a3c` | Outage state on the landing page, login errors |
+| `redwall` | `#b92f19` | Dashboard background while something is down |
+| `ink` | `#101536` | Text on light surfaces, dark buttons, banners |
+| `soft` | `#4a4f73` | Secondary text on white |
+| `butter` | `#ffe45e` | Primary action, active states, highlights |
+| `cream` | `#fff6e5` | Light sections and inset panels |
+| `sand` | `#ffcf86` | Sentry's fur |
 
-Status colours:
+Status pills:
 
-| Status | Badge |
+| Status | Colours |
 |---|---|
-| Up, Resolved | green text on `green-50` |
-| Down, Open | red text on `red-50` |
-| Pending (unknown) | gray text on `gray-100` |
-| Paused | orange text on `orange-50`, dot `#ff9918` |
-| Acknowledged | yellow text on `yellow-50` |
+| Up, Resolved | `#0b5a32` on `#d3f5e2` |
+| Slow | `#5c3d00` on `#ffd966` |
+| Down, Open | white on `#c8321a` |
+| Acknowledged | ink on butter |
+| Paused | `#3d3a31` on `#d6d1c4` |
+| Pending | `#3b3a52` on `#e6e3ee` |
+
+Tiles change colour with state: white when up or pending, `#fff1c4` when slow, `#ffd9d0` when down, `#ece8df` when paused.
 
 ## 3. Type
 
-The interface uses the Tailwind default sans stack (system fonts). Sizes are set per element.
+| Role | Font | Notes |
+|---|---|---|
+| Display | Bricolage Grotesque 500 to 800 | Headlines, big numbers, brand. Tight tracking |
+| UI and body | DM Sans 400 to 700 | 15 to 18 px body |
 
-| Role | Size and weight |
-|---|---|
-| Page title | 24 px, semibold |
-| Card title | 17 px, semibold |
-| Body and values | 13 to 14 px |
-| Labels | 12 to 13 px |
-| Auth headline | 34 px, semibold, tight tracking |
+Both are loaded from Google Fonts in `index.html`.
 
 ## 4. Layout
 
-- Content width is `max-w-7xl` on the dashboard and `max-w-4xl` on the incidents page, with responsive side padding.
-- The navbar is sticky with a translucent white background, a bottom border and a blur.
-- Monitors are cards in a responsive grid: one column on mobile, two from `md`, three from `lg`.
-- Incidents are a vertical list of cards.
-- Login and signup use one large rounded card. The form is on the left and a dark panel with the product message is on the right, hidden below `md`.
+- Content width is `1312px` on the dashboard and landing page and `960px` on the incidents page, with 24 px side padding on mobile and 64 px from `sm`.
+- Monitors are tiles in a grid: one column on mobile, two from `md`, three from `lg`. Problem monitors sort first.
+- The dashboard header pairs the small Sentry avatar with a headline that summarises the state ("API is down", "All 5 monitors are up").
+- Login and signup are two columns on large screens: the form on the left and a large Sentry on the right who follows the cursor. Below `lg` only the form shows.
+- The landing page is a sequence of full-width sections: hero, marquee, scroll story, tiles, closing call to action.
 
 ## 5. Components
 
 | Component | Notes |
 |---|---|
-| `Navbar` | Brand, Dashboard and Incidents links with an active colour, user name, logout |
-| `MonitorCard` | Name, URL, status badge, interval, last check, response time, pause or resume, delete |
-| `StatusBadge` | Pill with a dot and label for monitor states (up, down, pending, paused) and incident states (open, acknowledged, resolved) |
-| `IncidentList` | Card per incident with start, duration, failed checks, cause, latest error and an acknowledge button |
-| `AuthSidePanel` | Dark panel with the tagline and a status legend |
-| `ProtectedRoute`, `PublicRoute` | Redirect based on the session, with a loading state |
+| `Sentry` | The large animated dog. Props `mode` (`up`, `slow`, `down`), `scale`, `intro`. Exposes `lookAt` so a parent can make his eyes follow the cursor |
+| `SentryAvatar` | A small flat version used in the dashboard header and the page loader |
+| `MonitorTile` | Name, URL, status pill, big response time, interval, last check, pause or resume, delete. Shakes briefly when down |
+| `StatusBadge` | Pill for monitor and incident states |
+| `IncidentList` | White card per incident: start, duration, failed checks, cause, latest error, acknowledge |
+| `AuthLayout` | Two-column layout for login and signup with the reacting Sentry |
+| `Navbar` | Brand, Monitors and Incidents links, Add monitor, user name, log out |
+| `FormField`, `ChipGroup` | Label, hint and input wrapper; radio-style chips for interval, timeout, method and threshold |
+| `ui.js` | Shared class strings for cards, inputs and buttons (butter, ink, outline) |
 
-Form inputs are pills with a light border. The primary button is an orange pill that dims when disabled.
+## 6. Sentry
 
-## 6. States and feedback
+| Mode | Appearance | Used when |
+|---|---|---|
+| `up` | Eyes closed, ears drooped, floating z's, slow breathing | Everything is up, or nothing to show |
+| `slow` | Eyes open and tracking, ears raised, brows lifted | A monitor answers slowly (over 1.5 seconds), or a form is being filled in |
+| `down` | Eyes wide, brows angled, mouth barking, sound waves, shake | A monitor is down, or a form returned an error |
+
+On login and signup he closes his eyes while you type a password and barks when the server returns an error. The mode is derived from the monitor list on the dashboard (`utils/monitorState.js`).
+
+## 7. Motion
+
+Animation uses GSAP, with ScrollTrigger on the landing page only. The landing route is lazy-loaded, so the app screens do not pay for it.
+
+| Where | What |
+|---|---|
+| Landing hero | Headline words slide in, Sentry bounces in, status chips pop in and drift, his eyes and head follow the cursor, a soft light follows the mouse, the All up, Slow and Down buttons change his mood and the page colour |
+| Marquee | A looping band that speeds up with scroll velocity |
+| Scroll story | A pinned four-step sequence scrubbed by the scrollbar: sites arrive, Sentry checks them, one goes down and an incident opens, it recovers. The page turns coral during the outage. Shown at 1280 px and wider, and as stacked cards below that |
+| Tiles | Rise in with a stagger, tilt toward the cursor, and the "Break the API" button turns one red |
+| Closing line | Words fade in as you scroll |
+| Dashboard and forms | Sentry avatar changes with the overall state, tiles shake briefly when down, colour changes use CSS transitions |
+
+Reduced motion: all looping and scroll animation is skipped, mode changes are instant, and the scroll story becomes the stacked cards.
+
+## 8. States and feedback
 
 | State | Treatment |
 |---|---|
-| Loading | Plain text such as "Loading monitors...". Buttons switch to a working label and disable |
-| Empty | A dashed white card with one line of explanation and, on the dashboard, a button to add the first monitor |
-| Error (page) | A white card with the message and a Try again button |
-| Error (action) | A red line under the page header |
-| Error (form) | A red line above the fields with the server's message |
+| Loading | Pulsing placeholder blocks the shape of the content |
+| Empty | A white card with one line and, on the dashboard, a button to add the first monitor |
+| Error (page) | A white card with the message in red and a Try again button |
+| Error (action) | An ink banner above the content with `role="alert"` |
+| Error (form) | A red banner above the fields with `role="alert"` and the server's message |
 | Confirm | The browser confirm dialog before deleting a monitor |
 | Live change | The dashboard and incidents refresh every 30 seconds without a loading state |
 
-## 7. Writing
+## 9. Writing
 
-- Plain and specific. Failures say what happened: "Unexpected status 503", "Timed out after 5000 ms".
+- Plain and specific: "Unexpected status 503", "Timed out after 5000 ms".
 - Time is shown as relative text ("5 min ago") and durations as `2m 5s`.
 - Server messages are written to be shown to users as they are.
 
-## 8. Accessibility
+## 10. Accessibility
 
-Measured contrast of the current colours:
+Measured contrast of the main pairs:
 
-| Pair | Ratio | Result |
-|---|---|---|
-| `#303030` on `#f5f2ed` | 11.8:1 | Pass |
-| `#303030` on white | 13.2:1 | Pass |
-| `#303030` on `#ff9918` | 6.2:1 | Pass |
-| `#bdbdbd` on `#303030` | 7.0:1 | Pass |
-| `#999999` on white | 2.9:1 | Fails AA |
-| `#aaaaaa` on white | 2.3:1 | Fails AA |
-| White on `#ff9918` (primary button text) | 2.1:1 | Fails AA |
-| `#ff6b35` on white | 2.8:1 | Fails AA |
-
-Known gaps to fix in the redesign: secondary and label text is too light, the white text on the orange button is too low in contrast (dark text on orange passes), and the brand orange is too light for small text. Text inputs remove the browser focus outline and only change the border from `#d5d5d5` to `#aaaaaa`, which is hard to see. Loading and error messages are plain text and are not announced to screen readers.
-
-## 9. Planned redesign
-
-The visual design is deferred until the features are complete. The intended direction is a mascot-led look (Sentry, a watchdog whose mood mirrors the status), with these tokens:
-
-| Role | Value |
+| Pair | Ratio |
 |---|---|
-| Cobalt (hero) | `#2b46ff` |
-| Deep cobalt | `#1f35d9` |
-| Coral (outage) | `#ff5a3c` |
-| Ink | `#101536` |
-| Butter | `#ffe45e` |
-| Cream | `#fff6e5` |
+| White on cobalt `#2b46ff` | 6.1:1 |
+| White on deep `#1f35d9` | 8.2:1 |
+| White on redwall `#b92f19` | 6.0:1 |
+| Ink on coral `#ff5a3c` | 5.7:1 |
+| Ink on butter | 14.0:1 |
+| Butter on cobalt | 4.8:1 |
+| Ink on white | 17.8:1 |
+| Soft `#4a4f73` on white | 7.9:1 |
+| `#0b5a32` on `#d3f5e2` (Up pill) | 7.1:1 |
+| White on `#c8321a` (Down pill) | 5.4:1 |
 
-Fonts would be Bricolage Grotesque for display and DM Sans for body. The page would turn coral during an outage, and motion (GSAP with scroll-driven sections) would be used for the landing page. The redesign should also close the accessibility gaps in section 8.
+White text is never used on coral (3.1:1). Focus is a 3 px ink outline with a butter halo on every interactive element. Form fields have labels and hints wired to inputs, errors use `role="alert"`, and Sentry is decorative and hidden from assistive technology.
+
+Known gaps: the page-level loading and error cards are not announced to screen readers, the landing page uses fixed-size compositions that have not been tested on phones, and keyboard-only use of the scroll story has not been checked.

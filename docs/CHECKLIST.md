@@ -65,11 +65,14 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 
 ## 5. Accessibility and interface
 
-- [ ] Fix low-contrast secondary text, labels and the orange button text ([DESIGN.md](./DESIGN.md) section 8)
-- [ ] Visible focus style on text inputs
-- [ ] Error messages announced to screen readers (`role="alert"`)
+- [x] Text contrast meets WCAG AA ([DESIGN.md](./DESIGN.md) section 10)
+- [x] Visible focus style on every interactive element
+- [x] Form and action errors announced to screen readers (`role="alert"`)
+- [ ] Page-level loading and error cards announced to screen readers
 - [ ] Layout checked at 360 px, tablet and desktop widths
 - [ ] Keyboard-only walkthrough: sign up, add a monitor, acknowledge an incident
+- [ ] Landing page checked on a phone and a tablet
+- [ ] Reduced-motion setting turned on: landing page still reads correctly
 
 ## 6. Documentation
 

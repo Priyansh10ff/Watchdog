@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axiosInstance from "../services/api";
 import Navbar from "../components/Navbar";
-import MonitorCard from "../components/MonitorCard";
+import SentryAvatar from "../components/SentryAvatar";
+import MonitorTile from "../components/MonitorTile";
+import { butterBtn, cardClass, inkBtn } from "../components/ui";
+import { sortMonitors, summarize } from "../utils/monitorState";
 import { formatDuration } from "../utils/time";
 
 const REFRESH_MS = 30000;
@@ -37,7 +40,10 @@ const Dashboard = () => {
       setError("");
     } catch (error) {
       if (!silent) {
-        setError(error.response?.data?.message || "Could not load monitors.");
+        setError(
+          error.response?.data?.message ||
+            "Could not reach the server. Check your connection and try again.",
+        );
       }
     } finally {
       if (!silent) setLoading(false);
@@ -63,7 +69,7 @@ const Dashboard = () => {
         prev.map((m) => (m._id === id ? response.data.monitor : m)),
       );
     } catch (error) {
-      setActionError(error.response?.data?.message || "Action failed.");
+      setActionError(error.response?.data?.message || "Could not update the monitor.");
     } finally {
       setBusyId(null);
     }
@@ -84,66 +90,56 @@ const Dashboard = () => {
         prev.filter((incident) => incident.monitor?._id !== monitor._id),
       );
     } catch (error) {
-      setActionError(error.response?.data?.message || "Delete failed.");
+      setActionError(error.response?.data?.message || "Could not delete the monitor.");
     } finally {
       setBusyId(null);
     }
   };
 
-  const upCount = monitors.filter((m) => m.isActive && m.status === "up").length;
-  const downCount = monitors.filter((m) => m.isActive && m.status === "down").length;
-  const pausedCount = monitors.filter((m) => !m.isActive).length;
+  const ready = !loading && !error;
+  const summary = summarize(monitors);
+  const sorted = sortMonitors(monitors);
 
   return (
-    <div className="min-h-screen bg-[#f5f2ed]">
+    <div
+      className={`min-h-screen text-white transition-colors duration-500 ${
+        ready && summary.mode === "down" ? "bg-redwall" : "bg-deep"
+      }`}
+    >
       <Navbar />
 
-      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <main className="mx-auto max-w-[1312px] px-6 pb-24 pt-4 sm:px-16">
+        <header className="flex flex-wrap items-center gap-6">
+          <SentryAvatar mode={ready ? summary.mode : "up"} size={104} />
           <div>
-            <h1 className="text-2xl font-semibold text-[#303030]">
-              Your monitors
+            <h1 className="font-display text-[clamp(34px,5vw,56px)] font-extrabold leading-none tracking-[-2px]">
+              {loading ? "Loading monitors" : error ? "Could not load" : summary.headline}
             </h1>
-            {!loading && !error && (
-              <p className="mt-1 text-[13px] text-[#999999]">
-                {monitors.length} total · {upCount} up · {downCount} down ·{" "}
-                {pausedCount} paused
-              </p>
-            )}
+            {ready && <p className="mt-3 text-[18px]">{summary.hint}</p>}
           </div>
-
-          <Link
-            to="/monitors/new"
-            className="rounded-full bg-[#ff9918] px-5 py-3 text-[13px] font-medium text-white transition hover:bg-[#f58c08]"
-          >
-            + Add monitor
-          </Link>
-        </div>
+        </header>
 
         {openIncidents.length > 0 && (
-          <div className="mt-6 rounded-3xl bg-red-50 p-5 text-[13px] text-red-800">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="font-semibold">
+          <div className="mt-8 rounded-[28px] bg-ink p-6 text-white">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <p className="text-[18px] font-bold">
                 {openIncidents.length === 1
                   ? "1 open incident"
                   : `${openIncidents.length} open incidents`}
               </p>
-              <Link
-                to="/incidents"
-                className="rounded-full bg-red-600 px-4 py-2 font-semibold text-white transition hover:bg-red-700"
-              >
+              <Link to="/incidents" className={butterBtn}>
                 View incidents
               </Link>
             </div>
-            <ul className="mt-3 space-y-1">
+            <ul className="mt-3 space-y-1 text-[15px]">
               {openIncidents.map((incident) => (
                 <li key={incident._id}>
-                  <span className="font-medium">
+                  <span className="font-bold">
                     {incident.monitor?.name || "Deleted monitor"}
                   </span>{" "}
                   down for{" "}
                   {formatDuration(Date.now() - new Date(incident.startedAt).getTime())}
-                  {incident.status === "acknowledged" && " · acknowledged"}
+                  {incident.status === "acknowledged" && ", acknowledged"}
                 </li>
               ))}
             </ul>
@@ -151,56 +147,66 @@ const Dashboard = () => {
         )}
 
         {actionError && (
-          <p className="mt-4 text-[13px] text-red-500">{actionError}</p>
+          <div
+            role="alert"
+            className="mt-6 rounded-2xl bg-ink px-4 py-3 text-[14px] font-medium text-butter"
+          >
+            {actionError}
+          </div>
         )}
 
         {loading && (
-          <p className="mt-10 text-center text-[13px] text-[#999999]">
-            Loading monitors...
-          </p>
+          <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2].map((item) => (
+              <div key={item} className="h-[300px] animate-pulse rounded-[32px] bg-white/10" />
+            ))}
+          </div>
         )}
 
         {error && (
-          <div className="mt-10 rounded-3xl bg-white p-10 text-center">
-            <p className="text-[14px] text-red-500">{error}</p>
-            <button
-              onClick={() => fetchMonitors()}
-              className="mt-4 rounded-full bg-[#303030] px-5 py-2 text-[13px] font-medium text-white"
-            >
+          <div className={`${cardClass} mt-10 p-8`}>
+            <p className="text-[16px] font-medium text-[#c8321a]">{error}</p>
+            <button onClick={() => fetchMonitors()} className={`${inkBtn} mt-5`}>
               Try again
             </button>
           </div>
         )}
 
-        {!loading && !error && monitors.length === 0 && (
-          <div className="mt-10 rounded-3xl border border-dashed border-[#d5d5d5] bg-white p-10 text-center">
-            <p className="text-[15px] font-medium text-[#303030]">
-              No monitors yet
+        {ready && monitors.length === 0 && (
+          <div className={`${cardClass} mt-10 p-10`}>
+            <h2 className="font-display text-[34px] font-extrabold tracking-[-1px]">
+              Nothing to watch yet
+            </h2>
+            <p className="mt-2 max-w-lg text-[17px] text-soft">
+              Paste the address of a website or API. Watchdog will request it on a
+              schedule and open an incident when it stops responding.
             </p>
-            <p className="mt-1 text-[13px] text-[#999999]">
-              Add a website or API to start tracking its uptime.
-            </p>
-            <Link
-              to="/monitors/new"
-              className="mt-5 inline-block rounded-full bg-[#ff9918] px-5 py-2 text-[13px] font-medium text-white hover:bg-[#f58c08]"
-            >
+            <Link to="/monitors/new" className={`${inkBtn} mt-6`}>
               Add your first monitor
             </Link>
           </div>
         )}
 
-        {!loading && !error && monitors.length > 0 && (
-          <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {monitors.map((monitor) => (
-              <MonitorCard
-                key={monitor._id}
-                monitor={monitor}
-                onToggle={handleToggle}
-                onDelete={handleDelete}
-                busy={busyId === monitor._id}
-              />
-            ))}
-          </div>
+        {ready && monitors.length > 0 && (
+          <>
+            <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {sorted.map((monitor) => (
+                <MonitorTile
+                  key={monitor._id}
+                  monitor={monitor}
+                  busy={busyId === monitor._id}
+                  onToggle={handleToggle}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+
+            <div className="mt-10">
+              <Link to="/monitors/new" className={butterBtn}>
+                Add monitor
+              </Link>
+            </div>
+          </>
         )}
       </main>
     </div>

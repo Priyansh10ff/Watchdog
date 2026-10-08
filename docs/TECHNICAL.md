@@ -10,7 +10,7 @@ Details live in [api.md](./api.md) (endpoints), [database-schema.md](./database-
 
 | Layer | Choice | Notes |
 |---|---|---|
-| Client | React 19, Vite, React Router 7, Tailwind CSS v4, Axios | State is local to pages plus an auth context |
+| Client | React 19, Vite, React Router 7, Tailwind CSS v4, Axios, GSAP | State is local to pages plus an auth context. GSAP drives Sentry and the landing page |
 | Server | Node.js 20 or newer, Express 5 | ES modules |
 | Scheduling | node-cron | Runs inside the API process |
 | HTTP checks | Axios with custom agents | Timeout, redirects and DNS control |
@@ -24,11 +24,11 @@ Details live in [api.md](./api.md) (endpoints), [database-schema.md](./database-
 Watchdog/
 ├── client/                  React app
 │   └── src/
-│       ├── pages/           Login, SignUp, Dashboard, AddMonitor, Incidents
-│       ├── components/      Navbar, MonitorCard, StatusBadge, IncidentList, AuthSidePanel, route guards
+│       ├── pages/           Landing, Login, SignUp, Dashboard, AddMonitor, Incidents
+│       ├── components/      Sentry, SentryAvatar, MonitorTile, StatusBadge, IncidentList, Navbar, AuthLayout, route guards
 │       ├── context/         AuthContext
 │       ├── services/        api.js (Axios instance)
-│       └── utils/           time.js
+│       └── utils/           monitorState.js, sentryPose.js, time.js
 ├── server/
 │   ├── index.js             App setup, DB connection, scheduler start
 │   ├── controllers/         auth, monitor, incident
@@ -173,6 +173,13 @@ See the README for the commands. Notes:
 ## 13. Testing
 
 Manual test cases with expected results are in [TESTING.md](./TESTING.md). Automated tests are not written yet (FR20). The planned first targets are the status machine, `isPrivateIp`, `validateUrl` and the incident transitions, since they are pure logic.
+
+## 13a. Client animation
+
+- `components/Sentry.jsx` is the animated dog. It is plain DOM with `data-part` attributes. `utils/sentryPose.js` defines three poses (`up`, `slow`, `down`) as values for ears, eyes, brows, mouth, sound waves and z's, and helpers to apply them with GSAP or to add them to a timeline.
+- When the `mode` prop changes, `Sentry` tweens to the new pose and starts or stops its barking loops (shake, jaw, waves). Idle loops (breathing, blinking, floating z's) run inside a `gsap.context`, which is reverted on unmount.
+- The landing page (`pages/Landing.jsx`) is lazy-loaded so ScrollTrigger is not part of the main bundle. Its scroll story is one scrubbed timeline over a pinned (sticky) stage. It is created only at 1280 px and wider and when reduced motion is off. Below that, or with reduced motion, the story is shown as stacked cards.
+- React owns the markup and the colour classes. GSAP owns transforms and the properties it tweens, so React state never writes to the same inline styles.
 
 ## 14. Limits and known limitations
 

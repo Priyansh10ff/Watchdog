@@ -1,15 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axiosInstance from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import Logo from "./Logo";
+import { butterBtnSm, outlineBtn } from "./ui";
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, setUser } = useAuth();
-
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
 
   const handleLogout = async () => {
     try {
@@ -22,45 +20,35 @@ const Navbar = () => {
     }
   };
 
+  const linkClass = (path) =>
+    `text-[15px] font-semibold underline-offset-8 transition-colors hover:text-butter ${
+      location.pathname === path ? "text-butter underline" : "text-white"
+    }`;
+
   return (
-    <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/90 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Link to="/dashboard" className="text-2xl font-bold tracking-tight">
-          Watch<span className="text-[#ff6b35]">dog</span>
+    <nav className="text-white">
+      <div className="mx-auto flex max-w-[1312px] flex-wrap items-center justify-between gap-4 px-6 py-6 sm:px-16">
+        <Link to="/dashboard">
+          <Logo />
         </Link>
 
-        <div className="flex items-center gap-7">
-          <Link
-            to="/dashboard"
-            className={`text-sm font-medium transition-colors ${
-              isActive("/dashboard")
-                ? "text-[#ff6b35]"
-                : "text-gray-600 hover:text-[#ff6b35]"
-            }`}
-          >
-            Dashboard
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+          <Link to="/dashboard" className={linkClass("/dashboard")}>
+            Monitors
           </Link>
-
-          <Link
-            to="/incidents"
-            className={`text-sm font-medium transition-colors ${
-              isActive("/incidents")
-                ? "text-[#ff6b35]"
-                : "text-gray-600 hover:text-[#ff6b35]"
-            }`}
-          >
+          <Link to="/incidents" className={linkClass("/incidents")}>
             Incidents
           </Link>
+          <Link to="/monitors/new" className={butterBtnSm}>
+            Add monitor
+          </Link>
 
-          <span className="hidden text-sm text-gray-500 sm:block">
+          <span className="hidden max-w-[160px] truncate text-[15px] font-medium md:block">
             {user?.name}
           </span>
 
-          <button
-            onClick={handleLogout}
-            className="rounded-full bg-[#f5f2ed] px-4 py-2 text-sm font-semibold transition-all hover:bg-[#303030] hover:text-white active:scale-95"
-          >
-            Logout
+          <button onClick={handleLogout} className={outlineBtn}>
+            Log out
           </button>
         </div>
       </div>

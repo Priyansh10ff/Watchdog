@@ -149,7 +149,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | FR20 | Automated tests for the status machine, validators and incidents | Should | Open |
 | FR21 | Rate limit on the rest of the API | Should | Open |
 | FR22 | Deployment on Render, Vercel and Atlas | Must | Open |
-| FR23 | UI redesign | Could | Open (last) |
+| FR23 | Sentry mascot UI with animated landing page and scroll story | Could | Done |
 
 ## 7. Non-functional requirements
 
@@ -161,7 +161,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | **Reliability** | The server only listens once MongoDB is connected. A claimed monitor is leased for 2 minutes, so a crashed check is retried. The scheduler skips a run while the previous one is still going. One monitor's error never stops the others. |
 | **Performance** | Up to 200 due monitors are claimed per run and checked 10 at a time. Responses are limited to 2 MB. List endpoints are paginated. Indexes cover the dashboard, scheduler and incident queries. |
 | **Compatibility** | Latest two versions of Chrome, Edge, Firefox and Safari. Layouts work from 360 px wide. |
-| **Accessibility** | Visible focus, labelled form fields, semantic buttons and links. Contrast gaps are listed in [DESIGN.md](./DESIGN.md) and tracked in [CHECKLIST.md](./CHECKLIST.md). |
+| **Accessibility** | Text pairs meet WCAG AA, visible focus, labelled form fields, semantic buttons and links, reduced-motion support. Remaining gaps are listed in [DESIGN.md](./DESIGN.md) and tracked in [CHECKLIST.md](./CHECKLIST.md). |
 | **Maintainability** | Configuration from environment variables only. Logic lives in services, controllers stay thin. Manual test cases are in [TESTING.md](./TESTING.md). Automated tests are planned (FR20). |
 
 ## 8. Success metrics
@@ -182,7 +182,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 |---|---|
 | **v1.0 (end-term submission)** | Everything marked Done, plus the public status page (FR14), automated tests (FR20), deployment (FR22), documentation and demo video |
 | **v1.1** | Charts (FR15), SSL expiry (FR16), encrypted custom headers (FR17), rate limit on the whole API (FR21) |
-| **v1.2** | Maintenance windows (FR18), second-region checker (FR19), UI redesign (FR23) |
+| **v1.2** | Maintenance windows (FR18), second-region checker (FR19) |
 | **Later** | Outbound notifications (email, Slack, Discord), teams, status page custom domains |
 
 ## 10. Risks and open questions

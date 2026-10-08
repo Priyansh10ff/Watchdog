@@ -2,11 +2,38 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../services/api";
 import Navbar from "../components/Navbar";
+import FormField from "../components/FormField";
+import ChipGroup from "../components/ChipGroup";
+import { cardClass, inkBtn, inputClass } from "../components/ui";
 
-const inputClass =
-  "w-full h-[44px] rounded-full border border-[#d5d5d5] bg-white px-6 text-[13px] text-[#333] outline-none focus:border-[#aaaaaa] placeholder:text-[#c4c4c4]";
+const intervalOptions = [1, 2, 5, 10, 15, 30, 60].map((n) => ({
+  value: n,
+  label: `${n} min`,
+}));
 
-const labelClass = "mb-2 ml-2 block text-[12px] font-medium text-[#777777]";
+const timeoutOptions = [5, 10, 15, 30].map((n) => ({
+  value: n,
+  label: `${n}s`,
+}));
+
+const methodOptions = [
+  { value: "GET", label: "GET" },
+  { value: "HEAD", label: "HEAD" },
+];
+
+const thresholdOptions = [1, 2, 3, 5].map((n) => ({
+  value: n,
+  label: String(n),
+}));
+
+const SectionTitle = ({ title, text }) => (
+  <div>
+    <h2 className="font-display text-[26px] font-extrabold tracking-[-0.5px]">
+      {title}
+    </h2>
+    <p className="text-[14px] text-soft">{text}</p>
+  </div>
+);
 
 const AddMonitor = () => {
   const [form, setForm] = useState({
@@ -28,6 +55,15 @@ const AddMonitor = () => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const setField = (name, value) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const codes = form.expectedStatusCodes
+    .split(",")
+    .map((code) => code.trim())
+    .filter(Boolean);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErr("");
@@ -39,139 +75,157 @@ const AddMonitor = () => {
         method: form.method,
         intervalMinutes: Number(form.intervalMinutes),
         timeoutMs: Number(form.timeoutSeconds) * 1000,
-        expectedStatusCodes: form.expectedStatusCodes
-          .split(",")
-          .map((code) => code.trim())
-          .filter(Boolean)
-          .map(Number),
+        expectedStatusCodes: codes.map(Number),
         keyword: form.keyword,
         failureThreshold: Number(form.failureThreshold),
       });
 
       navigate("/dashboard");
     } catch (error) {
-      setErr(error.response?.data?.message || "Could not add monitor.");
+      setErr(
+        error.response?.data?.message ||
+          "Could not reach the server. Check your connection and try again.",
+      );
     } finally {
       setLoader(false);
     }
   };
 
+  const preview = [
+    `${form.method} ${form.url || "https://your-site.com"}`,
+    `every ${form.intervalMinutes} min, timeout ${form.timeoutSeconds}s`,
+    `up when the status is ${codes.length ? codes.join(", ") : "not set"}`,
+    form.keyword ? `and the page contains "${form.keyword}"` : null,
+    `incident after ${form.failureThreshold} failed ${
+      form.failureThreshold === "1" ? "check" : "checks"
+    } in a row`,
+  ].filter(Boolean);
+
   return (
-    <div className="min-h-screen bg-[#f5f2ed]">
+    <div className="min-h-screen bg-deep text-white">
       <Navbar />
 
-      <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-        <Link to="/dashboard" className="text-[13px] text-[#999999] hover:text-[#303030]">
-          ← Back to dashboard
+      <main className="mx-auto max-w-[1100px] px-6 pb-24 pt-4 sm:px-16">
+        <Link to="/dashboard" className="text-[15px] font-medium underline underline-offset-4">
+          Back to monitors
         </Link>
 
-        <div className="mt-4 rounded-3xl bg-white p-8">
-          <h1 className="text-2xl font-semibold text-[#303030]">Add monitor</h1>
-          <p className="mt-1 text-[13px] text-[#999999]">
-            We will check this address on a schedule and alert you when it goes
-            down.
-          </p>
+        <h1 className="mt-6 font-display text-[clamp(40px,6vw,68px)] font-extrabold leading-none tracking-[-2px]">
+          Add monitor
+        </h1>
+        <p className="mt-3 max-w-xl text-[18px]">
+          Tell Watchdog what to check and when to raise an incident.
+        </p>
 
-          <form onSubmit={handleSubmit} className="mt-8">
-            {err && (
-              <p className="mb-4 text-center text-[13px] text-red-500">{err}</p>
-            )}
-
-            <label className={labelClass}>Name</label>
-            <input
-              type="text"
-              name="name"
-              placeholder="My website"
-              value={form.name}
-              onChange={handleChange}
-              maxLength={60}
-              required
-              className={`${inputClass} mb-4`}
-            />
-
-            <label className={labelClass}>URL</label>
-            <input
-              type="url"
-              name="url"
-              placeholder="https://example.com"
-              value={form.url}
-              onChange={handleChange}
-              required
-              className={inputClass}
-            />
-
-            <details className="mt-6">
-              <summary className="cursor-pointer text-[13px] font-medium text-[#303030]">
-                Advanced settings
-              </summary>
-
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className={labelClass}>Method</label>
-                  <select
-                    name="method"
-                    value={form.method}
-                    onChange={handleChange}
-                    className={inputClass}
-                  >
-                    <option value="GET">GET</option>
-                    <option value="HEAD">HEAD</option>
-                  </select>
+        <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_320px]">
+          <div className={cardClass}>
+            <form onSubmit={handleSubmit}>
+              {err && (
+                <div
+                  role="alert"
+                  className="m-6 mb-0 rounded-2xl bg-[#c8321a] px-4 py-3 text-[14px] font-medium text-white"
+                >
+                  {err}
                 </div>
+              )}
 
-                <div>
-                  <label className={labelClass}>Check every</label>
-                  <select
-                    name="intervalMinutes"
-                    value={form.intervalMinutes}
-                    onChange={handleChange}
-                    className={inputClass}
-                  >
-                    <option value="1">1 minute</option>
-                    <option value="2">2 minutes</option>
-                    <option value="5">5 minutes</option>
-                    <option value="10">10 minutes</option>
-                    <option value="15">15 minutes</option>
-                    <option value="30">30 minutes</option>
-                    <option value="60">60 minutes</option>
-                  </select>
-                </div>
+              <section className="space-y-5 p-7">
+                <SectionTitle title="Target" text="What to check." />
 
-                <div>
-                  <label className={labelClass}>Timeout</label>
-                  <select
-                    name="timeoutSeconds"
-                    value={form.timeoutSeconds}
-                    onChange={handleChange}
-                    className={inputClass}
-                  >
-                    <option value="5">5 seconds</option>
-                    <option value="10">10 seconds</option>
-                    <option value="15">15 seconds</option>
-                    <option value="30">30 seconds</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Alert after failures</label>
-                  <select
-                    name="failureThreshold"
-                    value={form.failureThreshold}
-                    onChange={handleChange}
-                    className={inputClass}
-                  >
-                    <option value="1">1 failed check</option>
-                    <option value="2">2 failed checks</option>
-                    <option value="3">3 failed checks</option>
-                    <option value="5">5 failed checks</option>
-                  </select>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className={labelClass}>
-                    Status codes that count as up (comma separated)
-                  </label>
+                <FormField label="Name" htmlFor="name">
                   <input
+                    id="name"
+                    type="text"
+                    name="name"
+                    placeholder="Marketing site"
+                    value={form.name}
+                    onChange={handleChange}
+                    maxLength={60}
+                    required
+                    className={inputClass}
+                  />
+                </FormField>
+
+                <FormField
+                  label="URL"
+                  htmlFor="url"
+                  hint="Must start with http:// or https://"
+                >
+                  <input
+                    id="url"
+                    type="url"
+                    name="url"
+                    placeholder="https://example.com"
+                    value={form.url}
+                    onChange={handleChange}
+                    required
+                    className={inputClass}
+                  />
+                </FormField>
+              </section>
+
+              <section className="space-y-5 border-t border-ink/15 p-7">
+                <SectionTitle title="Schedule" text="How often to check." />
+
+                <FormField label="Check every">
+                  <ChipGroup
+                    name="intervalMinutes"
+                    options={intervalOptions}
+                    value={form.intervalMinutes}
+                    onChange={setField}
+                  />
+                </FormField>
+
+                <FormField
+                  label="Give up on a request after"
+                  hint="A request with no reply by then counts as a failed check."
+                >
+                  <ChipGroup
+                    name="timeoutSeconds"
+                    options={timeoutOptions}
+                    value={form.timeoutSeconds}
+                    onChange={setField}
+                  />
+                </FormField>
+              </section>
+
+              <section className="space-y-5 border-t border-ink/15 p-7">
+                <SectionTitle
+                  title="Detection"
+                  text="What counts as up, and when to raise an incident."
+                />
+
+                <FormField
+                  label="Request method"
+                  hint="HEAD is lighter but cannot check page content."
+                >
+                  <ChipGroup
+                    name="method"
+                    options={methodOptions}
+                    value={form.method}
+                    onChange={setField}
+                  />
+                </FormField>
+
+                <FormField
+                  label="Failed checks in a row before an incident"
+                  hint="Waiting for more than one failure avoids false alarms from a single dropped request."
+                >
+                  <ChipGroup
+                    name="failureThreshold"
+                    options={thresholdOptions}
+                    value={form.failureThreshold}
+                    onChange={setField}
+                  />
+                </FormField>
+
+                <FormField
+                  label="Status codes that count as up"
+                  htmlFor="expectedStatusCodes"
+                  hint="Separate with commas. A login-protected site can add 401 and 403."
+                >
+                  <input
+                    id="expectedStatusCodes"
                     type="text"
                     name="expectedStatusCodes"
                     placeholder="200, 301, 302"
@@ -179,13 +233,15 @@ const AddMonitor = () => {
                     onChange={handleChange}
                     className={inputClass}
                   />
-                </div>
+                </FormField>
 
-                <div className="sm:col-span-2">
-                  <label className={labelClass}>
-                    Keyword the page must contain (optional, needs GET)
-                  </label>
+                <FormField
+                  label="Keyword the page must contain (optional)"
+                  htmlFor="keyword"
+                  hint="Catches a page that answers 200 but shows an error. Needs GET."
+                >
                   <input
+                    id="keyword"
                     type="text"
                     name="keyword"
                     placeholder="Sign in"
@@ -194,18 +250,39 @@ const AddMonitor = () => {
                     maxLength={100}
                     className={inputClass}
                   />
-                </div>
-              </div>
-            </details>
+                </FormField>
+              </section>
 
-            <button
-              type="submit"
-              disabled={loader}
-              className="mt-8 h-[44px] w-full rounded-full bg-[#ff9918] text-[13px] font-medium text-white transition hover:bg-[#f58c08] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loader ? "Adding..." : "Add monitor"}
-            </button>
-          </form>
+              <div className="border-t border-ink/15 p-7">
+                <button
+                  type="submit"
+                  disabled={loader}
+                  className={`${inkBtn} w-full sm:w-auto`}
+                >
+                  {loader ? "Adding..." : "Add monitor"}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <aside className="lg:sticky lg:top-6 lg:self-start">
+            <div className={`${cardClass} p-7`}>
+              <h2 className="font-display text-[24px] font-extrabold tracking-[-0.5px]">
+                What will run
+              </h2>
+              <p className="mt-1 text-[13px] text-soft">
+                Updates as you change the form.
+              </p>
+
+              <div className="mt-5 rounded-[14px] bg-ink p-5">
+                <ul className="space-y-3 break-words text-[14px] leading-relaxed text-butter">
+                  {preview.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </aside>
         </div>
       </main>
     </div>

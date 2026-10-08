@@ -45,6 +45,7 @@ Watchdog is an uptime and incident tracker for websites and APIs. It checks your
 - Incidents opened on the first confirmed outage, updated while it lasts, resolved automatically with the duration. They can be acknowledged, listed with filters and paginated, and opened in detail.
 - Check history for 30 days, with response time and 24 hour uptime statistics.
 - Dashboard with live status that refreshes every 30 seconds, an open-incident banner and an incidents page.
+- Sentry, a watchdog mascot whose mood shows the status (napping, listening, barking), and an animated landing page with a scroll-driven story.
 - Protection against server-side request forgery: in production the checker refuses private, loopback and link-local addresses.
 
 **In progress**
@@ -53,7 +54,7 @@ Watchdog is an uptime and incident tracker for websites and APIs. It checks your
 - Automated tests
 
 **Planned**
-- SSL certificate expiry warnings, encrypted custom headers for authenticated checks, maintenance windows, a second-region checker, and a UI redesign
+- SSL certificate expiry warnings, encrypted custom headers for authenticated checks, maintenance windows and a second-region checker
 
 ## How it works
 
@@ -66,7 +67,7 @@ Watchdog is an uptime and incident tracker for websites and APIs. It checks your
 
 | Layer | Choice |
 |---|---|
-| Frontend | React 19, Vite, React Router, Tailwind CSS v4, Axios |
+| Frontend | React 19, Vite, React Router, Tailwind CSS v4, Axios, GSAP |
 | Backend | Node.js, Express 5, node-cron, Axios |
 | Database | MongoDB with Mongoose |
 | Auth | JWT in an httpOnly cookie, bcrypt |

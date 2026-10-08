@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import axiosInstance from "../services/api";
 import Navbar from "../components/Navbar";
 import IncidentList from "../components/IncidentList";
+import { cardClass, inkBtn } from "../components/ui";
 
 const FILTERS = [
   { value: "active", label: "Active" },
@@ -34,7 +35,10 @@ const Incidents = () => {
         setError("");
       } catch (error) {
         if (!silent) {
-          setError(error.response?.data?.message || "Could not load incidents.");
+          setError(
+            error.response?.data?.message ||
+              "Could not reach the server. Check your connection and try again.",
+          );
         }
       } finally {
         if (!silent) setLoading(false);
@@ -79,29 +83,31 @@ const Incidents = () => {
   }[filter];
 
   return (
-    <div className="min-h-screen bg-[#f5f2ed]">
+    <div className="min-h-screen bg-deep text-white">
       <Navbar />
 
-      <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <main className="mx-auto max-w-[960px] px-6 pb-24 pt-4 sm:px-16">
+        <div className="flex flex-wrap items-end justify-between gap-5">
           <div>
-            <h1 className="text-2xl font-semibold text-[#303030]">Incidents</h1>
+            <h1 className="font-display text-[clamp(40px,6vw,64px)] font-extrabold leading-none tracking-[-2px]">
+              Incidents
+            </h1>
             {!loading && !error && (
-              <p className="mt-1 text-[13px] text-[#999999]">
+              <p className="mt-3 text-[18px]">
                 {data.total} {data.total === 1 ? "incident" : "incidents"}
               </p>
             )}
           </div>
 
-          <div className="flex gap-2 rounded-full bg-white p-1">
+          <div role="group" aria-label="Filter incidents" className="flex gap-1 rounded-full bg-white/15 p-1">
             {FILTERS.map((item) => (
               <button
                 key={item.value}
+                type="button"
+                aria-pressed={filter === item.value}
                 onClick={() => changeFilter(item.value)}
-                className={`rounded-full px-4 py-2 text-[13px] font-semibold transition ${
-                  filter === item.value
-                    ? "bg-[#303030] text-white"
-                    : "text-[#303030] hover:bg-[#f5f2ed]"
+                className={`min-h-11 rounded-full px-5 text-[15px] font-bold transition-colors ${
+                  filter === item.value ? "bg-butter text-ink" : "text-white hover:bg-white/10"
                 }`}
               >
                 {item.label}
@@ -111,35 +117,41 @@ const Incidents = () => {
         </div>
 
         {actionError && (
-          <p className="mt-4 text-[13px] text-red-500">{actionError}</p>
+          <div
+            role="alert"
+            className="mt-6 rounded-2xl bg-ink px-4 py-3 text-[14px] font-medium text-butter"
+          >
+            {actionError}
+          </div>
         )}
 
         {loading && (
-          <p className="mt-10 text-center text-[13px] text-[#999999]">
-            Loading incidents...
-          </p>
+          <div className="mt-10 space-y-5">
+            {[0, 1].map((item) => (
+              <div key={item} className="h-[240px] animate-pulse rounded-[28px] bg-white/10" />
+            ))}
+          </div>
         )}
 
         {error && (
-          <div className="mt-10 rounded-3xl bg-white p-10 text-center">
-            <p className="text-[14px] text-red-500">{error}</p>
-            <button
-              onClick={() => fetchIncidents()}
-              className="mt-4 rounded-full bg-[#303030] px-5 py-2 text-[13px] font-medium text-white"
-            >
+          <div className={`${cardClass} mt-10 p-8`}>
+            <p className="text-[16px] font-medium text-[#c8321a]">{error}</p>
+            <button onClick={() => fetchIncidents()} className={`${inkBtn} mt-5`}>
               Try again
             </button>
           </div>
         )}
 
         {!loading && !error && data.incidents.length === 0 && (
-          <div className="mt-10 rounded-3xl border border-dashed border-[#d5d5d5] bg-white p-10 text-center">
-            <p className="text-[15px] font-medium text-[#303030]">{emptyText}</p>
+          <div className={`${cardClass} mt-10 p-10`}>
+            <p className="font-display text-[28px] font-extrabold tracking-[-1px]">
+              {emptyText}
+            </p>
           </div>
         )}
 
         {!loading && !error && data.incidents.length > 0 && (
-          <div className="mt-8">
+          <div className="mt-10">
             <IncidentList
               incidents={data.incidents}
               onAcknowledge={handleAcknowledge}
@@ -147,21 +159,23 @@ const Incidents = () => {
             />
 
             {data.pages > 1 && (
-              <div className="mt-8 flex items-center justify-center gap-4 text-[13px]">
+              <div className="mt-10 flex items-center justify-center gap-5 text-[15px]">
                 <button
+                  type="button"
                   onClick={() => setPage((p) => p - 1)}
                   disabled={page <= 1}
-                  className="rounded-full bg-white px-4 py-2 font-semibold text-[#303030] disabled:opacity-40"
+                  className="min-h-11 rounded-full bg-white px-6 font-bold text-ink disabled:opacity-40"
                 >
                   Previous
                 </button>
-                <span className="text-[#999999]">
+                <span>
                   Page {page} of {data.pages}
                 </span>
                 <button
+                  type="button"
                   onClick={() => setPage((p) => p + 1)}
                   disabled={page >= data.pages}
-                  className="rounded-full bg-white px-4 py-2 font-semibold text-[#303030] disabled:opacity-40"
+                  className="min-h-11 rounded-full bg-white px-6 font-bold text-ink disabled:opacity-40"
                 >
                   Next
                 </button>
