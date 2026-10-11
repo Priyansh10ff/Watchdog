@@ -4,10 +4,18 @@
 
 Watchdog is an uptime and incident tracker for websites and APIs. It checks your URLs on a schedule, waits for several failures in a row before calling a site down, opens one incident per outage and closes it automatically when the site recovers.
 
-![Stack](https://img.shields.io/badge/stack-MERN-1f2937) ![Node](https://img.shields.io/badge/node-%E2%89%A5%2020-1f2937) ![Status](https://img.shields.io/badge/status-in%20development-ff9918)
+![Stack](https://img.shields.io/badge/stack-MERN-1f2937) ![Node](https://img.shields.io/badge/node-%E2%89%A5%2020-1f2937) ![Status](https://img.shields.io/badge/status-live-2ea44f)
+
+## Links
+
+| | |
+|---|---|
+| Repository | [github.com/Priyansh10ff/Watchdog](https://github.com/Priyansh10ff/Watchdog) |
+| API health | [watchdog-lfcr.onrender.com/api/health](https://watchdog-lfcr.onrender.com/api/health) |
 
 ## Contents
 
+- [Links](#links)
 - [Why Watchdog](#why-watchdog)
 - [Features](#features)
 - [How it works](#how-it-works)
@@ -24,6 +32,7 @@ Watchdog is an uptime and incident tracker for websites and APIs. It checks your
 - [Security](#security)
 - [Limitations and roadmap](#limitations-and-roadmap)
 - [Documentation](#documentation)
+- [License](#license)
 - [Author](#author)
 
 ## Why Watchdog
@@ -72,7 +81,8 @@ Watchdog is an uptime and incident tracker for websites and APIs. It checks your
 | Database | MongoDB with Mongoose |
 | Auth | JWT in an httpOnly cookie, bcrypt |
 | Hardening | helmet, express-rate-limit, CORS with credentials |
-| Hosting plan | Vercel (client), Render (API), MongoDB Atlas (database) |
+| Testing and CI | Node's built-in test runner, GitHub Actions |
+| Hosting | Vercel (client), Render (API), MongoDB Atlas (database) |
 
 ## Architecture
 
@@ -94,9 +104,12 @@ The API and the scheduler run in one process. More in [docs/TECHNICAL.md](docs/T
 ```
 Watchdog/
 ├── client/        React app (pages, components, context, services)
-├── server/        Express API (controllers, models, routes, services, jobs, utils)
+├── server/        Express API (controllers, models, routes, services, jobs, utils, tests)
 ├── demo-target/   Small site you can switch up, slow or down for demos
-└── docs/          Product, requirements, technical, design, API and deployment docs
+├── docs/          Product, requirements, technical, design, API, deployment and test docs, Postman collection
+├── .github/       CI workflow: tests and client build on every push
+├── render.yaml    Render blueprint for the API and the demo target
+└── LICENSE        MIT
 ```
 
 ## Getting started
@@ -258,18 +271,16 @@ npm run smoke -- https://YOUR-APP.vercel.app --demo=https://YOUR-DEMO-TARGET.onr
 
 ## Deployment
 
-The plan is MongoDB Atlas for the database, Render for the API and Vercel for the client. Step-by-step instructions, the production settings and a troubleshooting table are in [docs/deployment.md](docs/deployment.md). Three things matter in production:
+Watchdog runs on MongoDB Atlas (database), Render (API) and Vercel (client). Step-by-step instructions, the production settings and a troubleshooting table are in [docs/deployment.md](docs/deployment.md). Three things matter in production:
 
 - The scheduler runs inside the API process, so the API instance must stay awake.
 - `NODE_ENV=production` turns on secure cookies, trust proxy and private-address blocking, and `CLIENT_URL` must match the client origin exactly.
 - When the client and API are on different domains, proxy `/api` through the client host so the session cookie stays first-party.
 
-Live app: not deployed yet.
-
 ## Security
 
 - Passwords are hashed with bcrypt and never returned by the API.
-- The session is an httpOnly cookie, `secure` and `sameSite: none` in production.
+- The session is an httpOnly cookie. In production it is `secure`, and `SameSite` is `none` by default or `lax` when the client proxies the API (`COOKIE_SAMESITE=lax`), which also blocks cross-site request forgery.
 - Request types are validated, which blocks NoSQL injection. Every monitor and incident query is scoped to the logged-in user.
 - Rate limits per IP: 600 requests per 15 minutes across the API, 10 per 15 minutes on register and login, and 60 per minute on the public status page. Monitors are limited to 20 per user.
 - helmet headers, CORS restricted to `CLIENT_URL`, 10 kB body limit.
@@ -282,7 +293,7 @@ Live app: not deployed yet.
 - HTTP and HTTPS only, GET and HEAD only.
 - No outbound notifications (email, SMS, chat). Incidents are shown in the dashboard and on the status page.
 
-Next: deployment, then the optional extras. Then SSL expiry warnings, encrypted custom headers, maintenance windows and a second-region checker. The full plan is in [docs/PRD.md](docs/PRD.md).
+Next: SSL expiry warnings, encrypted custom headers, maintenance windows and a second-region checker. The full plan is in [docs/PRD.md](docs/PRD.md).
 
 ## Documentation
 
@@ -291,7 +302,7 @@ Next: deployment, then the optional extras. Then SSL expiry warnings, encrypted 
 | [docs/PRODUCT.md](docs/PRODUCT.md) | What Watchdog is, why it exists, who it is for |
 | [docs/PRD.md](docs/PRD.md) | Requirements, user stories, acceptance criteria, release plan, risks |
 | [docs/TECHNICAL.md](docs/TECHNICAL.md) | Architecture, check pipeline, status machine, security, configuration |
-| [docs/DESIGN.md](docs/DESIGN.md) | Design system as built and the planned redesign |
+| [docs/DESIGN.md](docs/DESIGN.md) | Design system: colour, type, components, motion and accessibility |
 | [docs/api.md](docs/api.md) | API reference |
 | [docs/database-schema.md](docs/database-schema.md) | Collections and indexes |
 | [docs/deployment.md](docs/deployment.md) | Hosting guide and troubleshooting |
@@ -300,6 +311,10 @@ Next: deployment, then the optional extras. Then SSL expiry warnings, encrypted 
 | [docs/postman](docs/postman) | Postman collection and environments |
 | [docs/CHECKLIST.md](docs/CHECKLIST.md) | Submission and production readiness checklist |
 
+## License
+
+MIT. See [LICENSE](LICENSE).
+
 ## Author
 
-Built by [Priyansh](https://github.com/Priyansh10ff).
+Built by [Priyansh Dugar](https://github.com/Priyansh10ff) as an end-term project for Web Development at Scaler School of Technology, Bengaluru.

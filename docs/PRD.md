@@ -3,9 +3,9 @@
 | | |
 |---|---|
 | **Product** | Watchdog uptime and incident tracker |
-| **Owner** | Priyansh |
-| **Status** | v1.0 in development |
-| **Live** | Not deployed yet. See [deployment.md](./deployment.md) |
+| **Owner** | Priyansh Dugar |
+| **Status** | v1.0, end-term submission |
+| **Live** | Deployed on Vercel, Render and Atlas. Links are in the [README](../README.md), hosting steps in [deployment.md](./deployment.md) |
 | **Last updated** | October 2026 |
 
 Related: [PRODUCT.md](./PRODUCT.md) (overview) · [TECHNICAL.md](./TECHNICAL.md) (implementation) · [DESIGN.md](./DESIGN.md) (interface) · [CHECKLIST.md](./CHECKLIST.md) (readiness)
@@ -159,7 +159,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | FR19 | Second-region checker agent | Could | Open |
 | FR20 | Automated tests for the status machine, validators, check engine, incidents, API and hardening | Should | Done |
 | FR21 | Rate limit on the rest of the API | Should | Done |
-| FR22 | Deployment on Render, Vercel and Atlas | Must | Open |
+| FR22 | Deployment on Render, Vercel and Atlas | Must | Done |
 | FR23 | Sentry mascot UI with animated landing page and scroll story | Could | Done |
 | FR24 | Pulse monitor cards: response time, 24 hour uptime, bars for recent checks | Should | Done |
 | FR25 | Edit monitor page and interval dial with a custom interval | Should | Done |
@@ -203,7 +203,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Free hosting sleeps | The scheduler lives in the API process, so checks stop while the server is asleep | Always-on instance, or an external ping on `/api/health` at least every 10 minutes |
+| Free hosting sleeps | The scheduler lives in the API process, so checks stop while the server is asleep | Always-on instance, or an external ping on `/api/health` every 5 minutes (never more than 14) |
 | Sites that block bots or datacenter IPs | False "down" results | A clear User-Agent, and users can list 403 or 429 as expected status codes |
 | Geo-blocked sites | A site looks down from one region | Documented limitation. The second-region agent (FR19) addresses it |
 | Cross-site cookies between Vercel and Render | Browsers that block third-party cookies may break login | Proxy `/api` through the client host so cookies are first-party (see [deployment.md](./deployment.md)) |

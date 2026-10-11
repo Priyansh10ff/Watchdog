@@ -46,7 +46,7 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 ## 3. Security review
 
 - [x] Passwords hashed with bcrypt, never returned
-- [x] Session in an httpOnly cookie, `secure` and `sameSite: none` in production
+- [x] Session in an httpOnly cookie, `secure` in production, `SameSite=lax` behind the Vercel proxy (`none` otherwise)
 - [x] Input types validated, ranges enforced
 - [x] Every monitor and incident query scoped to the user
 - [x] Rate limit on register and login
@@ -63,6 +63,7 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 
 ## 4. Production readiness
 
+- [ ] Atlas Network Access allows the API host (`0.0.0.0/0`)
 - [ ] `NODE_ENV=production` set on the API host
 - [ ] `CLIENT_URL` matches the deployed client origin exactly
 - [ ] Health check path `/api/health` configured on the host
@@ -97,9 +98,9 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [x] [PRODUCT.md](./PRODUCT.md), [PRD.md](./PRD.md), [TECHNICAL.md](./TECHNICAL.md), [DESIGN.md](./DESIGN.md)
 - [x] [api.md](./api.md) and [database-schema.md](./database-schema.md)
 - [x] [deployment.md](./deployment.md)
-- [ ] Screenshots added to `docs/screenshots/` and linked from the README
+- [ ] Screenshots added to `docs/screenshots/` and shown in the README
 - [x] Postman collection in `docs/postman/` (22 requests, 30 checks, run with Newman)
-- [ ] Live links added to the README after deployment
+- [ ] Live app and demo video links added to the Links table in the README
 - [x] `LICENSE` file (MIT, in the name of Priyansh Dugar. Change it if you prefer another license)
 
 ## 7. Demo video (3 to 5 minutes)

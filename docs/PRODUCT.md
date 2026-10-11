@@ -95,6 +95,6 @@ Large operations that need on-call rotation, SMS or phone alerts, or monitoring 
 | Backend | Node.js, Express 5, node-cron, Axios |
 | Database | MongoDB with Mongoose |
 | Auth | JWT in an httpOnly cookie, bcrypt |
-| Hosting plan | Vercel (client), Render (server), MongoDB Atlas (database) |
+| Hosting | Vercel (client), Render (server), MongoDB Atlas (database) |
 
 Requirements and the roadmap are in [PRD.md](./PRD.md). Technical details are in [TECHNICAL.md](./TECHNICAL.md).

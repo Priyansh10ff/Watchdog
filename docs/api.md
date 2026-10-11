@@ -1,6 +1,6 @@
 # API reference
 
-Base URL: `http://localhost:5000/api`
+Base URL: `http://localhost:5000/api` locally. In production the same paths sit under the app address, for example `https://your-app.vercel.app/api/health`, because the client proxies `/api` to the server.
 
 All responses are JSON shaped as `{ "success": true|false, "message": "...", ... }`. Every route except `/health`, `/auth/register` and `/auth/login` needs the session cookie set by login or register.
 

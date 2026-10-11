@@ -1,6 +1,6 @@
 # Database schema
 
-MongoDB with Mongoose. Collections: `users`, `monitors`, `checkresults`, `incidents`.
+MongoDB with Mongoose. Collections: `users`, `monitors`, `checkresults`, `incidents`, `statuspages`.
 
 ## User
 

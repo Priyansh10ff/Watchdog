@@ -15,7 +15,7 @@ About 40 minutes. The order matters because each step needs a value from the one
 7. Run the showcase script against the Atlas database (section 6a).
 8. Go through the verification list (section 7), then put the live links in the README.
 
-Never paste the Atlas connection string, `JWT_SECRET` or any password into a chat, an issue or a commit. Share only the public addresses and the text of error messages.
+Never put the Atlas connection string, `JWT_SECRET` or any password in an issue, a chat or a commit. When you ask for help, share only public addresses and the text of error messages.
 
 Related: [TECHNICAL.md](./TECHNICAL.md) · [CHECKLIST.md](./CHECKLIST.md)
 
@@ -34,7 +34,7 @@ Related: [TECHNICAL.md](./TECHNICAL.md) · [CHECKLIST.md](./CHECKLIST.md)
 
 1. Create a free M0 cluster.
 2. Database Access: create a user with a strong password.
-3. Network Access: allow `0.0.0.0/0`. Free hosts do not have a fixed outbound IP. Keep the database password strong because of this.
+3. Security, then Network Access, then Add IP Address, then Allow Access from Anywhere (`0.0.0.0/0`). The setup wizard only adds your own computer, and a free host connects from a different, changing address, so without this step the API cannot reach the database. Keep the database password strong because of this.
 4. Connect, then Drivers, and copy the connection string. Replace `<password>` and add the database name before the `?`:
    ```
    mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/watchdog?retryWrites=true&w=majority
@@ -54,7 +54,7 @@ Atlas M0 has no automatic backups. Export anything you cannot afford to lose.
 | Root directory | `server` |
 | Runtime | Node |
 | Build command | `npm install` |
-| Start command | `npm start` |
+| Start command | `npm start` (type it yourself: the grey `yarn start` in the form is only a hint) |
 | Health check path | `/api/health` |
 
 Environment variables:
@@ -173,5 +173,12 @@ It creates a throwaway account (`smoke-...@watchdog.test`) and deletes everythin
 | 404 when refreshing a page on Vercel | `client/vercel.json` rewrite is missing |
 | Every monitor stays on Pending | The scheduler is not running: the instance is asleep, or `DISABLE_SCHEDULER` is `true` |
 | Server exits at startup | `MONGO_URI` or `JWT_SECRET` is missing, or Atlas Network Access does not allow the host |
+| Logs show `Could not connect to any servers` and mention the IP access list | Atlas Network Access does not include the host. Add `0.0.0.0/0` (section 2), wait until it is Active, then restart the service |
+| Logs show `bad auth` or `Authentication failed` | The user or password in `MONGO_URI` is wrong. Use the database user from Database Access, not your Atlas login, and URL-encode special characters |
+| `{"message":"Route not found"}` when opening the health address | Every route is under `/api`. The health check is `/api/health` |
+| The Vercel build fails on `gsap` | `gsap` is missing from `client/package.json`. Run `npm install gsap` in `client` and commit `package.json` and `package-lock.json` |
+| The first request after a quiet period takes about 30 seconds | The free API instance was asleep. Set up the pinger (section 3) |
+| Seeding the showcase from your computer fails with `querySrv ECONNREFUSED` | Your network blocks Atlas's SRV lookups. Use the standard `mongodb://` connection string from Atlas, or another network |
+| The landing page has no yellow ticker | The `world` status page does not exist in this database, has fewer than 5 monitors, or the API was asleep when the page loaded. Run the showcase command (section 6a) and reload |
 | A public monitor shows "Private addresses are not allowed" | The hostname resolves to a private address. That is the protection working |
 | A site shows down but loads in a browser | The site blocks bots or datacenter IPs. Add the status it returns (often 403) to the expected status codes |
