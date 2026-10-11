@@ -9,7 +9,9 @@
   "scripts": {
     "test": "node --test",
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test:smoke": "node --test tests/smoke*.spec.js",
+    "smoke": "node scripts/smokeTest.mjs"
   },
   "keywords": [],
   "author": "",
