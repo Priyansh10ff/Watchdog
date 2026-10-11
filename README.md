@@ -1,132 +1,60 @@
 # Watchdog
 
-**Know when your site goes down before your users do.**
+Uptime and incident tracker for websites and APIs. Watchdog checks your URLs on a schedule, calls a site down only after several failed checks in a row, opens one incident per outage with its cause and start time, and closes it automatically with the total duration when the site recovers. A mascot, Sentry, shows the state: napping when everything is up, barking when something is down.
 
-Watchdog is an uptime and incident tracker for websites and APIs. It checks your URLs on a schedule, waits for several failures in a row before calling a site down, opens one incident per outage and closes it automatically when the site recovers.
+[![CI](https://github.com/Priyansh10ff/Watchdog/actions/workflows/ci.yml/badge.svg)](https://github.com/Priyansh10ff/Watchdog/actions/workflows/ci.yml) ![Stack](https://img.shields.io/badge/stack-MERN-1f2937) ![Node](https://img.shields.io/badge/node-%E2%89%A5%2020-3c873a) ![Tests](https://img.shields.io/badge/tests-435%20server%20%2B%2057%20client-2ea44f) ![License](https://img.shields.io/badge/license-MIT-2b46ff)
 
-![Stack](https://img.shields.io/badge/stack-MERN-1f2937) ![Node](https://img.shields.io/badge/node-%E2%89%A5%2020-1f2937) ![Status](https://img.shields.io/badge/status-live-2ea44f)
+[Product](docs/PRODUCT.md) · [Requirements](docs/PRD.md) · [Technical reference](docs/TECHNICAL.md) · [Design system](docs/DESIGN.md) · [API](docs/api.md) · [Deployment](docs/deployment.md) · [Testing](docs/TESTING.md)
 
-## Links
+![Watchdog dashboard](docs/screenshots/dashboard.png)
 
 | | |
 |---|---|
 | Repository | [github.com/Priyansh10ff/Watchdog](https://github.com/Priyansh10ff/Watchdog) |
 | API health | [watchdog-lfcr.onrender.com/api/health](https://watchdog-lfcr.onrender.com/api/health) |
 
-## Contents
+---
 
-- [Links](#links)
-- [Why Watchdog](#why-watchdog)
-- [Features](#features)
-- [How it works](#how-it-works)
-- [Tech stack](#tech-stack)
-- [Architecture](#architecture)
-- [Project structure](#project-structure)
-- [Getting started](#getting-started)
-- [Configuration](#configuration)
-- [Landing page ticker setup](#landing-page-ticker-setup)
-- [Scripts](#scripts)
-- [API overview](#api-overview)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Security](#security)
-- [Limitations and roadmap](#limitations-and-roadmap)
-- [Documentation](#documentation)
-- [License](#license)
-- [Author](#author)
+## Why
 
-## Why Watchdog
+People who run websites and APIs usually learn about an outage from their users. Simple monitors raise an alarm for one dropped request, keep alerting through a long outage, and treat anything but a 200 as down, although a login-protected API answers 401 and is alive. Watchdog judges each check against rules you set per monitor and declares a site down only after several failures in a row. It is for developers, freelancers and small teams who want to know quickly and reliably when something stops answering.
 
-**Problem.** People who run websites and APIs usually learn about an outage from their users. Simple monitors are noisy: one dropped request raises an alarm and a long outage keeps raising it. Real sites also do not always answer 200. A login-protected API answers 401 and is still alive, and a page can answer 200 and show an error.
+## What it does
 
-**Who it is for.** Developers, freelancers and small teams who want to know quickly and reliably when something stops answering.
-
-**Solution.** Each monitor has its own interval, timeout, expected status codes, optional keyword and failure threshold. A status machine only declares a site down after the threshold of failures in a row. One incident is opened for the whole outage, with its cause and start time, and it resolves itself on recovery with the total duration.
-
-## Features
-
-**Implemented**
-- Register, login and logout. The session is a JWT in an httpOnly cookie and survives a refresh. Passwords are hashed with bcrypt.
-- Add, edit, pause, resume and delete monitors (up to 20 per user), and check on demand.
-- Monitor cards show the response time, 24 hour uptime and a bar for each of the last 24 checks.
-- Set the check interval with a rotary dial, a preset or any whole number of minutes from 1 to 60.
-- Per-monitor interval (1 to 60 minutes), timeout, expected status codes, optional keyword and failure threshold.
-- Scheduled checks every minute. Due monitors are claimed atomically, so a restart or a second instance never double-checks a monitor.
-- Redirects handled, keyword check, readable failure reasons such as "Timed out after 5000 ms" or "Connection refused".
-- Fast re-checks after a failure, so outages are confirmed and recoveries noticed within a minute.
-- Incidents opened on the first confirmed outage, updated while it lasts, resolved automatically with the duration. They can be acknowledged, listed with filters and paginated, and opened in detail.
-- Check history for 30 days, with response time and 24 hour uptime statistics.
-- Dashboard with live status that refreshes every 30 seconds, an open-incident banner and an incidents page.
-- Sentry, a watchdog mascot whose mood shows the status (napping, listening, barking), and an animated landing page with a scroll-driven story.
-- A landing page with a live ticker of popular websites that slides through five sites at a time, built from real checks on a showcase status page.
-- A public status page you can share: choose monitors, get a link, and visitors see live status, uptime, recent checks and past incidents without logging in. URLs and error details are never shown.
-- Protection against server-side request forgery: in production the checker refuses private, loopback and link-local addresses.
-
-**Planned**
-- SSL certificate expiry warnings, encrypted custom headers for authenticated checks, maintenance windows and a second-region checker
-
-## How it works
-
-1. A scheduler runs every minute and claims every monitor that is due.
-2. Each claimed monitor is checked: the URL is requested, the response time is measured and the result is judged against the monitor's rules.
-3. The result is stored and the monitor's status is updated. A failed check increments a counter, and the monitor becomes down only when the counter reaches the failure threshold. One success resets it.
-4. When a monitor becomes down, an incident opens. While it stays down the incident is updated. When it answers again the incident resolves.
-
-## Tech stack
-
-| Layer | Choice |
+| Stage | What happens |
 |---|---|
-| Frontend | React 19, Vite, React Router, Tailwind CSS v4, Axios, GSAP |
-| Backend | Node.js, Express 5, node-cron, Axios |
-| Database | MongoDB with Mongoose |
-| Auth | JWT in an httpOnly cookie, bcrypt |
-| Hardening | helmet, express-rate-limit, CORS with credentials |
-| Testing and CI | Node's built-in test runner, GitHub Actions |
-| Hosting | Vercel (client), Render (API), MongoDB Atlas (database) |
+| **Check** | A scheduler runs every minute and claims every due monitor with an atomic lease, so a restart or a second instance never checks a monitor twice. Each check follows up to 3 redirects, measures the response time and judges the answer against the monitor's expected status codes and optional keyword. Failures say why, such as "Timed out after 5000 ms" or "Connection refused" |
+| **Decide** | A status machine counts failures in a row. A monitor is down when the count reaches its failure threshold and one success resets it. After a failure it is re-checked within a minute, so outages are confirmed and recoveries noticed quickly |
+| **Respond** | One incident opens for the whole outage with its cause and start time, is updated while it lasts, can be acknowledged, and resolves itself with the total duration |
+| **Show** | A dashboard of cards with response time, 24 hour uptime and the last 24 checks, an incidents page with filters and detail, and 30 days of check history |
+| **Share** | A public status page with live status, uptime, recent checks and past incidents, without logging in. It never shows URLs or error details |
+| **Protect** | In production the checker refuses private, loopback and link-local addresses at DNS lookup, for IP literals and for redirect targets |
 
-## Architecture
+Each monitor has its own interval (1 to 60 minutes, set with a rotary dial, a preset or any whole number), timeout, expected status codes, optional keyword and failure threshold. Up to 20 monitors per account.
 
-```
-Browser (React)  --- JWT cookie --->  Express API  --->  MongoDB
-                                         |
-                                  node-cron, every minute
-                                         |  claims due monitors (atomic lease)
-                                         v
-                              checker.service  ->  CheckResult
-                                         v
-                              incident.service ->  status machine + Incident
-```
+## Screenshots
 
-The API and the scheduler run in one process. More in [docs/TECHNICAL.md](docs/TECHNICAL.md).
+| | |
+|---|---|
+| ![Landing page](docs/screenshots/landing.png)<br>**Landing page.** Sentry, a scroll-driven story and a ticker of real checks | ![Live ticker](docs/screenshots/ticker.png)<br>**Live ticker.** Popular sites, checked around the clock |
+| ![A site is down](docs/screenshots/down-state.png)<br>**Down state.** Sentry barks and an incident opens | ![Incidents](docs/screenshots/incidents.png)<br>**Incidents.** Cause, start time, acknowledgement and duration |
+| ![Add monitor](docs/screenshots/add-monitor.png)<br>**Add monitor.** The interval dial, status codes and failure threshold | ![Public status page](docs/screenshots/status-page.png)<br>**Public status page.** Shareable, with no login |
 
-## Project structure
+## Quickstart
 
-```
-Watchdog/
-├── client/        React app (pages, components, context, services)
-├── server/        Express API (controllers, models, routes, services, jobs, utils, tests)
-├── demo-target/   Small site you can switch up, slow or down for demos
-├── docs/          Product, requirements, technical, design, API, deployment and test docs, Postman collection
-├── .github/       CI workflow: tests and client build on every push
-├── render.yaml    Render blueprint for the API and the demo target
-└── LICENSE        MIT
-```
-
-## Getting started
-
-**Requirements:** Node.js 20 or newer, and a MongoDB database (a free Atlas cluster works).
+Requires Node.js 20 or newer and a MongoDB database (a free Atlas cluster works).
 
 ```bash
 git clone https://github.com/Priyansh10ff/Watchdog.git
 cd Watchdog
 ```
 
-**1. API**
+**API**
 
 ```bash
 cd server
 npm install
-cp .env.example .env
+cp .env.example .env        # Windows: copy .env.example .env
 ```
 
 Fill in `MONGO_URI` and `JWT_SECRET` in `server/.env` (see [Configuration](#configuration)), then:
@@ -135,9 +63,9 @@ Fill in `MONGO_URI` and `JWT_SECRET` in `server/.env` (see [Configuration](#conf
 npm run dev
 ```
 
-The API starts on http://localhost:5000. You should see `DB Connected`, `Server started on port 5000` and `Scheduler started`.
+The API starts on http://localhost:5000 and logs `DB Connected`, `Server started on port 5000` and `Scheduler started`.
 
-**2. Client**
+**Client**
 
 ```bash
 cd client
@@ -146,9 +74,9 @@ cp .env.example .env
 npm run dev
 ```
 
-The app runs on http://localhost:5173.
+The app runs on http://localhost:5173. If your network blocks MongoDB SRV lookups, use the non-SRV connection string from Atlas.
 
-**3. Demo target (optional)**
+**Demo target (optional).** A small site you can switch up, slow or down on demand:
 
 ```bash
 cd demo-target
@@ -157,8 +85,6 @@ npm start
 ```
 
 Open http://localhost:4000, add a monitor for `http://localhost:4000/health`, then use the links on that page to make it slow or down and watch Watchdog react.
-
-On Windows PowerShell use `copy .env.example .env` instead of `cp`. If your network blocks MongoDB SRV lookups, use the non-SRV connection string from Atlas.
 
 ## Configuration
 
@@ -181,99 +107,106 @@ Client (`client/.env`):
 
 | Variable | Default | Description |
 |---|---|---|
-| `VITE_API_URL` | `http://localhost:5000/api` | API base URL |
+| `VITE_API_URL` | `http://localhost:5000/api` | API base URL. Use `/api` when the client host proxies the API |
 | `VITE_SHOWCASE_SLUG` | `world` | Link name of the status page used for the landing page ticker |
-| `VITE_FAVICON_URL` | Google's favicon service | Icon service for the ticker, with `{domain}` where the host name goes |
+| `VITE_FAVICON_URL` | Google's favicon service | First icon service the ticker tries, with `{domain}` where the host name goes |
 
 Generate a secret with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Never commit real secrets. `.env` files are ignored by Git.
 
-## Landing page ticker setup
+## Using it
 
-The landing page shows a ticker of popular websites when a status page called `world` exists with at least 5 monitors. Without that page the section is not shown. One command creates everything:
+**Website.** `/` is the landing page. After signing up: `/dashboard` for the monitors, `/monitors/new` and `/monitors/:id/edit` to add and change them, `/incidents` for incidents and `/status-page` to publish a public page at `/status/:slug`.
+
+**API.** All routes are under `/api` and everything except health, register and login needs the session cookie. Log in, then create and list monitors:
+
+```bash
+curl -c cookies.txt -H "Content-Type: application/json" \
+     -d '{"email":"you@example.com","password":"your-password"}' \
+     http://localhost:5000/api/auth/login
+
+curl -b cookies.txt -H "Content-Type: application/json" \
+     -d '{"name":"My site","url":"https://example.com","intervalMinutes":5}' \
+     http://localhost:5000/api/monitors
+
+curl -b cookies.txt http://localhost:5000/api/monitors
+```
+
+On Windows PowerShell `curl` is a different command, so use Git Bash or the Postman collection in [docs/postman](docs/postman). The full endpoint list, bodies, filters and error codes are in [docs/api.md](docs/api.md).
+
+| Group | Endpoints |
+|---|---|
+| Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout` |
+| Monitors | `POST /monitors`, `GET /monitors`, `GET`, `PATCH`, `DELETE /monitors/:id`, `PATCH /monitors/:id/toggle`, `GET /monitors/:id/results`, `POST /monitors/:id/check`, `GET /monitors/:id/incidents` |
+| Incidents | `GET /incidents`, `GET /incidents/:id`, `PATCH /incidents/:id/acknowledge` |
+| Status page | `GET /status/:slug` (public), `GET`, `PUT`, `DELETE /status-page` |
+| Health | `GET /health` |
+
+**Landing page ticker.** The ticker on the landing page shows real checks of 12 popular sites from a public status page called `world`. Create it with one command, and keep the API running so its scheduler runs the first checks:
 
 ```bash
 cd server
 node scripts/seedShowcase.js
 ```
 
-It creates a showcase account (`showcase@watchdog.local`), adds a monitor for each of 12 popular sites with a 5 minute interval, and publishes them as the status page `world` with site domains switched on, so every row shows the site's own icon and domain. If you ran the script before icons were added, run it again to turn domains on. It is safe to run again: nothing is duplicated, and monitors you have edited keep their settings. Keep the server running, because its scheduler runs the first checks within a minute.
+Without that page the section is hidden. Production setup and the script's options are in [docs/deployment.md](docs/deployment.md).
 
-To check it, open `http://localhost:5000/api/status/world`. JSON with the sites means it works, and then reloading the landing page shows the ticker (the answer is cached for 30 seconds). A "Status page not found" message means the script has not run against this database.
+## Architecture
 
-Options, as environment variables:
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `SHOWCASE_EMAIL` | `showcase@watchdog.local` | Account that owns the monitors. Using your own account replaces that account's status page, because each account has one |
-| `SHOWCASE_PASSWORD` | random | Password for a new showcase account, 8 to 72 characters. Set it before the first run if you want to log in and edit the monitors. It is ignored if the account already exists |
-| `SHOWCASE_SLUG` | `world` | Link name of the page. Set `VITE_SHOWCASE_SLUG` in the client to match |
-| `SHOWCASE_TITLE` | `Popular websites` | Title of the page |
-
-For the live site, run the same script against the production database with one PowerShell command from the project root. Replace the two values first. It writes a temporary `.env.production` file, runs the script against it and deletes the file again:
-
-```powershell
-cd server; Set-Content .env.production @('MONGO_URI=PASTE_ATLAS_STRING_HERE','SHOWCASE_PASSWORD=choose-a-password'); node --env-file=.env.production scripts/seedShowcase.js; Remove-Item .env.production
+```
+Browser (React)  --- JWT cookie --->  Express API  --->  MongoDB
+                                         |
+                                  node-cron, every minute
+                                         |  claims due monitors (atomic lease)
+                                         v
+                              checker.service  ->  CheckResult
+                                         v
+                              incident.service ->  status machine + Incident
 ```
 
-`SHOWCASE_PASSWORD` is optional and only matters the first time, when the showcase account is created. If the connection string contains special characters in the password, URL-encode them (`@` becomes `%40`, `#` becomes `%23`). The `.env.production` file is ignored by Git.
-
-The icons are loaded by each visitor's browser from Google's favicon service (set `VITE_FAVICON_URL` to use another one), and a row falls back to a letter tile if its icon does not load.
-
-The sites are Google, YouTube, Wikipedia, GitHub, Cloudflare, Amazon, Reddit, Netflix, LinkedIn, Stack Overflow, Microsoft and Spotify. Reddit, LinkedIn and Stack Overflow also accept the codes they use to block automated checks (403, 429 and 999). Some sites may still block your server, so watch the results for a day, log in to the showcase account to adjust a monitor's status codes, or leave a site out. A site that shows down only because it blocks the checker would look like an outage on your public landing page.
-
-## Scripts
-
-| Where | Command | What it does |
-|---|---|---|
-| `server` | `npm run dev` | Start the API with nodemon |
-| `server` | `npm start` | Start the API |
-| `server` | `npm test` | Run the server tests |
-| `server` | `npm run test:smoke` | Run the slower tests of the smoke script itself (about a minute) |
-| `server` | `npm run smoke -- <address>` | Check a deployed app end to end |
-| `client` | `npm run dev` | Start the Vite dev server |
-| `client` | `npm test` | Run the client tests |
-| `client` | `npm run build` | Production build into `dist` |
-| `client` | `npm run preview` | Serve the production build locally |
-| `demo-target` | `npm start` | Start the demo site |
-
-## API overview
-
-All routes are under `/api`. Everything except health, register and login needs the session cookie.
-
-| Group | Endpoints |
+| Layer | Choice |
 |---|---|
-| Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout` |
-| Monitors | `POST /monitors`, `GET /monitors` (with recent checks and uptime), `GET /monitors/:id`, `PATCH /monitors/:id`, `PATCH /monitors/:id/toggle`, `DELETE /monitors/:id` |
-| Checks | `GET /monitors/:id/results`, `POST /monitors/:id/check` |
-| Status page | `GET /status/:slug` (public), `GET`, `PUT`, `DELETE /status-page` |
-| Incidents | `GET /incidents`, `GET /incidents/:id`, `PATCH /incidents/:id/acknowledge`, `GET /monitors/:id/incidents` |
-| Health | `GET /health` |
+| Frontend | React 19, Vite, React Router, Tailwind CSS v4, Axios, GSAP |
+| Backend | Node.js, Express 5, node-cron, Axios |
+| Database | MongoDB with Mongoose |
+| Auth | JWT in an httpOnly cookie, bcrypt |
+| Hardening | helmet, express-rate-limit, CORS with credentials |
+| Testing and CI | Node's built-in test runner, GitHub Actions |
+| Hosting | Vercel (client), Render (API), MongoDB Atlas (database) |
 
-Bodies, filters and error codes are in [docs/api.md](docs/api.md).
+The API and the scheduler run in one process. Details in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
-## Testing
+## Project layout
+
+```
+client/        React app (pages, components, context, services)
+server/        Express API (controllers, models, routes, services, jobs, utils, tests)
+demo-target/   Small site you can switch up, slow or down for demos
+docs/          Product, requirements, technical, design, API, deployment and test docs, Postman collection
+.github/       CI workflow: tests and client build on every push
+render.yaml    Render blueprint for the API and the demo target
+```
+
+## Tests
 
 ```bash
 cd server && npm test
 cd client && npm test
 ```
 
-435 server tests and 57 client tests, using Node's built-in test runner, so there is nothing extra to install. The server tests need no database or internet. A GitHub Actions workflow runs both suites and the client build on every push. `docs/TESTING.md` lists what is covered and also holds the manual test cases for the React components and the real database.
+435 server tests and 57 client tests, using Node's built-in test runner, so there is nothing extra to install. The server tests need no database or internet: they replace the models with in-memory stand-ins and test the check engine against a real local web server. GitHub Actions runs both suites and the client build on every push. `docs/TESTING.md` lists what is covered and holds the manual cases for the interface.
 
-### Checking a deployed app
+To check a deployed app end to end, run the smoke test. It registers a throwaway account and goes through the main features over the real address. With `--demo` it also breaks the demo site and confirms that exactly one incident opens, can be acknowledged and resolves with its duration:
 
 ```bash
 cd server
-npm run smoke -- https://YOUR-APP.vercel.app --demo=https://YOUR-DEMO-TARGET.onrender.com
+npm run smoke -- https://your-app.vercel.app --demo=https://your-demo-target.onrender.com
 ```
-
-`npm run smoke` is an automated check of a deployed app. It registers a throwaway account, then goes through the main features over the real address: health, security headers, CORS, cookies, creating and editing a monitor, a real check by the server, results and uptime, pause and resume, check now, the public status page (and that it never shows a full address), and cleanup. With `--demo` it also breaks the demo site and confirms that exactly one incident opens, can be acknowledged, and resolves with a duration after recovery. It exits with an error if anything fails, and prints a warning for things that depend on your setup, such as `SameSite=None` behind the Vercel proxy. The `docs/postman` folder has a Postman collection with every endpoint and its checks, and `docs/DEMO.md` has the demo video script.
 
 ## Deployment
 
 Watchdog runs on MongoDB Atlas (database), Render (API) and Vercel (client). Step-by-step instructions, the production settings and a troubleshooting table are in [docs/deployment.md](docs/deployment.md). Three things matter in production:
 
-- The scheduler runs inside the API process, so the API instance must stay awake.
+- The scheduler runs inside the API process, so the API instance must stay awake. On a free plan, point an external pinger at `/api/health` every 5 minutes.
 - `NODE_ENV=production` turns on secure cookies, trust proxy and private-address blocking, and `CLIENT_URL` must match the client origin exactly.
 - When the client and API are on different domains, proxy `/api` through the client host so the session cookie stays first-party.
 
@@ -282,7 +215,7 @@ Watchdog runs on MongoDB Atlas (database), Render (API) and Vercel (client). Ste
 - Passwords are hashed with bcrypt and never returned by the API.
 - The session is an httpOnly cookie. In production it is `secure`, and `SameSite` is `none` by default or `lax` when the client proxies the API (`COOKIE_SAMESITE=lax`), which also blocks cross-site request forgery.
 - Request types are validated, which blocks NoSQL injection. Every monitor and incident query is scoped to the logged-in user.
-- Rate limits per IP: 600 requests per 15 minutes across the API, 10 per 15 minutes on register and login, and 60 per minute on the public status page. Monitors are limited to 20 per user.
+- Rate limits per IP: 600 requests per 15 minutes across the API, 10 per 15 minutes on register and login, and 60 per minute on the public status page. 20 monitors per user.
 - helmet headers, CORS restricted to `CLIENT_URL`, 10 kB body limit.
 - In production the checker blocks private, loopback and link-local addresses at DNS lookup time, for IP-literal URLs and for redirect targets.
 - Secrets live only in environment variables.
@@ -293,23 +226,23 @@ Watchdog runs on MongoDB Atlas (database), Render (API) and Vercel (client). Ste
 - HTTP and HTTPS only, GET and HEAD only.
 - No outbound notifications (email, SMS, chat). Incidents are shown in the dashboard and on the status page.
 
-Next: SSL expiry warnings, encrypted custom headers, maintenance windows and a second-region checker. The full plan is in [docs/PRD.md](docs/PRD.md).
+Next: SSL certificate expiry warnings, encrypted custom headers for authenticated checks, maintenance windows and a second-region checker. The full plan is in [docs/PRD.md](docs/PRD.md).
 
 ## Documentation
 
-| Document | Contents |
+| Document | Covers |
 |---|---|
-| [docs/PRODUCT.md](docs/PRODUCT.md) | What Watchdog is, why it exists, who it is for |
-| [docs/PRD.md](docs/PRD.md) | Requirements, user stories, acceptance criteria, release plan, risks |
-| [docs/TECHNICAL.md](docs/TECHNICAL.md) | Architecture, check pipeline, status machine, security, configuration |
-| [docs/DESIGN.md](docs/DESIGN.md) | Design system: colour, type, components, motion and accessibility |
-| [docs/api.md](docs/api.md) | API reference |
-| [docs/database-schema.md](docs/database-schema.md) | Collections and indexes |
-| [docs/deployment.md](docs/deployment.md) | Hosting guide and troubleshooting |
-| [docs/TESTING.md](docs/TESTING.md) | Test cases with expected results |
-| [docs/DEMO.md](docs/DEMO.md) | Demo video script and submission form text |
-| [docs/postman](docs/postman) | Postman collection and environments |
-| [docs/CHECKLIST.md](docs/CHECKLIST.md) | Submission and production readiness checklist |
+| [PRODUCT.md](docs/PRODUCT.md) | What Watchdog is, why it exists, who it is for |
+| [PRD.md](docs/PRD.md) | Requirements, user stories, acceptance criteria, release plan, risks |
+| [TECHNICAL.md](docs/TECHNICAL.md) | Architecture, check pipeline, status machine, security, configuration |
+| [DESIGN.md](docs/DESIGN.md) | Design system: colour, type, components, motion and accessibility |
+| [api.md](docs/api.md) | API reference |
+| [database-schema.md](docs/database-schema.md) | Collections and indexes |
+| [deployment.md](docs/deployment.md) | Hosting guide and troubleshooting |
+| [TESTING.md](docs/TESTING.md) | Automated tests and manual test cases with expected results |
+| [DEMO.md](docs/DEMO.md) | Demo video script and submission form text |
+| [postman](docs/postman) | Postman collection and environments |
+| [CHECKLIST.md](docs/CHECKLIST.md) | Submission and production readiness checklist |
 
 ## License
 

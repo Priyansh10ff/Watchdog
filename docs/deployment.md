@@ -126,7 +126,7 @@ The session is an httpOnly cookie. When the client and the API are on different 
 
 ## 6a. Landing page ticker
 
-The landing page ticker reads a public status page called `world`. After deploying, create it on the production database with this one PowerShell command from the project root (replace the two values; the options are in the README under "Landing page ticker setup"):
+The landing page ticker reads a public status page called `world`. After deploying, create it on the production database with this one PowerShell command from the project root (replace the two values):
 
 ```powershell
 cd server; Set-Content .env.production @('MONGO_URI=PASTE_ATLAS_STRING_HERE','SHOWCASE_PASSWORD=choose-a-password'); node --env-file=.env.production scripts/seedShowcase.js; Remove-Item .env.production
@@ -134,7 +134,18 @@ cd server; Set-Content .env.production @('MONGO_URI=PASTE_ATLAS_STRING_HERE','SH
 
 It creates the showcase account, 12 monitors and the `world` page in Atlas. Wait about a minute for the first checks, then reload the landing page. Sites can answer the production server differently from your own computer, because some block data centre addresses, so check the results for a day before relying on the numbers. To use another link name, set `SHOWCASE_SLUG` for the script and `VITE_SHOWCASE_SLUG` in the Vercel environment variables.
 
-The ticker shows each site's own icon, which the visitor's browser loads from Google's favicon service by default. To use a different service, set `VITE_FAVICON_URL` in Vercel with `{domain}` where the host name goes.
+Options for the script, as environment variables:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `SHOWCASE_EMAIL` | `showcase@watchdog.local` | Account that owns the monitors. Using your own account replaces that account's status page, because each account has one |
+| `SHOWCASE_PASSWORD` | random | Password for a new showcase account, 8 to 72 characters. Set it before the first run if you want to log in and edit the monitors. It is ignored if the account already exists |
+| `SHOWCASE_SLUG` | `world` | Link name of the page. Set `VITE_SHOWCASE_SLUG` in the client to match |
+| `SHOWCASE_TITLE` | `Popular websites` | Title of the page |
+
+The script is safe to run again: nothing is duplicated and monitors you have edited keep their settings. The sites are Google, YouTube, Wikipedia, GitHub, Cloudflare, Amazon, Reddit, Netflix, LinkedIn, Stack Overflow, Microsoft and Spotify, each checked every 5 minutes. Reddit, LinkedIn and Stack Overflow also accept the codes they use to block automated checks (403, 429 and 999). Some sites may still block your server, so watch the results for a day, log in to the showcase account to adjust a monitor's status codes, or leave a site out. A site that shows down only because it blocks the checker would look like an outage on your public landing page.
+
+The ticker shows each site's own icon, which the visitor's browser loads from Google's favicon service by default, then from DuckDuckGo's and from the site's own favicon if that fails. To change the first service, set `VITE_FAVICON_URL` in Vercel with `{domain}` where the host name goes.
 
 Render sends `SIGTERM` when it redeploys. The server then stops the scheduler, finishes open requests, closes the database connection and exits, so a deploy does not cut a check in half.
 

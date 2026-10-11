@@ -132,7 +132,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 - An unknown or hidden page shows "Status page not found".
 - It refreshes every minute. The data is cached for up to 30 seconds and limited to 60 requests per minute per IP.
 
-**P3. As a visitor on the landing page, I see how popular websites are doing right now.** A ticker shows five sites at a time and slides to the next one every few seconds, with each site's uptime, response time and recent checks. Each row shows the site's own icon, loaded in the visitor's browser, and falls back to a letter tile if the icon cannot be loaded. It uses real checks from a showcase status page and is hidden when that page does not exist or has fewer than 5 monitors.
+**P3. As a visitor on the landing page, I see how popular websites are doing right now.** A ticker shows five sites at a time and slides to the next one every few seconds, with each site's uptime, response time and recent checks. Each row shows the site's own icon, loaded in the visitor's browser from up to three sources, and falls back to a letter tile if none loads. It uses real checks from a showcase status page and is hidden when that page does not exist or has fewer than 5 monitors.
 
 ## 6. Functional requirements
 

@@ -192,11 +192,11 @@ Interface:
 | # | Action | Expected | Result |
 |---|---|---|---|
 | 29 | Open the landing page before running the showcase script | No ticker section, and the rest of the page is normal. `GET /api/status/world` returns 404 | |
-| 30 | Run `node scripts/seedShowcase.js` in `server`, wait a minute, then reload the landing page | A yellow section after the story shows the chips and five rows | |
+| 30 | Run `node scripts/seedShowcase.js` in `server`, wait a minute, then reload the landing page | A yellow section after the story shows five rows | |
 | 31 | Watch for 10 seconds | Every few seconds the top row slides out and a new one comes in from the bottom, with no jump when the list wraps | |
 | 32 | Move the pointer over the ticker | The scrolling stops. Moving away resumes it | |
 | 33 | Scroll the section out of view and back | It does not keep running off screen and picks up when visible | |
-| 34 | Break one showcase monitor | The chip says 1 down right now and its row says Not responding | |
+| 34 | Break one showcase monitor | Its row says Not responding with a red dot and red bars | |
 | 35 | Hide the showcase page or delete it | The section disappears from the landing page within a minute | |
 | 36 | Turn on reduced motion in the system settings | The five first sites show and nothing moves | |
 | 37 | Log in and open the landing page | The button says Add your own site and opens Add monitor | |
@@ -219,9 +219,9 @@ Interface:
 
 | # | Action | Expected | Result |
 |---|---|---|---|
-| 47 | Re-run `node scripts/seedShowcase.js`, wait for the 30 second cache, then reload the landing page | Each ticker row shows the site's own icon and its domain | |
-| 48 | Block the icon service (for example with the network tab set to offline for that host) and reload | Rows fall back to their coloured letter tiles and the page still works | |
+| 47 | Open the landing page with the `world` page published | Each ticker row shows the site's own icon and its domain. This works even before you re-run the showcase script, because the 12 sites are recognised by name | |
+| 48 | Block `www.google.com` for the page (network tab, block request domain) and reload | Rows switch to DuckDuckGo's icon service and still show icons. Block that too and they use each site's own favicon, and with all three blocked they show their coloured letter tiles | |
 | 49 | GET /status/world and read the JSON | Each monitor has a `domain` such as `github.com`. No full URL or path appears | |
-| 50 | On the status page settings, turn off Show site domains and save, then GET /status/world | Every `domain` is `null` and the ticker shows letter tiles | |
+| 50 | On the status page settings, turn off Show site domains and save, then GET /status/world | Every `domain` is `null`. The ticker still shows icons for the 12 well-known sites, which it recognises by name, and letter tiles for any other site | |
 | 51 | Turn it on for a monitor whose URL has a path or query, then read the public page | Only the host name is shown | |
 | 52 | Open a public status page whose owner turned domains on | The domain shows under each monitor name | |

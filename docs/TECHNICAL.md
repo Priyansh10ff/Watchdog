@@ -178,7 +178,7 @@ Client (`client/.env`):
 |---|---|---|
 | `VITE_API_URL` | `http://localhost:5000/api` | API base URL |
 | `VITE_SHOWCASE_SLUG` | `world` | Link name of the status page shown as the landing page ticker |
-| `VITE_FAVICON_URL` | Google's favicon service | Address of the icon service for the ticker, with `{domain}` where the host name goes. For example `https://icons.duckduckgo.com/ip3/{domain}.ico` |
+| `VITE_FAVICON_URL` | Google's favicon service | First icon service the ticker tries, with `{domain}` where the host name goes. DuckDuckGo's icon service and the site's own favicon are tried after it |
 
 The server refuses to start if `MONGO_URI` or `JWT_SECRET` is missing.
 
@@ -221,7 +221,7 @@ The edit page loads `GET /monitors/:id`, compares the form with the saved monito
 
 `components/LiveTicker.jsx` fetches `GET /api/status/<slug>` (the `VITE_SHOWCASE_SLUG` page, `world` by default) when the landing page loads and again every 60 seconds. If the request fails, the page does not exist or it has fewer than 5 monitors, the section renders nothing, so the landing page never shows made-up data.
 
-With data, it shows summary chips (sites watched, how many are down or slow, average response time) and a window five rows tall. The rows are the monitors followed by the first five again. A GSAP timeline slides the track up one row every 3.2 seconds (2.5 seconds still, 0.7 seconds moving) and, after the last row, restarts from the identical repeated view, so the loop has no jump. It pauses when the section is off screen and when the pointer is over it. With reduced motion it shows the first five sites without scrolling. The repeated rows are hidden from screen readers. When the page shares domains, each row shows the site's own icon: the browser loads it from a favicon service (Google's by default, or `VITE_FAVICON_URL`) using the host name, encoded, at 64 pixels shown at 32, with no referrer sent. If an icon fails to load, that row falls back to its coloured letter tile. The cost of this is that every visitor's browser contacts the icon service, which is a third party. When the section first appears, ScrollTrigger positions are refreshed because the page below it moves.
+With data, it shows a window five rows tall. The rows are the monitors followed by the first five again. A GSAP timeline slides the track up one row every 3.2 seconds (2.5 seconds still, 0.7 seconds moving) and, after the last row, restarts from the identical repeated view, so the loop has no jump. It pauses when the section is off screen and when the pointer is over it. With reduced motion it shows the first five sites without scrolling. The repeated rows are hidden from screen readers. Each row shows the site's own icon, loaded by the visitor's browser with no referrer sent. The domain comes from the status page when the owner turned on `showDomains`, and otherwise from a built-in list of the 12 showcase sites matched by name (ignoring case and spaces), so the icons appear even before the setting is on. The browser tries three sources in turn, moving on when one fails to load: a favicon service (Google's by default, or `VITE_FAVICON_URL`) at 64 pixels shown at 32, then DuckDuckGo's icon service, then the site's own `/favicon.ico`. If all three fail, that row shows its coloured letter tile. The cost is that visitors' browsers contact those services, which are third parties. When the section first appears, ScrollTrigger positions are refreshed because the page below it moves.
 
 ## 13d. Showcase setup script
 
