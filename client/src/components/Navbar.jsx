@@ -26,12 +26,12 @@ const Navbar = () => {
 
   return (
     <div className="mx-auto max-w-[1312px] px-6 pt-5 sm:px-16">
-      <nav className="flex flex-wrap items-center justify-between gap-3 rounded-[34px] border border-white/25 bg-white/10 px-5 py-3 text-white backdrop-blur-md md:grid md:h-[68px] md:grid-cols-[1fr_auto_1fr] md:rounded-full md:py-0 md:pl-5 md:pr-3">
-        <Link to="/dashboard" className="w-fit">
+      <nav className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[34px] border border-white/25 bg-white/10 px-4 py-3 text-white backdrop-blur-md xl:h-[68px] xl:flex-nowrap xl:rounded-full xl:py-0 xl:pl-5 xl:pr-3">
+        <Link to="/dashboard" className="order-1 flex shrink-0 items-center xl:flex-1">
           <Logo />
         </Link>
 
-        <div className="flex items-center gap-1.5">
+        <div className="order-3 flex w-full items-center justify-center gap-1.5 xl:order-2 xl:w-auto xl:shrink-0">
           <Link to="/dashboard" className={linkClass("/dashboard")}>
             Monitors
           </Link>
@@ -43,25 +43,29 @@ const Navbar = () => {
           </Link>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="order-2 ml-auto flex shrink-0 items-center justify-end gap-3 xl:order-3 xl:ml-0 xl:flex-1">
           <Link
             to="/monitors/new"
-            className="inline-flex h-[46px] items-center rounded-full bg-butter px-6 text-[15px] font-bold text-ink transition-colors hover:bg-white"
+            className="inline-flex h-[46px] items-center whitespace-nowrap rounded-full bg-butter px-6 text-[15px] font-bold text-ink transition-colors hover:bg-white"
           >
             Add monitor
           </Link>
 
-          <span className="hidden h-[46px] items-center gap-2.5 rounded-full bg-white/15 pl-1.5 pr-4 text-[15px] font-semibold lg:inline-flex">
+          <span
+            className="hidden h-[46px] items-center gap-2.5 rounded-full bg-white/15 pl-1.5 text-[15px] font-semibold sm:inline-flex xl:pr-4"
+            title={user?.name}
+          >
             <span className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-white font-extrabold text-ink">
               {user?.name?.charAt(0).toUpperCase()}
             </span>
-            <span className="max-w-[140px] truncate">{user?.name}</span>
+            <span className="hidden max-w-[140px] truncate xl:inline">{user?.name}</span>
+            <span className="w-1.5 xl:hidden" />
           </span>
 
           <button
             type="button"
             onClick={handleLogout}
-            className="inline-flex h-[46px] items-center rounded-full border-2 border-white/80 px-5 text-[15px] font-bold transition-colors hover:bg-white hover:text-ink"
+            className="inline-flex h-[46px] items-center whitespace-nowrap rounded-full border-2 border-white/80 px-5 text-[15px] font-bold transition-colors hover:bg-white hover:text-ink"
           >
             Log out
           </button>

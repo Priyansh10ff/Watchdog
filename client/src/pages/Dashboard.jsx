@@ -179,7 +179,7 @@ const Dashboard = () => {
         {ready && monitors.length === 0 && (
           <div className={`${cardClass} mt-10 p-10`}>
             <h2 className="font-display text-[34px] font-extrabold tracking-[-1px]">
-              Nothing to watch yet
+              Start with one site
             </h2>
             <p className="mt-2 max-w-lg text-[17px] text-soft">
               Paste the address of a website or API. Watchdog will request it on a

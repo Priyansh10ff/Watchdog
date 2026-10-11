@@ -126,7 +126,13 @@ The session is an httpOnly cookie. When the client and the API are on different 
 
 ## 6a. Landing page ticker
 
-The landing page ticker reads a public status page called `world`. After deploying, create it on the production database by running the showcase script with the Atlas connection string (the steps and options are in the README under "Landing page ticker setup"). Sites can answer the production server differently from your own computer, because some block data centre addresses, so check the results for a day before relying on the numbers. To use another link name, set `SHOWCASE_SLUG` for the script and `VITE_SHOWCASE_SLUG` in the Vercel environment variables.
+The landing page ticker reads a public status page called `world`. After deploying, create it on the production database with this one PowerShell command from the project root (replace the two values; the options are in the README under "Landing page ticker setup"):
+
+```powershell
+cd server; Set-Content .env.production @('MONGO_URI=PASTE_ATLAS_STRING_HERE','SHOWCASE_PASSWORD=choose-a-password'); node --env-file=.env.production scripts/seedShowcase.js; Remove-Item .env.production
+```
+
+It creates the showcase account, 12 monitors and the `world` page in Atlas. Wait about a minute for the first checks, then reload the landing page. Sites can answer the production server differently from your own computer, because some block data centre addresses, so check the results for a day before relying on the numbers. To use another link name, set `SHOWCASE_SLUG` for the script and `VITE_SHOWCASE_SLUG` in the Vercel environment variables.
 
 The ticker shows each site's own icon, which the visitor's browser loads from Google's favicon service by default. To use a different service, set `VITE_FAVICON_URL` in Vercel with `{domain}` where the host name goes.
 

@@ -196,12 +196,13 @@ Options, as environment variables:
 | `SHOWCASE_SLUG` | `world` | Link name of the page. Set `VITE_SHOWCASE_SLUG` in the client to match |
 | `SHOWCASE_TITLE` | `Popular websites` | Title of the page |
 
-For the live site, run the same script against the production database. In PowerShell:
+For the live site, run the same script against the production database with one PowerShell command from the project root. Replace the two values first. It writes a temporary `.env.production` file, runs the script against it and deletes the file again:
 
 ```powershell
-$env:MONGO_URI = "your Atlas connection string"
-node scripts/seedShowcase.js
+cd server; Set-Content .env.production @('MONGO_URI=PASTE_ATLAS_STRING_HERE','SHOWCASE_PASSWORD=choose-a-password'); node --env-file=.env.production scripts/seedShowcase.js; Remove-Item .env.production
 ```
+
+`SHOWCASE_PASSWORD` is optional and only matters the first time, when the showcase account is created. If the connection string contains special characters in the password, URL-encode them (`@` becomes `%40`, `#` becomes `%23`). The `.env.production` file is ignored by Git.
 
 The icons are loaded by each visitor's browser from Google's favicon service (set `VITE_FAVICON_URL` to use another one), and a row falls back to a letter tile if its icon does not load.
 
