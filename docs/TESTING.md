@@ -44,6 +44,17 @@ Client: 57 tests in 3 files.
 | `time.test.js` | 24 | "5 min ago", durations such as `2m 5s`, and dates |
 | `sentryPose.test.js` | 12 | The three moods of Sentry and how a pose is applied |
 
+Live smoke test, for a deployed app:
+
+```bash
+cd server
+npm run smoke -- https://YOUR-APP.vercel.app --demo=https://YOUR-DEMO-TARGET.onrender.com
+```
+
+`npm run smoke` is an automated check of a deployed app. It registers a throwaway account, then goes through the main features over the real address: health, security headers, CORS, cookies, creating and editing a monitor, a real check by the server, results and uptime, pause and resume, check now, the public status page (and that it never shows a full address), and cleanup. With `--demo` it also breaks the demo site and confirms that exactly one incident opens, can be acknowledged, and resolves with a duration after recovery. It exits with an error if anything fails, and prints a warning for things that depend on your setup, such as `SameSite=None` behind the Vercel proxy. Its own behaviour is tested in `tests/smoke*.spec.js` (6 tests, run with `npm run test:smoke`), which start a copy of the whole API on in-memory data and a copy of the demo site. They are kept out of `npm test` because they take about a minute.
+
+Postman: `docs/postman` has `Watchdog.postman_collection.json` (22 requests with 30 checks) and a local and a live environment. Import all three, pick an environment, set `baseUrl` and run the collection. It was run with Newman against a copy of the API and passes.
+
 Not covered by automated tests: the React components, the animations and anything that needs a real MongoDB. Those are covered by the manual cases below.
 
 Dependency audit (`npm audit`): the client has no known vulnerabilities, and the server has none in its production dependencies. Removing the unused `jest` and `nodemailer` packages leaves three advisories in `nodemon`'s dev-only dependency chain (a denial of service in `braces` that needs attacker-controlled glob patterns), with no upstream fix yet. They are never installed in production.

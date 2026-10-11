@@ -215,6 +215,8 @@ The sites are Google, YouTube, Wikipedia, GitHub, Cloudflare, Amazon, Reddit, Ne
 | `server` | `npm run dev` | Start the API with nodemon |
 | `server` | `npm start` | Start the API |
 | `server` | `npm test` | Run the server tests |
+| `server` | `npm run test:smoke` | Run the slower tests of the smoke script itself (about a minute) |
+| `server` | `npm run smoke -- <address>` | Check a deployed app end to end |
 | `client` | `npm run dev` | Start the Vite dev server |
 | `client` | `npm test` | Run the client tests |
 | `client` | `npm run build` | Production build into `dist` |
@@ -244,6 +246,15 @@ cd client && npm test
 ```
 
 435 server tests and 57 client tests, using Node's built-in test runner, so there is nothing extra to install. The server tests need no database or internet. A GitHub Actions workflow runs both suites and the client build on every push. `docs/TESTING.md` lists what is covered and also holds the manual test cases for the React components and the real database.
+
+### Checking a deployed app
+
+```bash
+cd server
+npm run smoke -- https://YOUR-APP.vercel.app --demo=https://YOUR-DEMO-TARGET.onrender.com
+```
+
+`npm run smoke` is an automated check of a deployed app. It registers a throwaway account, then goes through the main features over the real address: health, security headers, CORS, cookies, creating and editing a monitor, a real check by the server, results and uptime, pause and resume, check now, the public status page (and that it never shows a full address), and cleanup. With `--demo` it also breaks the demo site and confirms that exactly one incident opens, can be acknowledged, and resolves with a duration after recovery. It exits with an error if anything fails, and prints a warning for things that depend on your setup, such as `SameSite=None` behind the Vercel proxy. The `docs/postman` folder has a Postman collection with every endpoint and its checks, and `docs/DEMO.md` has the demo video script.
 
 ## Deployment
 
@@ -285,6 +296,8 @@ Next: deployment, then the optional extras. Then SSL expiry warnings, encrypted 
 | [docs/database-schema.md](docs/database-schema.md) | Collections and indexes |
 | [docs/deployment.md](docs/deployment.md) | Hosting guide and troubleshooting |
 | [docs/TESTING.md](docs/TESTING.md) | Test cases with expected results |
+| [docs/DEMO.md](docs/DEMO.md) | Demo video script and submission form text |
+| [docs/postman](docs/postman) | Postman collection and environments |
 | [docs/CHECKLIST.md](docs/CHECKLIST.md) | Submission and production readiness checklist |
 
 ## Author

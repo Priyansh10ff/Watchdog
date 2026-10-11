@@ -142,7 +142,14 @@ CI (`.github/workflows/ci.yml`) runs the tests and the client build on every pus
 
 ## 7. Verification
 
-Run these on the deployed app and note the results in [TESTING.md](./TESTING.md).
+Fastest: run the smoke test, which goes through most of the list below by itself and prints a result for each check:
+
+```bash
+cd server
+npm run smoke -- https://YOUR-APP.vercel.app --demo=https://YOUR-DEMO-TARGET.onrender.com
+```
+
+It creates a throwaway account (`smoke-...@watchdog.test`) and deletes everything else it makes. Then work through these by hand and note the results in [TESTING.md](./TESTING.md).
 
 - [ ] `/api/health` returns success
 - [ ] Register, then refresh the page: still logged in

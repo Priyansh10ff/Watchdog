@@ -202,7 +202,7 @@ On `SIGTERM` or `SIGINT`, which Render sends when it redeploys, the server stops
 
 ## 13. Testing
 
-Automated tests use Node's built-in test runner: 435 server tests and 57 client tests, run with `npm test` in each folder and in CI on every push. The server tests replace the database models with in-memory stand-ins and test the check engine against a local web server, so they need no database or internet. The full list is in [TESTING.md](./TESTING.md), which also holds the manual cases for the parts the automated tests do not cover (the React components, the animations and the real database).
+Automated tests use Node's built-in test runner: 435 server tests and 57 client tests, run with `npm test` in each folder and in CI on every push. The server tests replace the database models with in-memory stand-ins and test the check engine against a local web server, so they need no database or internet. `scripts/smokeTest.mjs` (run with `npm run smoke -- <address>`) checks a deployed app over HTTP, and its own tests (`npm run test:smoke`) run it against a copy of the API on in-memory data. The full list is in [TESTING.md](./TESTING.md), which also holds the manual cases for the parts the automated tests do not cover (the React components, the animations and the real database).
 
 ## 13a. Client animation
 

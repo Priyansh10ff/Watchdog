@@ -41,6 +41,7 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [x] Rate limit on the rest of the API (FR21)
 - [x] GitHub Actions runs both test suites and the client build
 - [ ] `npm test` passes in `server` and in `client` on the final commit
+- [ ] `npm run smoke` passes against the live app, including `--demo`
 
 ## 3. Security review
 
@@ -97,9 +98,9 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [x] [api.md](./api.md) and [database-schema.md](./database-schema.md)
 - [x] [deployment.md](./deployment.md)
 - [ ] Screenshots added to `docs/screenshots/` and linked from the README
-- [ ] Postman collection exported to `docs/postman/`
+- [x] Postman collection in `docs/postman/` (22 requests, 30 checks, run with Newman)
 - [ ] Live links added to the README after deployment
-- [ ] `LICENSE` file has content (it is empty now)
+- [x] `LICENSE` file (MIT, in the name of Priyansh Dugar. Change it if you prefer another license)
 
 ## 7. Demo video (3 to 5 minutes)
 
@@ -116,6 +117,7 @@ Show the product working, not the code.
 9. One slide on the architecture: scheduler, atomic claiming, status machine, incidents
 10. Close with what is next
 
+- [x] Script written: [DEMO.md](./DEMO.md)
 - [ ] Recorded
 - [ ] Link opens in a private window
 

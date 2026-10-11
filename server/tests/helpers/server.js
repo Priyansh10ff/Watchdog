@@ -122,3 +122,51 @@ export const freePort = async () => {
 
   return port;
 };
+
+export const startDemoServer = async () => {
+  const state = { mode: "up" };
+
+  const server = http.createServer((req, res) => {
+    const url = new URL(req.url, "http://demo.local");
+
+    if (url.pathname === "/health") {
+      if (state.mode === "down") {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ status: "down" }));
+      }
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ status: "ok" }));
+    }
+
+    if (url.pathname.startsWith("/control/")) {
+      const mode = url.pathname.split("/")[2];
+
+      if (!["up", "down", "slow"].includes(mode)) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ message: "Mode must be up, down or slow" }));
+      }
+
+      state.mode = mode;
+      res.writeHead(302, { Location: "/" });
+      return res.end();
+    }
+
+    res.writeHead(200, { "Content-Type": "text/html" });
+    return res.end(`<h1>Demo target</h1><p>Current mode: <strong>${state.mode}</strong></p>`);
+  });
+
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+
+  const { port } = server.address();
+
+  return {
+    base: `http://127.0.0.1:${port}`,
+    state,
+    close: () =>
+      new Promise((resolve) => {
+        server.closeAllConnections?.();
+        server.close(resolve);
+      }),
+  };
+};
