@@ -12,7 +12,7 @@ About 40 minutes. The order matters because each step needs a value from the one
 4. Keep the API awake with an external pinger (section 3).
 5. Vercel: add `client/vercel.json` with the Render address, then import the repository (sections 4 and 5).
 6. Render: set `CLIENT_URL` to the Vercel address and redeploy.
-7. Run the showcase script against the Atlas database (section 6a).
+7. Check the Render logs for the showcase page, which the API creates by itself (section 6a).
 8. Go through the verification list (section 7), then put the live links in the README.
 
 Never put the Atlas connection string, `JWT_SECRET` or any password in an issue, a chat or a commit. When you ask for help, share only public addresses and the text of error messages.
@@ -68,6 +68,8 @@ Environment variables:
 | `CLIENT_URL` | your Vercel URL, with no trailing slash |
 | `TRUST_PROXY` | `1` for option A below, `2` for option B (see section 5) |
 | `COOKIE_SAMESITE` | `lax` for option B. Leave it unset for option A, which needs `none` |
+| `SHOWCASE_PASSWORD` | optional, 8 to 72 characters. The API creates the landing page ticker's account by itself on its first start. Set this before that start if you want to log in as `showcase@watchdog.local` and adjust monitors |
+| `SEED_SHOWCASE` | optional. Defaults to `true` in production. Set `false` to stop the API from creating the ticker's page |
 | `API_RATE_LIMIT` | optional, requests per IP every 15 minutes across the API. Default `600`. Raise it if many people share one address, such as a campus network |
 
 After the deploy, open `https://YOUR-SERVICE.onrender.com/api/health`. It should return `{"success":true,"message":"Server is running"}`. The logs should show `DB Connected` and `Scheduler started`.
@@ -126,7 +128,15 @@ The session is an httpOnly cookie. When the client and the API are on different 
 
 ## 6a. Landing page ticker
 
-The landing page ticker reads a public status page called `world`. After deploying, create it on the production database with this one PowerShell command from the project root (replace the two values):
+The landing page ticker reads a public status page called `world`. In production the API creates it by itself the first time it starts: right after it begins listening, it checks whether a page with that link exists and, if not, creates the showcase account, the 12 monitors and the page. There is nothing to run after deploying. Look for this line in the Render logs:
+
+```
+Showcase page "world" created with 12 sites
+```
+
+A second start says `already exists` and changes nothing, and a page its owner hid is never published again. If the log shows `Showcase setup skipped:` followed by a reason, fix that (for example a `SHOWCASE_PASSWORD` that is too short). To log in as the showcase account and adjust a monitor, set `SHOWCASE_PASSWORD` before the first start. To switch the automatic setup off, set `SEED_SHOWCASE=false`.
+
+If you ever need to create the page by hand, for example against another database, use this one PowerShell command from the project root (replace the two values):
 
 ```powershell
 cd server; Set-Content .env.production @('MONGO_URI=PASTE_ATLAS_STRING_HERE','SHOWCASE_PASSWORD=choose-a-password'); node --env-file=.env.production scripts/seedShowcase.js; Remove-Item .env.production
@@ -190,6 +200,6 @@ It creates a throwaway account (`smoke-...@watchdog.test`) and deletes everythin
 | The Vercel build fails on `gsap` | `gsap` is missing from `client/package.json`. Run `npm install gsap` in `client` and commit `package.json` and `package-lock.json` |
 | The first request after a quiet period takes about 30 seconds | The free API instance was asleep. Set up the pinger (section 3) |
 | Seeding the showcase from your computer fails with `querySrv ECONNREFUSED` | Your network blocks Atlas's SRV lookups. Use the standard `mongodb://` connection string from Atlas, or another network |
-| The landing page has no yellow ticker | The `world` status page does not exist in this database, has fewer than 5 monitors, or the API was asleep when the page loaded. Run the showcase command (section 6a) and reload |
+| The landing page has no yellow ticker | Open `/api/status/world`. If it says the page was not found, look in the Render logs for `Showcase page "world" created` or for a `Showcase setup skipped:` line with the reason, or create it by hand with the command in section 6a. Right after a cold start the ticker retries by itself every few seconds, so wait a minute before reloading. It stays hidden when the page has fewer than 5 monitors |
 | A public monitor shows "Private addresses are not allowed" | The hostname resolves to a private address. That is the protection working |
 | A site shows down but loads in a browser | The site blocks bots or datacenter IPs. Add the status it returns (often 403) to the expected status codes |

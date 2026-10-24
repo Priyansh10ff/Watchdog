@@ -2,6 +2,7 @@ import "dotenv/config";
 import mongoose from "mongoose";
 import app from "./app.js";
 import { startScheduler, stopScheduler } from "./jobs/scheduler.js";
+import { ensureShowcase, showcaseAutoSeedEnabled } from "./services/showcase.service.js";
 
 const required = ["MONGO_URI", "JWT_SECRET"];
 const missing = required.filter((key) => !process.env[key]);
@@ -23,6 +24,25 @@ const start = async () => {
 
     if (process.env.DISABLE_SCHEDULER !== "true") {
       startScheduler();
+    }
+
+    if (showcaseAutoSeedEnabled()) {
+      ensureShowcase({
+        email: process.env.SHOWCASE_EMAIL,
+        slug: process.env.SHOWCASE_SLUG,
+        title: process.env.SHOWCASE_TITLE,
+        password: process.env.SHOWCASE_PASSWORD,
+      })
+        .then((result) => {
+          console.log(
+            result.skipped
+              ? `Showcase page "${result.slug}" already exists`
+              : `Showcase page "${result.slug}" created with ${result.total} sites`,
+          );
+        })
+        .catch((error) => {
+          console.log(`Showcase setup skipped: ${error.message}`);
+        });
     }
 
     let closing = false;

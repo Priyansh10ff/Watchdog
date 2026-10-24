@@ -74,7 +74,7 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [ ] `COOKIE_SAMESITE` set to `lax` on Render if the Vercel proxy option is used
 - [ ] `client/vercel.json` added so direct page refreshes do not return 404
 - [ ] Public demo target deployed for the video
-- [ ] Showcase script run locally and the ticker visible on the landing page ([README](../README.md))
+- [ ] The ticker is visible on the landing page of the deployed app (the API creates the showcase page on its first start, see [deployment.md](./deployment.md))
 - [ ] Showcase script run against the production database
 - [ ] Ticker icons checked in a private window, and the choice of icon service accepted (default: Google's favicon service)
 - [ ] Showcase monitors watched for a day: no site shows down only because it blocks the checker
@@ -98,7 +98,7 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [x] [PRODUCT.md](./PRODUCT.md), [PRD.md](./PRD.md), [TECHNICAL.md](./TECHNICAL.md), [DESIGN.md](./DESIGN.md)
 - [x] [api.md](./api.md) and [database-schema.md](./database-schema.md)
 - [x] [deployment.md](./deployment.md)
-- [ ] Screenshots added to `docs/screenshots/` and shown in the README
+- [x] Screenshots added to `docs/screenshots/` and shown in the README
 - [x] Postman collection in `docs/postman/` (22 requests, 30 checks, run with Newman)
 - [ ] Live app and demo video links added to the Links table in the README
 - [x] `LICENSE` file (MIT, in the name of Priyansh Dugar. Change it if you prefer another license)

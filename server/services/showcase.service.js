@@ -112,3 +112,22 @@ export const seedShowcase = async ({ email, slug, title, password } = {}) => {
     total: wanted.length,
   };
 };
+
+export const showcaseAutoSeedEnabled = (env = process.env) => {
+  const setting = String(env.SEED_SHOWCASE ?? "").trim().toLowerCase();
+
+  if (setting === "true") return true;
+  if (setting === "false") return false;
+
+  return env.NODE_ENV === "production";
+};
+
+export const ensureShowcase = async (options = {}) => {
+  const slug = (options.slug || "world").toLowerCase();
+
+  if (await StatusPage.exists({ slug })) {
+    return { skipped: true, slug };
+  }
+
+  return { skipped: false, ...(await seedShowcase(options)) };
+};

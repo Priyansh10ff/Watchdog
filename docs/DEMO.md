@@ -35,7 +35,7 @@ Do these 15 minutes before, in this order.
 | 3:00 | Demo target: press Make it up, then the dashboard | When the site answers again, the incident resolves itself and records how long the outage lasted. |
 | 3:20 | Edit a monitor, pause and resume, delete with the confirmation | A monitor can be edited, paused or deleted. Deleting asks first, inside the page. |
 | 3:40 | Status page settings, then the private window | I choose monitors, pick a link and publish. Anyone can open it without logging in. It shows names, status and uptime, never the addresses. |
-| 4:05 | A slide or the README architecture diagram | One scheduler claims due monitors with an atomic lease, so a restart or a second server never double-checks. A status machine decides when a site is down. Private network addresses are blocked, so a monitor cannot be pointed at the server's own network. There are 435 server tests and 57 client tests, CI on every push, and it is deployed on Vercel, Render and Atlas. |
+| 4:05 | A slide or the README architecture diagram | One scheduler claims due monitors with an atomic lease, so a restart or a second server never double-checks. A status machine decides when a site is down. Private network addresses are blocked, so a monitor cannot be pointed at the server's own network. There are 453 server tests and 70 client tests, CI on every push, and it is deployed on Vercel, Render and Atlas. |
 | 4:35 | Landing page or the repo | Next: SSL expiry warnings and charts. Thanks for watching. |
 
 ## If something goes wrong while recording
@@ -61,4 +61,4 @@ Check these against the form's own wording.
 - **Deployed application:** your Vercel address
 - **Demo video:** your video link
 - **Tech stack:** MongoDB, Express, React, Node.js. Vite, Tailwind CSS, GSAP, node-cron, JWT in an httpOnly cookie. Deployed on Vercel, Render and MongoDB Atlas.
-- **Major features:** scheduled checks with per-monitor interval, status codes, keyword and failure threshold; incidents with acknowledge and automatic resolution; a live dashboard with response time, uptime and recent checks; a public status page; SSRF protection, rate limits and security headers; 435 server tests, 57 client tests and CI.
+- **Major features:** scheduled checks with per-monitor interval, status codes, keyword and failure threshold; incidents with acknowledge and automatic resolution; a live dashboard with response time, uptime and recent checks; a public status page; SSRF protection, rate limits and security headers; 453 server tests, 70 client tests and CI.

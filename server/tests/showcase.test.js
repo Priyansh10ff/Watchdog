@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import User from "../models/user.model.js";
 import Monitor from "../models/monitor.model.js";
 import StatusPage from "../models/statusPage.model.js";
-import { SHOWCASE_SITES, seedShowcase } from "../services/showcase.service.js";
+import { SHOWCASE_SITES, ensureShowcase, seedShowcase, showcaseAutoSeedEnabled } from "../services/showcase.service.js";
 import { createStubs, oid } from "./helpers/stubs.js";
 
 const stubs = createStubs();
@@ -39,6 +39,7 @@ beforeEach(() => {
     monitors.push(monitor);
     return monitor;
   });
+  stubs.stub(StatusPage, "exists", async (query) => (pages.find((p) => p.slug === query.slug) ? { _id: oid() } : null));
   stubs.stub(StatusPage, "findOneAndUpdate", async (query, update) => {
     const clash = pages.find((p) => p.slug === update.slug && String(p.user) !== String(query.user));
     if (clash) throw Object.assign(new Error("dup"), { code: 11000 });
@@ -209,6 +210,109 @@ describe("showcase setup", () => {
       });
 
       await assert.rejects(() => seedShowcase(), { message: "db down" });
+    });
+  });
+});
+
+describe("automatic setup on start", () => {
+  describe("when it is switched on", () => {
+    const cases = [
+      ["production with no setting", { NODE_ENV: "production" }, true],
+      ["development with no setting", { NODE_ENV: "development" }, false],
+      ["test with no setting", { NODE_ENV: "test" }, false],
+      ["nothing set at all", {}, false],
+      ["true in development", { NODE_ENV: "development", SEED_SHOWCASE: "true" }, true],
+      ["false in production", { NODE_ENV: "production", SEED_SHOWCASE: "false" }, false],
+      ["capitals and spaces", { NODE_ENV: "development", SEED_SHOWCASE: "  TRUE " }, true],
+      ["an unknown value falls back to the environment rule in production", { NODE_ENV: "production", SEED_SHOWCASE: "maybe" }, true],
+      ["an unknown value falls back to the environment rule in development", { NODE_ENV: "development", SEED_SHOWCASE: "1" }, false],
+      ["an empty value falls back to the environment rule", { NODE_ENV: "production", SEED_SHOWCASE: "" }, true],
+    ];
+
+    cases.forEach(([label, env, expected]) => {
+      it(label, () => {
+        assert.equal(showcaseAutoSeedEnabled(env), expected);
+      });
+    });
+  });
+
+  describe("creating the page", () => {
+    it("creates the account, 12 monitors and the world page when it is missing", async () => {
+      const result = await ensureShowcase();
+
+      assert.equal(result.skipped, false);
+      assert.equal(result.slug, "world");
+      assert.equal(result.total, 12);
+      assert.equal(result.created, 12);
+      assert.equal(users.length, 1);
+      assert.equal(monitors.length, 12);
+      assert.equal(pages.length, 1);
+      assert.equal(pages[0].isPublished, true);
+      assert.equal(pages[0].showDomains, true);
+    });
+
+    it("does nothing when the page already exists", async () => {
+      await ensureShowcase();
+      const second = await ensureShowcase();
+
+      assert.deepEqual(second, { skipped: true, slug: "world" });
+      assert.equal(userCreates, 1);
+      assert.equal(monitors.length, 12);
+      assert.equal(pages.length, 1);
+    });
+
+    it("leaves a page alone that its owner hid, instead of publishing it again", async () => {
+      await ensureShowcase();
+      pages[0].isPublished = false;
+
+      const again = await ensureShowcase();
+
+      assert.equal(again.skipped, true);
+      assert.equal(pages[0].isPublished, false);
+    });
+
+    it("leaves alone a page with that link that belongs to another account", async () => {
+      pages.push({ user: oid(), slug: "world", title: "Someone else", monitors: [], isPublished: true });
+
+      const result = await ensureShowcase();
+
+      assert.equal(result.skipped, true);
+      assert.equal(users.length, 0);
+      assert.equal(monitors.length, 0);
+      assert.equal(pages.length, 1);
+    });
+
+    it("checks the link that was asked for, not always world", async () => {
+      await ensureShowcase();
+      const custom = await ensureShowcase({ slug: "Popular" });
+
+      assert.equal(custom.skipped, false);
+      assert.equal(custom.slug, "popular");
+    });
+
+    it("passes the options on to the setup", async () => {
+      const result = await ensureShowcase({ email: "Owner@Example.com", slug: "sites", title: "My sites", password: "a-long-password" });
+
+      assert.equal(result.email, "owner@example.com");
+      assert.equal(result.passwordSet, true);
+      assert.equal(pages[0].title, "My sites");
+      assert.equal(await bcrypt.compare("a-long-password", users[0].password), true);
+    });
+
+    it("refuses a bad password before creating anything", async () => {
+      await assert.rejects(ensureShowcase({ password: "short" }), /8 to 72 characters/);
+
+      assert.equal(users.length, 0);
+      assert.equal(monitors.length, 0);
+      assert.equal(pages.length, 0);
+    });
+
+    it("passes on database errors so the caller can log them", async () => {
+      stubs.stub(StatusPage, "exists", async () => {
+        throw new Error("database is down");
+      });
+
+      await assert.rejects(ensureShowcase(), /database is down/);
     });
   });
 });

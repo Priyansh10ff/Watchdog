@@ -168,6 +168,11 @@ Server (`server/.env`):
 | `NODE_ENV` | no | none | `production` enables secure cookies, trust proxy and private-address blocking |
 | `CLIENT_URL` | no | `http://localhost:5173` | Allowed browser origin, no trailing slash |
 | `DISABLE_SCHEDULER` | no | `false` | Set to `true` to run the API without the scheduler |
+| `SEED_SHOWCASE` | no | `true` in production, `false` otherwise | `true` makes the API create the landing page ticker's status page on start if it does not exist. `false` turns that off |
+| `SHOWCASE_EMAIL` | no | `showcase@watchdog.local` | Account that owns the ticker's monitors and page |
+| `SHOWCASE_PASSWORD` | no | random | Password for the showcase account when it is created, 8 to 72 characters. Set it before the first start if you want to log in and adjust the monitors |
+| `SHOWCASE_SLUG` | no | `world` | Link name of the ticker's page. Set `VITE_SHOWCASE_SLUG` in the client to match |
+| `SHOWCASE_TITLE` | no | `Popular websites` | Title of the ticker's page |
 | `API_RATE_LIMIT` | no | `600` | Requests allowed per IP every 15 minutes across the whole API, except the health check |
 | `COOKIE_SAMESITE` | no | `none` in production, `lax` otherwise | `SameSite` of the session cookie: `lax`, `strict` or `none`. Use `lax` behind the Vercel proxy, where the cookie is first-party. `none` is always sent as secure |
 | `TRUST_PROXY` | no | `1` | Number of proxy hops in front of the API in production, used to find the visitor's IP for rate limiting. Use `2` behind the Vercel proxy option |
@@ -202,7 +207,7 @@ On `SIGTERM` or `SIGINT`, which Render sends when it redeploys, the server stops
 
 ## 13. Testing
 
-Automated tests use Node's built-in test runner: 435 server tests and 57 client tests, run with `npm test` in each folder and in CI on every push. The server tests replace the database models with in-memory stand-ins and test the check engine against a local web server, so they need no database or internet. `scripts/smokeTest.mjs` (run with `npm run smoke -- <address>`) checks a deployed app over HTTP, and its own tests (`npm run test:smoke`) run it against a copy of the API on in-memory data. The full list is in [TESTING.md](./TESTING.md), which also holds the manual cases for the parts the automated tests do not cover (the React components, the animations and the real database).
+Automated tests use Node's built-in test runner: 453 server tests and 70 client tests, run with `npm test` in each folder and in CI on every push. The server tests replace the database models with in-memory stand-ins and test the check engine against a local web server, so they need no database or internet. `scripts/smokeTest.mjs` (run with `npm run smoke -- <address>`) checks a deployed app over HTTP, and its own tests (`npm run test:smoke`) run it against a copy of the API on in-memory data. The full list is in [TESTING.md](./TESTING.md), which also holds the manual cases for the parts the automated tests do not cover (the React components, the animations and the real database).
 
 ## 13a. Client animation
 
@@ -219,13 +224,15 @@ The edit page loads `GET /monitors/:id`, compares the form with the saved monito
 
 ## 13c. Landing page ticker
 
-`components/LiveTicker.jsx` fetches `GET /api/status/<slug>` (the `VITE_SHOWCASE_SLUG` page, `world` by default) when the landing page loads and again every 60 seconds. If the request fails, the page does not exist or it has fewer than 5 monitors, the section renders nothing, so the landing page never shows made-up data.
+`components/LiveTicker.jsx` fetches `GET /api/status/<slug>` (the `VITE_SHOWCASE_SLUG` page, `world` by default) when the landing page loads and again every 60 seconds. If a request fails, it retries after 3, 6, 12, 20 and 30 seconds and then goes back to every 60 seconds (`utils/poller.js`), so a cold start of the API costs seconds, not a minute, and a page created a moment after the visit is picked up by itself. While the request fails, the page does not exist or it has fewer than 5 monitors, the section renders nothing, so the landing page never shows made-up data. Once data has arrived, a failed refresh keeps showing the last good data.
 
 With data, it shows a window five rows tall. The rows are the monitors followed by the first five again. A GSAP timeline slides the track up one row every 3.2 seconds (2.5 seconds still, 0.7 seconds moving) and, after the last row, restarts from the identical repeated view, so the loop has no jump. It pauses when the section is off screen and when the pointer is over it. With reduced motion it shows the first five sites without scrolling. The repeated rows are hidden from screen readers. Each row shows the site's own icon, loaded by the visitor's browser with no referrer sent. The domain comes from the status page when the owner turned on `showDomains`, and otherwise from a built-in list of the 12 showcase sites matched by name (ignoring case and spaces), so the icons appear even before the setting is on. The browser tries three sources in turn, moving on when one fails to load: a favicon service (Google's by default, or `VITE_FAVICON_URL`) at 64 pixels shown at 32, then DuckDuckGo's icon service, then the site's own `/favicon.ico`. If all three fail, that row shows its coloured letter tile. The cost is that visitors' browsers contact those services, which are third parties. When the section first appears, ScrollTrigger positions are refreshed because the page below it moves.
 
 ## 13d. Showcase setup script
 
 `server/scripts/seedShowcase.js` connects with `MONGO_URI` and calls `seedShowcase` in `services/showcase.service.js`. That function finds or creates the showcase account (the password is hashed with bcrypt, random unless `SHOWCASE_PASSWORD` is given), adds a monitor for each site that is missing (matched by account and URL, so re-running never duplicates), refuses to go past the limit of 20 monitors per account, and creates or updates that account's status page with the monitors in order. A link already used by another account stops it with a clear message.
+
+The API calls the same setup by itself on start. After the server is listening, `server/index.js` asks `showcaseAutoSeedEnabled()` (true when `SEED_SHOWCASE=true`, or when it is not set and `NODE_ENV` is `production`) and then `ensureShowcase`, which does nothing if any status page with that link exists, even a hidden one or one owned by another account, and otherwise runs `seedShowcase` with the `SHOWCASE_*` settings. It runs in the background: a failure is logged as `Showcase setup skipped: <reason>` and never stops the server or the scheduler, and a successful run logs `Showcase page "world" created with 12 sites`. Because it only acts when no such page exists, restarting the API never duplicates anything and never undoes a page the owner hid.
 
 ## 14. Limits and known limitations
 

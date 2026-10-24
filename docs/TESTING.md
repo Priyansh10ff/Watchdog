@@ -18,7 +18,7 @@ npm test
 
 Both use Node's built-in test runner, so they need no extra packages. The server tests need no database and no network: models are replaced with in-memory stand-ins, and the check engine is tested against a small web server started on a random local port. A GitHub Actions workflow (`.github/workflows/ci.yml`) runs both suites and the client build on every push and pull request.
 
-Server: 435 tests in 13 files, about 11 seconds.
+Server: 453 tests in 13 files, about 11 seconds.
 
 | File | Tests | What it covers |
 |---|---|---|
@@ -32,17 +32,18 @@ Server: 435 tests in 13 files, about 11 seconds.
 | `auth.test.js` | 51 | Registration, login, logout, the session cookie and its SameSite setting, and the login middleware |
 | `monitors.api.test.js` | 90 | Every monitor and incident route over HTTP: validation, ownership, limits, mass-assignment, delete cascade, check-now cooldown |
 | `statusPage.test.js` | 50 | The owner's status page routes and the public page: privacy, ordering, states, domains, caching |
-| `showcase.test.js` | 16 | The one-command showcase setup |
+| `showcase.test.js` | 34 | The showcase setup, and the automatic setup on start: when it is switched on, creating the page when it is missing, and leaving existing, hidden or foreign pages alone |
 | `hardening.test.js` | 26 | JSON errors, body limit, security headers, CORS, production proxy setting and the API-wide and login rate limits |
 | `publicLimit.test.js` | 3 | The 60 requests a minute limit on the public status page |
 
-Client: 57 tests in 3 files.
+Client: 70 tests in 4 files.
 
 | File | Tests | What it covers |
 |---|---|---|
 | `monitorState.test.js` | 21 | A monitor's state, the sort order of the dashboard and the headline for the overall state |
 | `time.test.js` | 24 | "5 min ago", durations such as `2m 5s`, and dates |
 | `sentryPose.test.js` | 12 | The three moods of Sentry and how a pose is applied |
+| `poller.test.js` | 13 | The retry timing of the landing ticker: quick retries after a failure, back to normal, reset after a success, and stopping cleanly |
 
 Live smoke test, for a deployed app:
 
@@ -225,3 +226,7 @@ Interface:
 | 50 | On the status page settings, turn off Show site domains and save, then GET /status/world | Every `domain` is `null`. The ticker still shows icons for the 12 well-known sites, which it recognises by name, and letter tiles for any other site | |
 | 51 | Turn it on for a monitor whose URL has a path or query, then read the public page | Only the host name is shown | |
 | 52 | Open a public status page whose owner turned domains on | The domain shows under each monitor name | |
+| 53 | Start the API with `NODE_ENV=production` (or `SEED_SHOWCASE=true`) on a database that has no `world` page | The log says `Showcase page "world" created with 12 sites`, and about a minute later the landing page shows the ticker | |
+| 54 | Restart the API | The log says `Showcase page "world" already exists`. Nothing is duplicated | |
+| 55 | Open the landing page while the API is still starting, and wait | The ticker appears by itself within about a minute, without reloading | |
+| 56 | Start the API with `SEED_SHOWCASE=false` on an empty database | Nothing is created and the landing page has no ticker | |

@@ -2,16 +2,11 @@
 
 Uptime and incident tracker for websites and APIs. Watchdog checks your URLs on a schedule, calls a site down only after several failed checks in a row, opens one incident per outage with its cause and start time, and closes it automatically with the total duration when the site recovers. A mascot, Sentry, shows the state: napping when everything is up, barking when something is down.
 
-[![CI](https://github.com/Priyansh10ff/Watchdog/actions/workflows/ci.yml/badge.svg)](https://github.com/Priyansh10ff/Watchdog/actions/workflows/ci.yml) ![Stack](https://img.shields.io/badge/stack-MERN-1f2937) ![Node](https://img.shields.io/badge/node-%E2%89%A5%2020-3c873a) ![Tests](https://img.shields.io/badge/tests-435%20server%20%2B%2057%20client-2ea44f) ![License](https://img.shields.io/badge/license-MIT-2b46ff)
+[![CI](https://github.com/Priyansh10ff/Watchdog/actions/workflows/ci.yml/badge.svg)](https://github.com/Priyansh10ff/Watchdog/actions/workflows/ci.yml) ![Stack](https://img.shields.io/badge/stack-MERN-1f2937) ![Node](https://img.shields.io/badge/node-%E2%89%A5%2020-3c873a) ![Tests](https://img.shields.io/badge/tests-453%20server%20%2B%2070%20client-2ea44f) ![License](https://img.shields.io/badge/license-MIT-blue)
 
 [Product](docs/PRODUCT.md) · [Requirements](docs/PRD.md) · [Technical reference](docs/TECHNICAL.md) · [Design system](docs/DESIGN.md) · [API](docs/api.md) · [Deployment](docs/deployment.md) · [Testing](docs/TESTING.md)
 
 ![Watchdog dashboard](docs/screenshots/dashboard.png)
-
-| | |
-|---|---|
-| Repository | [github.com/Priyansh10ff/Watchdog](https://github.com/Priyansh10ff/Watchdog) |
-| API health | [watchdog-lfcr.onrender.com/api/health](https://watchdog-lfcr.onrender.com/api/health) |
 
 ---
 
@@ -36,9 +31,11 @@ Each monitor has its own interval (1 to 60 minutes, set with a rotary dial, a pr
 
 | | |
 |---|---|
-| ![Landing page](docs/screenshots/landing.png)<br>**Landing page.** Sentry, a scroll-driven story and a ticker of real checks | ![Live ticker](docs/screenshots/ticker.png)<br>**Live ticker.** Popular sites, checked around the clock |
-| ![A site is down](docs/screenshots/down-state.png)<br>**Down state.** Sentry barks and an incident opens | ![Incidents](docs/screenshots/incidents.png)<br>**Incidents.** Cause, start time, acknowledgement and duration |
-| ![Add monitor](docs/screenshots/add-monitor.png)<br>**Add monitor.** The interval dial, status codes and failure threshold | ![Public status page](docs/screenshots/status-page.png)<br>**Public status page.** Shareable, with no login |
+| ![Landing page](docs/screenshots/landing.png)<br>**Landing page.** Sentry naps while everything is up | ![How it works](docs/screenshots/how-it-works.png)<br>**How it works.** A scroll-driven story: a site goes down and an incident opens |
+| ![A site is down](docs/screenshots/down-state.png)<br>**Down state.** The page turns red, Sentry barks and an incident banner appears | ![Incidents](docs/screenshots/incidents.png)<br>**Incidents.** Cause, start time, failed checks, acknowledgement and duration |
+| ![Add monitor](docs/screenshots/add-monitor.png)<br>**Add monitor.** The interval dial, status codes and failure threshold | ![Public status page](docs/screenshots/status-page.png)<br>**Public status page.** Shareable, with no login and no URLs |
+
+The screenshots show sample data.
 
 ## Quickstart
 
@@ -99,6 +96,7 @@ Server (`server/.env`):
 | `NODE_ENV` | no | | `production` enables secure cookies, trust proxy and private-address blocking |
 | `CLIENT_URL` | no | `http://localhost:5173` | Allowed browser origin, no trailing slash |
 | `DISABLE_SCHEDULER` | no | `false` | `true` runs the API without the scheduler |
+| `SEED_SHOWCASE` | no | `true` in production, `false` otherwise | `true` makes the API create the landing page ticker's status page and its 12 monitors on start, if the page does not exist yet |
 | `API_RATE_LIMIT` | no | `600` | Requests per IP every 15 minutes across the API, except the health check |
 | `COOKIE_SAMESITE` | no | `none` in production, `lax` otherwise | `SameSite` of the session cookie. Use `lax` behind the Vercel proxy |
 | `TRUST_PROXY` | no | `1` | Proxy hops in front of the API in production, for rate limiting. Use `2` behind the Vercel proxy option |
@@ -141,14 +139,14 @@ On Windows PowerShell `curl` is a different command, so use Git Bash or the Post
 | Status page | `GET /status/:slug` (public), `GET`, `PUT`, `DELETE /status-page` |
 | Health | `GET /health` |
 
-**Landing page ticker.** The ticker on the landing page shows real checks of 12 popular sites from a public status page called `world`. Create it with one command, and keep the API running so its scheduler runs the first checks:
+**Landing page ticker.** The ticker on the landing page shows real checks of 12 popular sites from a public status page called `world`. In production the API creates it by itself the first time it starts, so there is nothing to run after deploying (set `SEED_SHOWCASE=false` to stop that). On your own computer, create it with one command and keep the API running so its scheduler runs the first checks:
 
 ```bash
 cd server
 node scripts/seedShowcase.js
 ```
 
-Without that page the section is hidden. Production setup and the script's options are in [docs/deployment.md](docs/deployment.md).
+Without that page the section is hidden. If the API is still starting when someone opens the landing page, the ticker retries every few seconds and appears by itself. Production setup and options are in [docs/deployment.md](docs/deployment.md).
 
 ## Architecture
 
@@ -193,7 +191,7 @@ cd server && npm test
 cd client && npm test
 ```
 
-435 server tests and 57 client tests, using Node's built-in test runner, so there is nothing extra to install. The server tests need no database or internet: they replace the models with in-memory stand-ins and test the check engine against a real local web server. GitHub Actions runs both suites and the client build on every push. `docs/TESTING.md` lists what is covered and holds the manual cases for the interface.
+453 server tests and 70 client tests, using Node's built-in test runner, so there is nothing extra to install. The server tests need no database or internet: they replace the models with in-memory stand-ins and test the check engine against a real local web server. GitHub Actions runs both suites and the client build on every push. `docs/TESTING.md` lists what is covered and holds the manual cases for the interface.
 
 To check a deployed app end to end, run the smoke test. It registers a throwaway account and goes through the main features over the real address. With `--demo` it also breaks the demo site and confirms that exactly one incident opens, can be acknowledged and resolves with its duration:
 

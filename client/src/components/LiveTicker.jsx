@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import CheckBars from "./CheckBars";
 import { prefersReducedMotion } from "../utils/sentryPose";
 import { timeAgo } from "../utils/time";
+import { startPolling } from "../utils/poller";
 import { inkBtn } from "./ui";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -155,21 +156,19 @@ const LiveTicker = () => {
   useEffect(() => {
     let alive = true;
 
-    const load = async () => {
+    const stop = startPolling(async () => {
       try {
         const response = await axiosInstance.get(`/status/${SLUG}`);
         if (alive) setData(response.data);
+        return true;
       } catch (error) {
-        return;
+        return false;
       }
-    };
-
-    load();
-    const timer = setInterval(load, REFRESH_MS);
+    }, REFRESH_MS);
 
     return () => {
       alive = false;
-      clearInterval(timer);
+      stop();
     };
   }, []);
 

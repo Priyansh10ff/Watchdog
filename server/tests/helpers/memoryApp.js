@@ -168,8 +168,10 @@ export const installMemoryApp = ({ fastMonitors = () => false } = {}) => {
     const monitor = db.monitors.find((candidate) => same(candidate._id, incident.monitor?._id ?? incident.monitor));
     return monitor ? { ...incident, monitor: { _id: monitor._id, name: monitor.name, url: monitor.url } } : incident;
   };
+  const isIn = (value, spec) => (spec && spec.$in ? spec.$in.map(String).includes(String(value)) : same(value, spec));
   const matches = (incident, query) =>
-    (!query.monitor || same(incident.monitor, query.monitor)) &&
+    (!query.monitor || isIn(incident.monitor, query.monitor)) &&
+    (!query.startedAt || incident.startedAt >= query.startedAt.$gte) &&
     (!query.user || same(incident.user, query.user)) &&
     (!query._id || same(incident._id, query._id)) &&
     (query.isResolved === undefined || incident.isResolved === query.isResolved) &&
