@@ -428,14 +428,14 @@ const Landing = () => {
         <div className="relative mx-auto max-w-[1312px] px-6 pt-5 sm:px-16">
           <nav
             data-g="navi"
-            className={`flex flex-wrap items-center justify-between gap-3 rounded-[34px] border px-5 py-3 backdrop-blur-md transition-colors duration-500 md:grid md:h-[68px] md:grid-cols-[1fr_auto_1fr] md:rounded-full md:py-0 md:pl-5 md:pr-3 ${
+            className={`flex flex-wrap items-center justify-between gap-3 rounded-[34px] border px-5 py-3 backdrop-blur-md transition-colors duration-500 xl:grid xl:h-[68px] xl:grid-cols-[1fr_auto_1fr] xl:rounded-full xl:py-0 xl:pl-5 xl:pr-3 ${
               down ? "border-ink/20 bg-white/25" : "border-white/25 bg-white/10"
             }`}
           >
             <Link to="/" className="w-fit">
               <Logo />
             </Link>
-            <div className="hidden items-center gap-9 text-[16px] font-medium md:flex">
+            <div className="hidden items-center gap-9 text-[16px] font-medium lg:flex">
               <a href="#how" className="transition-opacity hover:opacity-70">
                 How it works
               </a>

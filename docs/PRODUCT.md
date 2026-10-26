@@ -68,6 +68,12 @@ Large operations that need on-call rotation, SMS or phone alerts, or monitoring 
 - Names and status only: URLs and error details are never shown
 - The landing page can show a live ticker of popular websites, built from the same public page
 
+**Alerts**
+- Webhook channels for Slack, Discord or any service, up to 3 per account
+- A message when an incident opens and when it resolves, never one per failed check
+- A test message on demand, and the result of the last delivery shown on each channel
+- Messages carry the monitor name, host name, cause and duration, never the full URL
+
 **Safety**
 - In production the checker refuses private and internal addresses, so a monitor cannot be pointed at the host's own network
 
@@ -81,7 +87,7 @@ Large operations that need on-call rotation, SMS or phone alerts, or monitoring 
 
 ## Out of scope
 
-- Email, SMS, push or chat notifications (not part of this version; incidents are shown in the dashboard and on the status page)
+- Email, SMS and push notifications (alerts go to webhooks: Slack, Discord or any service that accepts a POST)
 - Teams, roles or shared workspaces
 - Monitoring of non-HTTP services such as ping or raw TCP ports
 - Logging in to a site with a headless browser to check pages behind a login form

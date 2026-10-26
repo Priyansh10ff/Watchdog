@@ -41,6 +41,7 @@ describe("smoke test script against a healthy app", () => {
     assert.match(output, /\[ ok \] Check now works after the cooldown/);
     assert.match(output, /\[ ok \] A status page can be published and read without logging in\s+shows 127\.0\.0\.1, no full address/);
     assert.match(output, /\[ ok \] Hiding the page makes it answer 404, and deleting removes it/);
+    assert.match(output, /\[ ok \] Alert channels can be added, listed without their address, paused and removed\s+no address or secret in any answer/);
     assert.match(output, /\[warn\] Private and local addresses are refused\s+accepted 127\.0\.0\.1/);
     assert.match(output, /Cleaned up: 2 monitor\(s\) deleted, logged out\./);
     assert.match(output, /The test account smoke-[a-z0-9]+@watchdog\.test stays in the database/);

@@ -9,6 +9,7 @@ import EditMonitor from "./pages/EditMonitor";
 import Incidents from "./pages/Incidents";
 import StatusPage from "./pages/StatusPage";
 import StatusPageSettings from "./pages/StatusPageSettings";
+import Alerts from "./pages/Alerts";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
@@ -67,6 +68,15 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <StatusPageSettings />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/alerts"
+              element={
+                <ProtectedRoute>
+                  <Alerts />
                 </ProtectedRoute>
               }
             />

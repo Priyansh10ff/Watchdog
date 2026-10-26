@@ -173,6 +173,7 @@ Server (`server/.env`):
 | `SHOWCASE_PASSWORD` | no | random | Password for the showcase account when it is created, 8 to 72 characters. Set it before the first start if you want to log in and adjust the monitors |
 | `SHOWCASE_SLUG` | no | `world` | Link name of the ticker's page. Set `VITE_SHOWCASE_SLUG` in the client to match |
 | `SHOWCASE_TITLE` | no | `Popular websites` | Title of the ticker's page |
+| `CLIENT_URL` is also used in alert messages | | | The link in a webhook message points at `CLIENT_URL` + `/incidents`. Without it the message has no link |
 | `API_RATE_LIMIT` | no | `600` | Requests allowed per IP every 15 minutes across the whole API, except the health check |
 | `COOKIE_SAMESITE` | no | `none` in production, `lax` otherwise | `SameSite` of the session cookie: `lax`, `strict` or `none`. Use `lax` behind the Vercel proxy, where the cookie is first-party. `none` is always sent as secure |
 | `TRUST_PROXY` | no | `1` | Number of proxy hops in front of the API in production, used to find the visitor's IP for rate limiting. Use `2` behind the Vercel proxy option |
@@ -207,7 +208,7 @@ On `SIGTERM` or `SIGINT`, which Render sends when it redeploys, the server stops
 
 ## 13. Testing
 
-Automated tests use Node's built-in test runner: 453 server tests and 70 client tests, run with `npm test` in each folder and in CI on every push. The server tests replace the database models with in-memory stand-ins and test the check engine against a local web server, so they need no database or internet. `scripts/smokeTest.mjs` (run with `npm run smoke -- <address>`) checks a deployed app over HTTP, and its own tests (`npm run test:smoke`) run it against a copy of the API on in-memory data. The full list is in [TESTING.md](./TESTING.md), which also holds the manual cases for the parts the automated tests do not cover (the React components, the animations and the real database).
+Automated tests use Node's built-in test runner: 596 server tests and 88 client tests, run with `npm test` in each folder and in CI on every push. The server tests replace the database models with in-memory stand-ins and test the check engine against a local web server, so they need no database or internet. `scripts/smokeTest.mjs` (run with `npm run smoke -- <address>`) checks a deployed app over HTTP, and its own tests (`npm run test:smoke`) run it against a copy of the API on in-memory data. The full list is in [TESTING.md](./TESTING.md), which also holds the manual cases for the parts the automated tests do not cover (the React components, the animations and the real database).
 
 ## 13a. Client animation
 
@@ -234,11 +235,35 @@ With data, it shows a window five rows tall. The rows are the monitors followed 
 
 The API calls the same setup by itself on start. After the server is listening, `server/index.js` asks `showcaseAutoSeedEnabled()` (true when `SEED_SHOWCASE=true`, or when it is not set and `NODE_ENV` is `production`) and then `ensureShowcase`, which does nothing if any status page with that link exists, even a hidden one or one owned by another account, and otherwise runs `seedShowcase` with the `SHOWCASE_*` settings. It runs in the background: a failure is logged as `Showcase setup skipped: <reason>` and never stops the server or the scheduler, and a successful run logs `Showcase page "world" created with 12 sites`. Because it only acts when no such page exists, restarting the API never duplicates anything and never undoes a page the owner hid.
 
+## 13e. Alerts
+
+`services/alert.service.js` sends a message to the owner's webhook channels when an incident opens and when it resolves, and nothing in between: later failed checks only update the open incident.
+
+**How it is wired.** `services/incident.service.js` keeps a small set of listeners (`onIncidentEvent`) and emits `opened` or `resolved` after the incident has been written. `server/index.js` registers `notifyIncident` as a listener on start. Listeners run detached, so a slow or failing webhook never delays a check, and a listener that throws is logged and ignored. With no listener registered, checks and incidents behave exactly as before, which is why the whole test suite runs without alerts.
+
+**Delivery.** One POST with a 5 second timeout. It retries once after 1.5 seconds, but only when retrying could help: a 5xx, a 429 or a connection problem. A 4xx, a redirect or a blocked address is final. Redirects are never followed, so a webhook cannot be bounced to another host. The result of each attempt is stored on the channel as `lastDelivery`, which is what the Alerts page shows. All of an account's channels are sent at the same time.
+
+**Message shapes.** Slack gets plain text with the Slack markup characters escaped. Discord gets an embed with `allowed_mentions` empty, so a monitor named `@everyone` cannot ping a server. A `generic` channel gets JSON plus `X-Watchdog-Timestamp` and, when the channel has a secret, `X-Watchdog-Signature`: `sha256=` followed by the HMAC SHA-256 of `<timestamp>.<raw body>`. Messages carry the monitor's name and host name, never the full URL, so a webhook receiver cannot learn the address or any query string.
+
+**What keeps it safe.**
+
+| Risk | What stops it |
+|---|---|
+| SSRF: a webhook address aimed at the server's own network | The same protection the checker uses (`utils/safeHttp.js`): private, loopback and link-local addresses are blocked at DNS lookup time and for IP-literal addresses, in production |
+| A fake Slack or Discord address | In production a `slack` channel must be on `hooks.slack.com` under `/services/`, `/triggers/` or `/workflows/`, and a `discord` channel on a Discord host under `/api/webhooks/` |
+| The webhook address leaking | Stored `select: false`, never in an API response (only a masked `urlPreview`), and stripped out of error text before anything is logged |
+| Markup or mention injection from a monitor name | Escaped per format, and mentions switched off for Discord |
+| Using Watchdog to flood a third party | 3 channels per account, one message per transition, at most two attempts, and a 10 second cooldown on test messages |
+
+**Limits.** Up to 3 channels per account. Outbound only, so there is no email or SMS. Addresses are stored as plain text, which is normal for this kind of tool but worth encrypting at rest in a later version.
+
 ## 14. Limits and known limitations
 
 | Item | Limit |
 |---|---|
 | Monitors per user | 20 |
+| Alert channels per user | 3 |
+| Alert delivery timeout | 5 seconds, one retry |
 | Interval | 1 to 60 minutes |
 | Timeout | 1 to 30 seconds |
 | Response body read | 2 MB |
@@ -247,7 +272,7 @@ The API calls the same setup by itself on start. After the server is listening, 
 | Check history | 30 days |
 | Protocols | HTTP and HTTPS, GET and HEAD |
 
-Limitations: one scheduler process, no outbound notifications, no custom request headers yet, only auth routes are rate limited, and cross-site cookies need care when the client and API are on different domains.
+Limitations: one scheduler process, alerts go to webhooks only (no email or SMS), no custom request headers yet, and cross-site cookies need care when the client and API are on different domains.
 
 ## 15. Decisions
 
@@ -259,4 +284,6 @@ Limitations: one scheduler process, no outbound notifications, no custom request
 | Failure threshold plus quick re-check | Avoids false alarms without making detection slow |
 | Unique partial index for incidents | The database enforces one incident per outage, not just the code |
 | TTL index for retention | No cleanup job to maintain |
-| No email or other notifications | Out of scope for this version. The dashboard and status page carry incident information |
+| Webhook alerts rather than email or SMS | Webhooks are plain HTTP, so they work on free hosting with no mail provider, no sender domain and no per-message cost. Slack and Discord are where small teams already are |
+| Alerts sent from an incident listener, not from the checker | The checker stays about checking, and a slow or broken webhook can never delay or fail a check |
+| Only on open and resolve | One message per outage. Alerting on every failed check is the main reason people mute monitoring tools |

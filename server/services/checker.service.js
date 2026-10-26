@@ -1,83 +1,24 @@
 import axios from "axios";
-import http from "http";
-import https from "https";
-import dns from "dns";
 import net from "net";
 import { performance } from "perf_hooks";
 import Monitor from "../models/monitor.model.js";
 import CheckResult from "../models/checkResult.model.js";
 import isPrivateIp from "../utils/isPrivateIp.js";
 import { applyResult, handleIncident } from "./incident.service.js";
+import {
+  beforeRedirect,
+  blockPrivate,
+  cleanHost,
+  describeError,
+  httpAgent,
+  httpsAgent,
+  privateError,
+} from "../utils/safeHttp.js";
 
 const USER_AGENT = "WatchdogBot/1.0 (uptime monitoring)";
 const MAX_REDIRECTS = 3;
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
 const LEASE_MS = 2 * 60 * 1000;
-
-const blockPrivate = () => process.env.NODE_ENV === "production";
-
-const privateError = () => {
-  const error = new Error("Private addresses are not allowed");
-  error.code = "PRIVATE_ADDRESS";
-  return error;
-};
-
-const cleanHost = (hostname) => hostname.replace(/^\[|\]$/g, "");
-
-const safeLookup = (hostname, options, callback) => {
-  dns.lookup(hostname, options, (error, address, family) => {
-    if (error) return callback(error);
-
-    if (blockPrivate()) {
-      const addresses = Array.isArray(address)
-        ? address.map((entry) => entry.address)
-        : [address];
-
-      if (addresses.some(isPrivateIp)) return callback(privateError());
-    }
-
-    callback(null, address, family);
-  });
-};
-
-const httpAgent = new http.Agent({ lookup: safeLookup });
-const httpsAgent = new https.Agent({ lookup: safeLookup });
-
-const beforeRedirect = (options) => {
-  const host = cleanHost(options.hostname || options.host || "");
-  if (blockPrivate() && net.isIP(host) && isPrivateIp(host)) {
-    throw privateError();
-  }
-};
-
-const describeError = (error, timeoutMs) => {
-  const code = error.code || error.cause?.code || "";
-
-  if (code === "PRIVATE_ADDRESS") return "Private addresses are not allowed";
-
-  if (
-    error.name === "CanceledError" ||
-    error.name === "TimeoutError" ||
-    code === "ERR_CANCELED" ||
-    code === "ECONNABORTED"
-  ) {
-    return `Timed out after ${timeoutMs} ms`;
-  }
-
-  const known = {
-    ECONNREFUSED: "Connection refused",
-    ENOTFOUND: "DNS lookup failed",
-    EAI_AGAIN: "DNS lookup failed",
-    ECONNRESET: "Connection reset",
-    ETIMEDOUT: "Connection timed out",
-    EHOSTUNREACH: "Host unreachable",
-  };
-
-  if (known[code]) return known[code];
-  if (/CERT|SSL|TLS/i.test(code)) return `TLS error: ${code}`;
-
-  return (error.message || "Request failed").slice(0, 200);
-};
 
 const requestOnce = async (monitor, maxRedirects) => {
   const started = performance.now();

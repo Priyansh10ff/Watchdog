@@ -18,7 +18,7 @@ npm test
 
 Both use Node's built-in test runner, so they need no extra packages. The server tests need no database and no network: models are replaced with in-memory stand-ins, and the check engine is tested against a small web server started on a random local port. A GitHub Actions workflow (`.github/workflows/ci.yml`) runs both suites and the client build on every push and pull request.
 
-Server: 453 tests in 13 files, about 11 seconds.
+Server: 596 tests in 18 files, about 30 seconds.
 
 | File | Tests | What it covers |
 |---|---|---|
@@ -35,8 +35,13 @@ Server: 453 tests in 13 files, about 11 seconds.
 | `showcase.test.js` | 34 | The showcase setup, and the automatic setup on start: when it is switched on, creating the page when it is missing, and leaving existing, hidden or foreign pages alone |
 | `hardening.test.js` | 26 | JSON errors, body limit, security headers, CORS, production proxy setting and the API-wide and login rate limits |
 | `publicLimit.test.js` | 3 | The 60 requests a minute limit on the public status page |
+| `formatDuration.test.js` | 16 | How a duration is written in an alert message |
+| `webhookUrl.test.js` | 16 | Webhook address rules: schemes, length, private addresses, and that a Slack or Discord channel really points at that service |
+| `alert.service.test.js` | 61 | Message shapes for Slack, Discord and JSON, escaping and mention safety, HMAC signing, delivery with retries and redirects, address blocking, and that a webhook address never reaches a log |
+| `webhooks.api.test.js` | 36 | Every alert channel route over HTTP: validation, ownership, the limit of 3, the one-time secret, the test cooldown, and that no answer ever contains the address |
+| `incident.alerts.test.js` | 14 | A real failing check through to the message: one alert per outage, one on recovery, nothing in between, and that a broken channel never breaks a check |
 
-Client: 70 tests in 4 files.
+Client: 88 tests in 5 files.
 
 | File | Tests | What it covers |
 |---|---|---|
@@ -44,6 +49,7 @@ Client: 70 tests in 4 files.
 | `time.test.js` | 24 | "5 min ago", durations such as `2m 5s`, and dates |
 | `sentryPose.test.js` | 12 | The three moods of Sentry and how a pose is applied |
 | `poller.test.js` | 13 | The retry timing of the landing ticker: quick retries after a failure, back to normal, reset after a success, and stopping cleanly |
+| `webhookForm.test.js` | 18 | The alert channel form: validation messages, per-format hints, and the wording of the last delivery result |
 
 Live smoke test, for a deployed app:
 
@@ -230,3 +236,28 @@ Interface:
 | 54 | Restart the API | The log says `Showcase page "world" already exists`. Nothing is duplicated | |
 | 55 | Open the landing page while the API is still starting, and wait | The ticker appears by itself within about a minute, without reloading | |
 | 56 | Start the API with `SEED_SHOWCASE=false` on an empty database | Nothing is created and the landing page has no ticker | |
+
+## Alerts
+
+Use a real Slack or Discord channel, or a throwaway receiver such as a webhook.site address.
+
+| # | Step | Expected | Result |
+|---|---|---|---|
+| 57 | Open `/alerts` with no channels | It invites you to add the first one and says 0 of 3 used | |
+| 58 | Press Add channel with the form empty | A clear message about the name, and nothing is created | |
+| 59 | Paste something that is not a web address | It says so before anything is sent | |
+| 60 | Add a Slack or Discord channel with a real webhook URL | The card shows the name, the format, Active, and a masked address ending in four characters | |
+| 61 | Add a channel with format Webhook (JSON) | A signing secret is shown once, with a copy button | |
+| 62 | Reload the page | The secret is gone for good, and no full address appears anywhere | |
+| 63 | Press Send test | A message arrives in the channel within a few seconds, and the card says it was delivered just now | |
+| 64 | Press Send test again straight away | It asks you to wait a few seconds | |
+| 65 | Change the webhook URL to a wrong one and press Send test | The card turns red with the reason, such as HTTP 404 | |
+| 66 | Press Pause, then break a monitored site | The channel says Paused and no message arrives | |
+| 67 | Press Resume, then break the site (demo target, threshold 1) | One message arrives naming the monitor, the host, the cause and the start time | |
+| 68 | Leave it down for several more checks | No further messages arrive | |
+| 69 | Restore the site | One recovery message arrives with how long it was down | |
+| 70 | Read both messages | They contain the host name only, never the full URL or any query string | |
+| 71 | Add a third channel, then try a fourth | It says all 3 are in use and the form is gone | |
+| 72 | Press Delete on a channel | A dialog asks first, inside the page, and the form comes back after deleting | |
+| 73 | In production, try a Slack channel with a non-Slack address | It is refused with a message naming the right shape | |
+| 74 | In production, try `https://127.0.0.1/hook` | It is refused as a private address | |

@@ -33,7 +33,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 
 ## 3. Non-goals
 
-- Email, SMS, push or chat notifications
+- Email, SMS or push notifications (webhook alerts to Slack, Discord or any service are in scope and done)
 - Teams, roles or shared workspaces
 - Monitoring of non-HTTP services (ping, TCP ports)
 - Logging in to a site with a headless browser
@@ -164,6 +164,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | FR24 | Pulse monitor cards: response time, 24 hour uptime, bars for recent checks | Should | Done |
 | FR25 | Edit monitor page and interval dial with a custom interval | Should | Done |
 | FR26 | Landing page ticker of popular sites, from a showcase status page | Could | Done |
+| FR27 | Webhook alerts to Slack, Discord or any service when an incident opens and resolves, with a test message and per-channel delivery status | Should | Done |
 
 ## 7. Non-functional requirements
 
@@ -176,7 +177,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | **Performance** | Up to 200 due monitors are claimed per run and checked 10 at a time. Responses are limited to 2 MB. List endpoints are paginated. Indexes cover the dashboard, scheduler and incident queries. |
 | **Compatibility** | Latest two versions of Chrome, Edge, Firefox and Safari. Layouts work from 360 px wide. |
 | **Accessibility** | Text pairs meet WCAG AA, visible focus, labelled form fields, semantic buttons and links, reduced-motion support. Remaining gaps are listed in [DESIGN.md](./DESIGN.md) and tracked in [CHECKLIST.md](./CHECKLIST.md). |
-| **Maintainability** | Configuration from environment variables only. Logic lives in services, controllers stay thin. Automated tests (453 server and 70 client) run in CI, and manual test cases for the rest are in [TESTING.md](./TESTING.md). |
+| **Maintainability** | Configuration from environment variables only. Logic lives in services, controllers stay thin. Automated tests (596 server and 88 client) run in CI, and manual test cases for the rest are in [TESTING.md](./TESTING.md). |
 
 ## 8. Success metrics
 
@@ -195,9 +196,9 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | Version | Scope |
 |---|---|
 | **v1.0 (end-term submission)** | Everything marked Done, plus deployment (FR22), documentation and demo video |
-| **v1.1** | Charts (FR15), SSL expiry (FR16), encrypted custom headers (FR17) |
+| **v1.1** | Charts (FR15), SSL expiry (FR16), encrypted custom headers (FR17), encrypting webhook addresses at rest |
 | **v1.2** | Maintenance windows (FR18), second-region checker (FR19) |
-| **Later** | Outbound notifications (email, Slack, Discord), teams, status page custom domains |
+| **Later** | Email and SMS notifications, teams, status page custom domains |
 
 ## 10. Risks and open questions
 
@@ -209,5 +210,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | Cross-site cookies between Vercel and Render | Browsers that block third-party cookies may break login | Proxy `/api` through the client host so cookies are first-party (see [deployment.md](./deployment.md)) |
 | Large check history on the free database | Storage fills up | 30 day automatic retention. Estimate: a 1-minute monitor stores about 43,000 results per month |
 | Single scheduler process | One process does all checking | Atomic claiming already makes extra instances safe. Scaling out is a later step |
-| No outbound notifications | Users must open the app to notice an incident | Out of scope for now. The dashboard and status page show incidents |
+| A webhook address could be aimed at the server's own network | SSRF: a user could reach internal services | The same private-address blocking the checker uses, plus host rules for Slack and Discord in production |
+| A broken or slow webhook receiver | Checks could be delayed or fail | Alerts run detached from the check, with a 5 second timeout and at most two attempts. A failure is recorded on the channel and logged |
+| No email or SMS | Someone who does not use Slack or Discord needs the generic webhook or the dashboard | Accepted. Free hosting blocks SMTP, and a generic webhook covers anything else |
 | Showcase checks of big sites are blocked by their bot protection | A well-known site looks down on the public landing page | Check the dashboard for a day before publishing, add the code the site returns to its status codes, or leave the site out |

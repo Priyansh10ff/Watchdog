@@ -3,6 +3,7 @@ import Monitor from "../../models/monitor.model.js";
 import CheckResult from "../../models/checkResult.model.js";
 import Incident from "../../models/incident.model.js";
 import StatusPage from "../../models/statusPage.model.js";
+import WebhookChannel from "../../models/webhookChannel.model.js";
 import { oid, stub } from "./stubs.js";
 
 const same = (a, b) => String(a) === String(b);
@@ -50,7 +51,7 @@ const chainOf = (rows) => {
 };
 
 export const installMemoryApp = ({ fastMonitors = () => false } = {}) => {
-  const db = { users: [], monitors: [], results: [], incidents: [], pages: [] };
+  const db = { users: [], monitors: [], results: [], incidents: [], pages: [], channels: [] };
   const controls = { claimsDisabled: false };
   const restores = [];
   const use = (target, name, fn) => restores.push(stub(target, name, fn));
@@ -234,6 +235,34 @@ export const installMemoryApp = ({ fastMonitors = () => false } = {}) => {
     for (const page of db.pages) {
       page.monitors = page.monitors.filter((id) => !same(id, update.$pull.monitors));
     }
+  });
+
+  use(WebhookChannel, "countDocuments", async (query) => db.channels.filter((channel) => same(channel.user, query.user)).length);
+  use(WebhookChannel, "create", async (data) => {
+    const channel = makeDoc({ isActive: true, ...data }, (doc) => {
+      db.channels = db.channels.filter((candidate) => candidate !== doc);
+    });
+    db.channels.push(channel);
+    return channel;
+  });
+  use(WebhookChannel, "find", (query) =>
+    chainOf(
+      db.channels.filter(
+        (channel) =>
+          same(channel.user, query.user) && (query.isActive === undefined || channel.isActive === query.isActive),
+      ),
+    ),
+  );
+  use(WebhookChannel, "findOne", (query) => {
+    const found =
+      db.channels.find((channel) => same(channel._id, query._id) && (!query.user || same(channel.user, query.user))) || null;
+    const chain = { select: () => chain, then: (resolve, reject) => Promise.resolve(found).then(resolve, reject) };
+    return chain;
+  });
+  use(WebhookChannel, "updateOne", async (query, update) => {
+    const found = db.channels.find((channel) => same(channel._id, query._id));
+    if (found && update.$set) Object.assign(found, update.$set);
+    return { acknowledged: true };
   });
 
   return { db, controls, restore: () => restores.reverse().forEach((restore) => restore()) };

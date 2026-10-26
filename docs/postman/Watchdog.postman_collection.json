@@ -36,6 +36,14 @@
     {
       "key": "monitorUrl",
       "value": ""
+    },
+    {
+      "key": "webhookUrl",
+      "value": "https://example.com/watchdog-hook"
+    },
+    {
+      "key": "channelId",
+      "value": ""
     }
   ],
   "item": [
@@ -755,6 +763,239 @@
               "path": [
                 "api",
                 "status-page"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Alerts",
+      "item": [
+        {
+          "name": "List alert channels",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "webhooks"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Shows the limit and never an address or a secret\", function () { var body = pm.response.json(); pm.expect(body.limit).to.eql(3); pm.expect(body.channels).to.be.an(\"array\"); pm.expect(pm.response.text()).to.not.include(\"signingSecret\"); pm.expect(pm.response.text()).to.not.include('\"url\"'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add alert channel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "webhooks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman hook\",\n  \"format\": \"generic\",\n  \"url\": \"{{webhookUrl}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "format is slack, discord or generic. In production a Slack address must start with https://hooks.slack.com/services/ and a Discord address with https://discord.com/api/webhooks/. Up to 3 channels per account. The signing secret (generic channels) is returned only in this answer."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Hands out the signing secret once and hides the address\", function () { var body = pm.response.json(); pm.expect(body.signingSecret).to.match(/^[0-9a-f]{48}$/); pm.expect(body.channel).to.not.have.property(\"url\"); pm.expect(body.channel.urlPreview).to.be.a(\"string\"); pm.collectionVariables.set(\"channelId\", body.channel._id); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pause alert channel",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks/{{channelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "webhooks",
+                "{{channelId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Paused\", function () { pm.expect(pm.response.json().channel.isActive).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resume alert channel",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks/{{channelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "webhooks",
+                "{{channelId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Active again\", function () { pm.expect(pm.response.json().channel.isActive).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send a test message",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks/{{channelId}}/test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "webhooks",
+                "{{channelId}}",
+                "test"
+              ]
+            },
+            "description": "Delivery problems are reported in the answer, not as an error status. Limited to one message every 10 seconds per channel."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Sent (200) or still in the 10 second wait (429)\", function () { pm.expect(pm.response.code).to.be.oneOf([200, 429]); });",
+                  "if (pm.response.code === 200) { pm.test(\"Reports how the delivery went\", function () { var delivery = pm.response.json().delivery; pm.expect(delivery).to.have.property(\"ok\"); pm.expect(delivery).to.have.property(\"error\"); }); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete alert channel",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks/{{channelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "webhooks",
+                "{{channelId}}"
               ]
             }
           },

@@ -156,6 +156,74 @@ Rules and errors:
 - 404 on DELETE when the user has no page.
 - Deleting a monitor removes it from every status page.
 
+## Alerts
+
+Webhook channels that receive a message when an incident opens and when it resolves. Login required, up to 3 channels per account.
+
+| Method | Path | Description |
+|---|---|---|
+| GET | /webhooks | The user's channels |
+| POST | /webhooks | Add a channel |
+| PATCH | /webhooks/:id | Rename, pause, resume, or change the address or format |
+| DELETE | /webhooks/:id | Remove a channel |
+| POST | /webhooks/:id/test | Send a test message now |
+
+POST body:
+
+```json
+{ "name": "Team chat", "format": "slack", "url": "https://hooks.slack.com/services/..." }
+```
+
+Rules and errors:
+- `name`: 1 to 40 characters. `format`: `slack`, `discord` or `generic`. `isActive` defaults to `true`.
+- `url`: up to 500 characters, no credentials. In production it must be `https`, must not resolve to a private address, and a `slack` or `discord` channel must really point at that service.
+- 403 when the account already has 3 channels. 404 for a channel that does not exist or belongs to someone else. 429 on `/test` within 10 seconds of the last message.
+- A `generic` channel is given a signing secret on creation, returned **once** as `signingSecret`. It never appears again.
+
+A channel is returned without its address and without its secret:
+
+```json
+{
+  "_id": "...",
+  "name": "Team chat",
+  "format": "slack",
+  "isActive": true,
+  "urlPreview": "https://hooks.slack.com/…k9Qx",
+  "lastDelivery": { "at": "...", "event": "incident.opened", "ok": true, "statusCode": 200, "error": "" }
+}
+```
+
+`POST /webhooks/:id/test` answers 200 whether or not the message was delivered; the result is in the body:
+
+```json
+{ "success": true, "message": "Test message sent", "delivery": { "ok": true, "statusCode": 204, "error": "" } }
+```
+
+### What Watchdog sends
+
+A POST with a JSON body, `X-Watchdog-Event` set to `test`, `incident.opened` or `incident.resolved`, and a 5 second timeout. One retry after 1.5 seconds, but only for a 5xx, a 429 or a connection problem. Redirects are never followed. Messages carry the monitor's name and host name, the cause and, on recovery, the duration. They never carry the full monitored URL.
+
+Slack channels get `{ "text": "..." }`. Discord channels get an embed with mentions switched off. A `generic` channel gets:
+
+```json
+{
+  "event": "incident.opened",
+  "sentAt": "2026-10-11T17:52:00.000Z",
+  "message": "Orders API is down",
+  "monitor": { "id": "...", "name": "Orders API", "host": "api.acme.example" },
+  "incident": {
+    "id": "...",
+    "status": "open",
+    "startedAt": "2026-10-11T17:52:00.000Z",
+    "resolvedAt": null,
+    "durationMs": null,
+    "cause": { "statusCode": 503, "errorMessage": "Unexpected status 503" }
+  }
+}
+```
+
+A `generic` channel also gets `X-Watchdog-Timestamp` (Unix seconds) and `X-Watchdog-Signature`, which is `sha256=` followed by the HMAC SHA-256 of `<timestamp>.<raw body>` keyed with the signing secret. Verify it by recomputing the HMAC over the raw body and comparing with a timing-safe compare.
+
 ## Errors and limits
 
 These apply to every route under `/api`.

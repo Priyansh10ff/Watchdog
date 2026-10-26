@@ -2,6 +2,8 @@ import "dotenv/config";
 import mongoose from "mongoose";
 import app from "./app.js";
 import { startScheduler, stopScheduler } from "./jobs/scheduler.js";
+import { onIncidentEvent } from "./services/incident.service.js";
+import { notifyIncident } from "./services/alert.service.js";
 import { ensureShowcase, showcaseAutoSeedEnabled } from "./services/showcase.service.js";
 
 const required = ["MONGO_URI", "JWT_SECRET"];
@@ -21,6 +23,8 @@ const start = async () => {
     const server = app.listen(PORT, () => {
       console.log(`Server started on port ${PORT}`);
     });
+
+    onIncidentEvent(notifyIncident);
 
     if (process.env.DISABLE_SCHEDULER !== "true") {
       startScheduler();

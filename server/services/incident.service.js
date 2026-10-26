@@ -3,6 +3,21 @@ import CheckResult from "../models/checkResult.model.js";
 
 const QUICK_RETRY_MS = 60 * 1000;
 
+const listeners = new Set();
+
+export const onIncidentEvent = (listener) => {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+};
+
+const emitIncidentEvent = (event, incident, monitor) => {
+  for (const listener of listeners) {
+    Promise.resolve()
+      .then(() => listener(event, incident, monitor))
+      .catch((error) => console.log(`Incident listener failed: ${error.message}`));
+  }
+};
+
 export const applyResult = (monitor, result) => {
   const now = new Date();
   let transition = null;
@@ -118,11 +133,13 @@ export const handleIncident = async (monitor, result, transition) => {
   try {
     if (transition === "recovered") {
       const incident = await resolveIncident(monitor);
+      if (incident) emitIncidentEvent("resolved", incident, monitor);
       return { event: incident ? "resolved" : null, incident };
     }
 
     if (!result.isUp && monitor.status === "down") {
       const { incident, opened } = await trackFailure(monitor, result);
+      if (opened) emitIncidentEvent("opened", incident, monitor);
       return { event: opened ? "opened" : "updated", incident };
     }
 

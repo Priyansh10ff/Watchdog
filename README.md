@@ -2,7 +2,7 @@
 
 Uptime and incident tracker for websites and APIs. Watchdog checks your URLs on a schedule, calls a site down only after several failed checks in a row, opens one incident per outage with its cause and start time, and closes it automatically with the total duration when the site recovers. A mascot, Sentry, shows the state: napping when everything is up, barking when something is down.
 
-[![CI](https://github.com/Priyansh10ff/Watchdog/actions/workflows/ci.yml/badge.svg)](https://github.com/Priyansh10ff/Watchdog/actions/workflows/ci.yml) ![Stack](https://img.shields.io/badge/stack-MERN-1f2937) ![Node](https://img.shields.io/badge/node-%E2%89%A5%2020-3c873a) ![Tests](https://img.shields.io/badge/tests-453%20server%20%2B%2070%20client-2ea44f) ![License](https://img.shields.io/badge/license-MIT-blue)
+[![CI](https://github.com/Priyansh10ff/Watchdog/actions/workflows/ci.yml/badge.svg)](https://github.com/Priyansh10ff/Watchdog/actions/workflows/ci.yml) ![Stack](https://img.shields.io/badge/stack-MERN-1f2937) ![Node](https://img.shields.io/badge/node-%E2%89%A5%2020-3c873a) ![Tests](https://img.shields.io/badge/tests-596%20server%20%2B%2088%20client-2ea44f) ![License](https://img.shields.io/badge/license-MIT-blue)
 
 [Product](docs/PRODUCT.md) · [Requirements](docs/PRD.md) · [Technical reference](docs/TECHNICAL.md) · [Design system](docs/DESIGN.md) · [API](docs/api.md) · [Deployment](docs/deployment.md) · [Testing](docs/TESTING.md)
 
@@ -21,6 +21,7 @@ People who run websites and APIs usually learn about an outage from their users.
 | **Check** | A scheduler runs every minute and claims every due monitor with an atomic lease, so a restart or a second instance never checks a monitor twice. Each check follows up to 3 redirects, measures the response time and judges the answer against the monitor's expected status codes and optional keyword. Failures say why, such as "Timed out after 5000 ms" or "Connection refused" |
 | **Decide** | A status machine counts failures in a row. A monitor is down when the count reaches its failure threshold and one success resets it. After a failure it is re-checked within a minute, so outages are confirmed and recoveries noticed quickly |
 | **Respond** | One incident opens for the whole outage with its cause and start time, is updated while it lasts, can be acknowledged, and resolves itself with the total duration |
+| **Tell you** | A message in Slack, Discord or any service when an incident opens and when it resolves. One per outage, never one per failed check |
 | **Show** | A dashboard of cards with response time, 24 hour uptime and the last 24 checks, an incidents page with filters and detail, and 30 days of check history |
 | **Share** | A public status page with live status, uptime, recent checks and past incidents, without logging in. It never shows URLs or error details |
 | **Protect** | In production the checker refuses private, loopback and link-local addresses at DNS lookup, for IP literals and for redirect targets |
@@ -33,7 +34,8 @@ Each monitor has its own interval (1 to 60 minutes, set with a rotary dial, a pr
 |---|---|
 | ![Landing page](docs/screenshots/landing.png)<br>**Landing page.** Sentry naps while everything is up | ![How it works](docs/screenshots/how-it-works.png)<br>**How it works.** A scroll-driven story: a site goes down and an incident opens |
 | ![A site is down](docs/screenshots/down-state.png)<br>**Down state.** The page turns red, Sentry barks and an incident banner appears | ![Incidents](docs/screenshots/incidents.png)<br>**Incidents.** Cause, start time, failed checks, acknowledgement and duration |
-| ![Add monitor](docs/screenshots/add-monitor.png)<br>**Add monitor.** The interval dial, status codes and failure threshold | ![Public status page](docs/screenshots/status-page.png)<br>**Public status page.** Shareable, with no login and no URLs |
+| ![Alerts](docs/screenshots/alerts.png)<br>**Alerts.** Webhook channels for Slack, Discord or any service, with the last delivery result | ![Add monitor](docs/screenshots/add-monitor.png)<br>**Add monitor.** The interval dial, status codes and failure threshold |
+| ![Public status page](docs/screenshots/status-page.png)<br>**Public status page.** Shareable, with no login and no URLs | ![On a phone](docs/screenshots/mobile.png)<br>**On a phone.** The same dashboard down to 320px wide |
 
 The screenshots show sample data.
 
@@ -137,7 +139,10 @@ On Windows PowerShell `curl` is a different command, so use Git Bash or the Post
 | Monitors | `POST /monitors`, `GET /monitors`, `GET`, `PATCH`, `DELETE /monitors/:id`, `PATCH /monitors/:id/toggle`, `GET /monitors/:id/results`, `POST /monitors/:id/check`, `GET /monitors/:id/incidents` |
 | Incidents | `GET /incidents`, `GET /incidents/:id`, `PATCH /incidents/:id/acknowledge` |
 | Status page | `GET /status/:slug` (public), `GET`, `PUT`, `DELETE /status-page` |
+| Alerts | `GET /webhooks`, `POST /webhooks`, `PATCH`, `DELETE /webhooks/:id`, `POST /webhooks/:id/test` |
 | Health | `GET /health` |
+
+**Alerts.** Add a webhook channel on `/alerts` and Watchdog posts a message when a monitor goes down and when it recovers. Slack and Discord webhook URLs work as they are; `generic` sends JSON signed with an HMAC so your own service can verify it. Up to 3 channels per account, and a Send test button checks a channel straight away. The message format and the signature are described in [docs/api.md](docs/api.md).
 
 **Landing page ticker.** The ticker on the landing page shows real checks of 12 popular sites from a public status page called `world`. In production the API creates it by itself the first time it starts, so there is nothing to run after deploying (set `SEED_SHOWCASE=false` to stop that). On your own computer, create it with one command and keep the API running so its scheduler runs the first checks:
 
@@ -191,7 +196,7 @@ cd server && npm test
 cd client && npm test
 ```
 
-453 server tests and 70 client tests, using Node's built-in test runner, so there is nothing extra to install. The server tests need no database or internet: they replace the models with in-memory stand-ins and test the check engine against a real local web server. GitHub Actions runs both suites and the client build on every push. `docs/TESTING.md` lists what is covered and holds the manual cases for the interface.
+596 server tests and 88 client tests, using Node's built-in test runner, so there is nothing extra to install. The server tests need no database or internet: they replace the models with in-memory stand-ins and test the check engine against a real local web server. GitHub Actions runs both suites and the client build on every push. `docs/TESTING.md` lists what is covered and holds the manual cases for the interface.
 
 To check a deployed app end to end, run the smoke test. It registers a throwaway account and goes through the main features over the real address. With `--demo` it also breaks the demo site and confirms that exactly one incident opens, can be acknowledged and resolves with its duration:
 
@@ -216,15 +221,16 @@ Watchdog runs on MongoDB Atlas (database), Render (API) and Vercel (client). Ste
 - Rate limits per IP: 600 requests per 15 minutes across the API, 10 per 15 minutes on register and login, and 60 per minute on the public status page. 20 monitors per user.
 - helmet headers, CORS restricted to `CLIENT_URL`, 10 kB body limit.
 - In production the checker blocks private, loopback and link-local addresses at DNS lookup time, for IP-literal URLs and for redirect targets.
+- Webhook addresses are never returned by the API, never logged, and shown only as a masked preview. Outgoing alerts use the same private-address blocking as the checker and never follow redirects.
 - Secrets live only in environment variables.
 
 ## Limitations and roadmap
 
 - One scheduler process. Atomic claiming already makes extra instances safe.
 - HTTP and HTTPS only, GET and HEAD only.
-- No outbound notifications (email, SMS, chat). Incidents are shown in the dashboard and on the status page.
+- Alerts go to webhooks (Slack, Discord or any service). No email or SMS, because free hosting blocks outgoing mail.
 
-Next: SSL certificate expiry warnings, encrypted custom headers for authenticated checks, maintenance windows and a second-region checker. The full plan is in [docs/PRD.md](docs/PRD.md).
+Next: SSL certificate expiry warnings, a response-time chart, encrypted custom headers for authenticated checks, maintenance windows and a second-region checker. The full plan is in [docs/PRD.md](docs/PRD.md).
 
 ## Documentation
 

@@ -8,6 +8,7 @@ import monitorRoutes from "./routes/monitor.routes.js";
 import incidentRoutes from "./routes/incident.routes.js";
 import statusRoutes from "./routes/status.routes.js";
 import statusPageRoutes from "./routes/statusPage.routes.js";
+import webhookRoutes from "./routes/webhook.routes.js";
 import apiLimiter from "./middlewares/apiRateLimit.middleware.js";
 
 const app = express();
@@ -49,6 +50,7 @@ app.use("/api/monitors", monitorRoutes);
 app.use("/api/incidents", incidentRoutes);
 app.use("/api/status", statusRoutes);
 app.use("/api/status-page", statusPageRoutes);
+app.use("/api/webhooks", webhookRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

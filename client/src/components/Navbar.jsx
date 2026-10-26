@@ -20,7 +20,7 @@ const Navbar = () => {
   };
 
   const linkClass = (path) =>
-    `inline-flex h-[42px] items-center rounded-full px-5 text-[16px] font-semibold transition-colors ${
+    `inline-flex h-[42px] w-full items-center justify-center rounded-full px-4 text-[16px] sm:w-auto font-semibold transition-colors ${
       location.pathname === path ? "bg-white text-ink" : "text-white hover:bg-white/15"
     }`;
 
@@ -31,7 +31,7 @@ const Navbar = () => {
           <Logo />
         </Link>
 
-        <div className="order-3 flex w-full items-center justify-center gap-1.5 xl:order-2 xl:w-auto xl:shrink-0">
+        <div className="order-3 grid w-full grid-cols-2 gap-1.5 sm:flex sm:items-center sm:justify-center xl:order-2 xl:w-auto xl:shrink-0">
           <Link to="/dashboard" className={linkClass("/dashboard")}>
             Monitors
           </Link>
@@ -40,6 +40,9 @@ const Navbar = () => {
           </Link>
           <Link to="/status-page" className={linkClass("/status-page")}>
             Status page
+          </Link>
+          <Link to="/alerts" className={linkClass("/alerts")}>
+            Alerts
           </Link>
         </div>
 
@@ -52,14 +55,14 @@ const Navbar = () => {
           </Link>
 
           <span
-            className="hidden h-[46px] items-center gap-2.5 rounded-full bg-white/15 pl-1.5 text-[15px] font-semibold sm:inline-flex xl:pr-4"
+            className="hidden h-[46px] items-center gap-2.5 rounded-full bg-white/15 pl-1.5 text-[15px] font-semibold sm:inline-flex 2xl:pr-4"
             title={user?.name}
           >
             <span className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-white font-extrabold text-ink">
               {user?.name?.charAt(0).toUpperCase()}
             </span>
-            <span className="hidden max-w-[140px] truncate xl:inline">{user?.name}</span>
-            <span className="w-1.5 xl:hidden" />
+            <span className="hidden max-w-[140px] truncate 2xl:inline">{user?.name}</span>
+            <span className="w-1.5 2xl:hidden" />
           </span>
 
           <button

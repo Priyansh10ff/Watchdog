@@ -170,3 +170,47 @@ export const startDemoServer = async () => {
       }),
   };
 };
+
+export const startReceiver = async () => {
+  const requests = [];
+  const behavior = { statuses: [], defaultStatus: 204, delayMs: 0 };
+
+  const server = http.createServer((req, res) => {
+    let body = "";
+
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
+
+    req.on("end", () => {
+      requests.push({ method: req.method, url: req.url, headers: req.headers, body });
+
+      const status = behavior.statuses.length ? behavior.statuses.shift() : behavior.defaultStatus;
+
+      const respond = () => {
+        res.writeHead(status, status >= 300 && status < 400 ? { Location: "/elsewhere" } : {});
+        res.end(status === 200 ? "ok" : "");
+      };
+
+      if (behavior.delayMs) setTimeout(respond, behavior.delayMs);
+      else respond();
+    });
+  });
+
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+
+  const { port } = server.address();
+
+  return {
+    base: `http://127.0.0.1:${port}`,
+    port,
+    requests,
+    behavior,
+    json: (index) => JSON.parse(requests[index].body),
+    close: () =>
+      new Promise((resolve) => {
+        server.closeAllConnections?.();
+        server.close(resolve);
+      }),
+  };
+};

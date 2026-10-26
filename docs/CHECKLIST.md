@@ -35,6 +35,7 @@ Submission form fields: Project Name, Student Name, Problem Statement, GitHub Re
 - [x] Pulse monitor cards, edit monitor page and interval dial with a custom interval
 - [x] Public status page (FR14)
 - [x] Landing page ticker (FR26)
+- [x] Webhook alerts to Slack, Discord or any service, with a test message (FR27)
 - [ ] Response time chart and uptime bar (FR15)
 - [ ] Run the interface and status page test cases in [TESTING.md](./TESTING.md)
 - [x] Automated tests (FR20)

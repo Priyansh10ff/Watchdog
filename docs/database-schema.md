@@ -1,6 +1,6 @@
 # Database schema
 
-MongoDB with Mongoose. Collections: `users`, `monitors`, `checkresults`, `incidents`, `statuspages`.
+MongoDB with Mongoose. Collections: `users`, `monitors`, `checkresults`, `incidents`, `statuspages`, `webhookchannels`.
 
 ## User
 
@@ -80,3 +80,18 @@ Indexes: unique `monitor` where `isResolved` is false (one unresolved incident p
 | createdAt, updatedAt | Date | |
 
 Indexes: unique `user` and unique `slug`.
+
+## WebhookChannel
+
+| Field | Type | Notes |
+|---|---|---|
+| user | ObjectId | owner, indexed. Up to 3 channels per user |
+| name | String | up to 40 characters |
+| format | String | `slack`, `discord` or `generic` |
+| url | String | the webhook address, up to 500 characters. `select: false`, so it is never loaded unless asked for by name |
+| signingSecret | String | 48 hex characters for a `generic` channel, empty otherwise. `select: false`. Returned to the owner once, when it is created |
+| isActive | Boolean | default `true`. `false` pauses the channel without deleting it |
+| lastDelivery | Object | `at`, `event`, `ok`, `statusCode`, `error` of the most recent attempt. Absent until the first one |
+| createdAt, updatedAt | Date | |
+
+Index: `user`. The address and the secret are `select: false` so an ordinary query cannot return them by accident, and no API response ever includes them.

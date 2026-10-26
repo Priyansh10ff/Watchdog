@@ -12,6 +12,7 @@ Do these 15 minutes before, in this order.
 
 1. Make sure the API is awake: open `https://YOUR-API.onrender.com/api/health`. The pinger should keep it awake, but check.
 2. Wake the demo site a minute early by opening `https://YOUR-DEMO-TARGET.onrender.com/`. It starts in the up state. Its control links are `/control/down`, `/control/slow` and `/control/up`.
+2a. If you will show alerts, add a Slack or Discord channel on `/alerts` beforehand, press Send test once to prove it works, and have that channel open in a window you can switch to.
 3. Run the live smoke test and read the result. If it passes, the video will work:
    ```bash
    cd server
@@ -33,9 +34,9 @@ Do these 15 minutes before, in this order.
 | 2:15 | Dashboard, wait for the card to turn down | After the failure threshold, the card turns red, the page turns red and Sentry barks. One incident opens with the cause and when it started. |
 | 2:45 | Incidents page: acknowledge | I acknowledge it to show someone is on it. |
 | 3:00 | Demo target: press Make it up, then the dashboard | When the site answers again, the incident resolves itself and records how long the outage lasted. |
-| 3:20 | Edit a monitor, pause and resume, delete with the confirmation | A monitor can be edited, paused or deleted. Deleting asks first, inside the page. |
+| 3:20 | Alerts page, then break the demo site again and show the message land in Discord or Slack | I add a webhook channel, send a test, and Watchdog posts there when a site goes down and when it recovers. One message per outage, never one per failed check. |
 | 3:40 | Status page settings, then the private window | I choose monitors, pick a link and publish. Anyone can open it without logging in. It shows names, status and uptime, never the addresses. |
-| 4:05 | A slide or the README architecture diagram | One scheduler claims due monitors with an atomic lease, so a restart or a second server never double-checks. A status machine decides when a site is down. Private network addresses are blocked, so a monitor cannot be pointed at the server's own network. There are 453 server tests and 70 client tests, CI on every push, and it is deployed on Vercel, Render and Atlas. |
+| 4:05 | A slide or the README architecture diagram | One scheduler claims due monitors with an atomic lease, so a restart or a second server never double-checks. A status machine decides when a site is down. Private network addresses are blocked, so a monitor cannot be pointed at the server's own network. There are 596 server tests and 88 client tests, CI on every push, and it is deployed on Vercel, Render and Atlas. |
 | 4:35 | Landing page or the repo | Next: SSL expiry warnings and charts. Thanks for watching. |
 
 ## If something goes wrong while recording
@@ -56,9 +57,9 @@ Check these against the form's own wording.
 
 - **Project name:** Watchdog
 - **Student name:** Priyansh Dugar
-- **Problem statement:** Website owners usually learn about an outage from their users. Simple monitors raise false alarms on one dropped request and keep alerting during a long outage, and they cannot handle sites that answer 401 or redirect. Watchdog checks sites on a schedule, calls a site down only after several failed checks in a row, opens one incident per outage and closes it automatically on recovery, and publishes a public status page.
+- **Problem statement:** Website owners usually learn about an outage from their users. Simple monitors raise false alarms on one dropped request and keep alerting during a long outage, and they cannot handle sites that answer 401 or redirect. Watchdog checks sites on a schedule, calls a site down only after several failed checks in a row, opens one incident per outage and closes it automatically on recovery, sends one webhook alert per outage and one on recovery, and publishes a public status page.
 - **GitHub repository:** your repository link
 - **Deployed application:** your Vercel address
 - **Demo video:** your video link
 - **Tech stack:** MongoDB, Express, React, Node.js. Vite, Tailwind CSS, GSAP, node-cron, JWT in an httpOnly cookie. Deployed on Vercel, Render and MongoDB Atlas.
-- **Major features:** scheduled checks with per-monitor interval, status codes, keyword and failure threshold; incidents with acknowledge and automatic resolution; a live dashboard with response time, uptime and recent checks; a public status page; SSRF protection, rate limits and security headers; 453 server tests, 70 client tests and CI.
+- **Major features:** scheduled checks with per-monitor interval, status codes, keyword and failure threshold; incidents with acknowledge and automatic resolution; webhook alerts to Slack, Discord or any service, signed with an HMAC; a live dashboard with response time, uptime and recent checks; a public status page; SSRF protection, rate limits and security headers; 596 server tests, 88 client tests and CI.

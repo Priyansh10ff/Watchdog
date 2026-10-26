@@ -31,7 +31,7 @@ if (!base) {
 const isHttps = base.startsWith("https://");
 const marks = { ok: "[ ok ]", warn: "[warn]", fail: "[FAIL]" };
 const results = [];
-const created = { monitors: [], slug: null };
+const created = { monitors: [], slug: null, channels: [] };
 const session = { cookie: null, email: null };
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -318,6 +318,35 @@ const run = async () => {
       });
     }
 
+    await check("Alert channels can be added, listed without their address, paused and removed", async () => {
+      const token = Math.random().toString(36).slice(2, 10).padEnd(8, "x");
+      const address = `https://example.com/watchdog-smoke/${token}`;
+
+      const added = await authed("POST", "/api/webhooks", { name: "Smoke alert", format: "generic", url: address });
+
+      expect(added.status === 201, `expected 201, got ${added.status}: ${added.json?.message || ""}`);
+      created.channels.push(added.json.channel._id);
+      expect(/^[0-9a-f]{48}$/.test(added.json.signingSecret || ""), "no signing secret was handed out");
+      expect(!added.text.includes(token) && !("url" in added.json.channel), "the answer contains the webhook address");
+
+      const listed = await authed("GET", "/api/webhooks");
+      const mine = listed.json?.channels?.find((item) => item._id === added.json.channel._id);
+
+      expect(mine && mine.urlPreview.endsWith(address.slice(-4)), "the preview is missing");
+      expect(!listed.text.includes(token) && !listed.text.includes(added.json.signingSecret), "the list shows the address or the secret");
+
+      const paused = await authed("PATCH", `/api/webhooks/${added.json.channel._id}`, { isActive: false });
+
+      expect(paused.status === 200 && paused.json.channel.isActive === false, "pausing did not work");
+
+      const removed = await authed("DELETE", `/api/webhooks/${added.json.channel._id}`);
+
+      expect(removed.status === 200, `delete answered ${removed.status}`);
+      created.channels.pop();
+
+      return "no address or secret in any answer";
+    });
+
     if (demo) {
       console.log("\nOutage and recovery with the demo target (this takes a few minutes)");
 
@@ -401,6 +430,8 @@ const cleanup = async () => {
   }
 
   if (created.slug) await authed("DELETE", "/api/status-page").catch(() => null);
+
+  for (const id of created.channels) await authed("DELETE", `/api/webhooks/${id}`).catch(() => null);
 
   const out = await authed("POST", "/api/auth/logout").catch(() => null);
 
