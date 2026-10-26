@@ -18,7 +18,7 @@ npm test
 
 Both use Node's built-in test runner, so they need no extra packages. The server tests need no database and no network: models are replaced with in-memory stand-ins, and the check engine is tested against a small web server started on a random local port. A GitHub Actions workflow (`.github/workflows/ci.yml`) runs both suites and the client build on every push and pull request.
 
-Server: 596 tests in 18 files, about 30 seconds.
+Server: 607 tests in 19 files, about 30 seconds.
 
 | File | Tests | What it covers |
 |---|---|---|
@@ -39,13 +39,14 @@ Server: 596 tests in 18 files, about 30 seconds.
 | `webhookUrl.test.js` | 16 | Webhook address rules: schemes, length, private addresses, and that a Slack or Discord channel really points at that service |
 | `alert.service.test.js` | 61 | Message shapes for Slack, Discord and JSON, escaping and mention safety, HMAC signing, delivery with retries and redirects, address blocking, and that a webhook address never reaches a log |
 | `webhooks.api.test.js` | 36 | Every alert channel route over HTTP: validation, ownership, the limit of 3, the one-time secret, the test cooldown, and that no answer ever contains the address |
+| `firstCheck.test.js` | 11 | The first check of a new monitor: that the answer carries its result, that a slow site does not hold up the form, and that the check still runs in the background |
 | `incident.alerts.test.js` | 14 | A real failing check through to the message: one alert per outage, one on recovery, nothing in between, and that a broken channel never breaks a check |
 
-Client: 88 tests in 5 files.
+Client: 97 tests in 5 files.
 
 | File | Tests | What it covers |
 |---|---|---|
-| `monitorState.test.js` | 21 | A monitor's state, the sort order of the dashboard and the headline for the overall state |
+| `monitorState.test.js` | 30 | A monitor's state, the sort order of the dashboard and the headline for the overall state |
 | `time.test.js` | 24 | "5 min ago", durations such as `2m 5s`, and dates |
 | `sentryPose.test.js` | 12 | The three moods of Sentry and how a pose is applied |
 | `poller.test.js` | 13 | The retry timing of the landing ticker: quick retries after a failure, back to normal, reset after a success, and stopping cleanly |
@@ -236,6 +237,8 @@ Interface:
 | 54 | Restart the API | The log says `Showcase page "world" already exists`. Nothing is duplicated | |
 | 55 | Open the landing page while the API is still starting, and wait | The ticker appears by itself within about a minute, without reloading | |
 | 56 | Start the API with `SEED_SHOWCASE=false` on an empty database | Nothing is created and the landing page has no ticker | |
+| 56a | Add a monitor for a site that answers quickly | The dashboard opens with the card already showing a response time, uptime and one bar. No reload is needed | |
+| 56b | Add a monitor for a site that never answers (for example a firewalled address) | The form returns within a few seconds. The card says Checking..., then fills in by itself within about 10 seconds | |
 
 ## Alerts
 

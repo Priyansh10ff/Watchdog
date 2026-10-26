@@ -10,7 +10,7 @@ opens a single incident per outage and closes it automatically on recovery.
 [![CI](https://github.com/Priyansh10ff/Watchdog/actions/workflows/ci.yml/badge.svg)](https://github.com/Priyansh10ff/Watchdog/actions/workflows/ci.yml)
 &nbsp;![Stack](https://img.shields.io/badge/stack-MERN-1f2937)
 &nbsp;![Node](https://img.shields.io/badge/node-%E2%89%A5%2020-3c873a)
-&nbsp;![Tests](https://img.shields.io/badge/tests-684%20passing-2ea44f)
+&nbsp;![Tests](https://img.shields.io/badge/tests-704%20passing-2ea44f)
 &nbsp;![License](https://img.shields.io/badge/license-MIT-blue)
 
 [Product](docs/PRODUCT.md)&nbsp; · &nbsp;[Requirements](docs/PRD.md)&nbsp; ·
@@ -281,7 +281,7 @@ cd server && npm test
 cd client && npm test
 ```
 
-596 server tests and 88 client tests, using Node's built-in test runner, so there is
+607 server tests and 97 client tests, using Node's built-in test runner, so there is
 nothing extra to install. The server tests need no database or internet: they replace the
 models with in-memory stand-ins and test the check engine against a real local web server.
 GitHub Actions runs both suites and the client build on every push. `docs/TESTING.md`
@@ -367,6 +367,6 @@ Web Development at Scaler School of Technology, Bengaluru.
 <div align="center">
 <br>
 
-<sub>Built with MongoDB, Express, React and Node · 684 automated tests · MIT licensed</sub>
+<sub>Built with MongoDB, Express, React and Node · 704 automated tests · MIT licensed</sub>
 
 </div>

@@ -98,6 +98,8 @@ beforeEach(() => {
     return null;
   });
   stubs.stub(CheckResult, "deleteMany", async () => ({}));
+  stubs.stub(CheckResult, "find", () => chain([]));
+  stubs.stub(CheckResult, "aggregate", async () => []);
   stubs.stub(Incident, "deleteMany", async () => ({}));
   stubs.stub(StatusPage, "find", () => chain([]));
   stubs.stub(StatusPage, "updateMany", async () => ({}));

@@ -6,7 +6,7 @@ import StatusPage from "../models/statusPage.model.js";
 import statusCache from "../utils/statusCache.js";
 import { getMonitorHistory } from "../services/history.service.js";
 import validateUrl from "../utils/validateUrl.js";
-import { checkSoon, processMonitor } from "../services/checker.service.js";
+import { checkSoon, checkSoonAndWait, processMonitor } from "../services/checker.service.js";
 
 const MAX_MONITORS_PER_USER = 20;
 
@@ -152,15 +152,16 @@ export const createMonitor = async (req, res) => {
       ...result.data,
     });
 
-    const monitorObj = monitor.toObject();
-    delete monitorObj.encryptedHeaders;
+    const checked = (await checkSoonAndWait(monitor._id)) || monitor;
+    const history = await getMonitorHistory([checked._id]);
 
-    checkSoon(monitor._id);
+    const monitorObj = checked.toObject();
+    delete monitorObj.encryptedHeaders;
 
     return res.status(201).json({
       success: true,
       message: "Monitor created",
-      monitor: monitorObj,
+      monitor: { ...monitorObj, ...history.get(String(checked._id)) },
     });
   } catch (error) {
     if (error.code === 11000) {

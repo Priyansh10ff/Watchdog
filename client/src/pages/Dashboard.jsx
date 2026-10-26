@@ -6,10 +6,11 @@ import SentryAvatar from "../components/SentryAvatar";
 import { useConfirm } from "../components/ConfirmDialog";
 import MonitorTile from "../components/MonitorTile";
 import { butterBtn, cardClass, inkBtn } from "../components/ui";
-import { sortMonitors, summarize } from "../utils/monitorState";
+import { hasPendingFirstCheck, sortMonitors, summarize } from "../utils/monitorState";
 import { formatDuration } from "../utils/time";
 
 const REFRESH_MS = 30000;
+const FAST_REFRESH_MS = 5000;
 
 const Dashboard = () => {
   const [monitors, setMonitors] = useState([]);
@@ -52,15 +53,24 @@ const Dashboard = () => {
     }
   };
 
+  const awaitingFirstCheck = hasPendingFirstCheck(monitors);
+
   useEffect(() => {
     fetchMonitors();
     fetchOpenIncidents();
-    const timer = setInterval(() => {
-      fetchMonitors(true);
-      fetchOpenIncidents();
-    }, REFRESH_MS);
-    return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const timer = setInterval(
+      () => {
+        fetchMonitors(true);
+        fetchOpenIncidents();
+      },
+      awaitingFirstCheck ? FAST_REFRESH_MS : REFRESH_MS,
+    );
+
+    return () => clearInterval(timer);
+  }, [awaitingFirstCheck]);
 
   const handleToggle = async (id) => {
     setActionError("");

@@ -140,8 +140,32 @@ export const claimMonitor = (id) =>
     { returnDocument: "after" },
   );
 
-export const checkSoon = (id) => {
+const FIRST_CHECK_WAIT_MS = 3000;
+
+export const checkSoon = (id) =>
   claimMonitor(id)
-    .then((monitor) => (monitor ? processMonitor(monitor) : null))
-    .catch((error) => console.log("Immediate check failed:", error.message));
+    .then(async (monitor) => {
+      if (!monitor) return null;
+      await processMonitor(monitor);
+      return monitor;
+    })
+    .catch((error) => {
+      console.log("Immediate check failed:", error.message);
+      return null;
+    });
+
+export const checkSoonAndWait = async (id, waitMs = FIRST_CHECK_WAIT_MS) => {
+  const running = checkSoon(id);
+  let timer;
+
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(null), waitMs);
+    timer.unref?.();
+  });
+
+  try {
+    return await Promise.race([running, timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
 };

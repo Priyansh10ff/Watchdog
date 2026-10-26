@@ -2,14 +2,14 @@ import { Link } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
 import CheckBars from "./CheckBars";
 import Icon from "./Icon";
-import { getState } from "../utils/monitorState";
+import { getState, isAwaitingFirstCheck } from "../utils/monitorState";
 import { timeAgo } from "../utils/time";
 import { tileDeleteBtn, tileEditBtn, tileToggleBtn } from "./ui";
 
 const readout = (monitor, state) => {
   if (state === "down") return "No reply";
   if (state === "paused") return "Off";
-  if (state === "waiting") return "Waiting";
+  if (state === "waiting") return isAwaitingFirstCheck(monitor) ? "Checking..." : "Waiting";
   if (monitor.lastResponseTimeMs == null) return "No reply";
   return `${monitor.lastResponseTimeMs} ms`;
 };

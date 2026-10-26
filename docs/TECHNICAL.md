@@ -208,7 +208,7 @@ On `SIGTERM` or `SIGINT`, which Render sends when it redeploys, the server stops
 
 ## 13. Testing
 
-Automated tests use Node's built-in test runner: 596 server tests and 88 client tests, run with `npm test` in each folder and in CI on every push. The server tests replace the database models with in-memory stand-ins and test the check engine against a local web server, so they need no database or internet. `scripts/smokeTest.mjs` (run with `npm run smoke -- <address>`) checks a deployed app over HTTP, and its own tests (`npm run test:smoke`) run it against a copy of the API on in-memory data. The full list is in [TESTING.md](./TESTING.md), which also holds the manual cases for the parts the automated tests do not cover (the React components, the animations and the real database).
+Automated tests use Node's built-in test runner: 607 server tests and 97 client tests, run with `npm test` in each folder and in CI on every push. The server tests replace the database models with in-memory stand-ins and test the check engine against a local web server, so they need no database or internet. `scripts/smokeTest.mjs` (run with `npm run smoke -- <address>`) checks a deployed app over HTTP, and its own tests (`npm run test:smoke`) run it against a copy of the API on in-memory data. The full list is in [TESTING.md](./TESTING.md), which also holds the manual cases for the parts the automated tests do not cover (the React components, the animations and the real database).
 
 ## 13a. Client animation
 
@@ -234,6 +234,12 @@ With data, it shows a window five rows tall. The rows are the monitors followed 
 `server/scripts/seedShowcase.js` connects with `MONGO_URI` and calls `seedShowcase` in `services/showcase.service.js`. That function finds or creates the showcase account (the password is hashed with bcrypt, random unless `SHOWCASE_PASSWORD` is given), adds a monitor for each site that is missing (matched by account and URL, so re-running never duplicates), refuses to go past the limit of 20 monitors per account, and creates or updates that account's status page with the monitors in order. A link already used by another account stops it with a clear message.
 
 The API calls the same setup by itself on start. After the server is listening, `server/index.js` asks `showcaseAutoSeedEnabled()` (true when `SEED_SHOWCASE=true`, or when it is not set and `NODE_ENV` is `production`) and then `ensureShowcase`, which does nothing if any status page with that link exists, even a hidden one or one owned by another account, and otherwise runs `seedShowcase` with the `SHOWCASE_*` settings. It runs in the background: a failure is logged as `Showcase setup skipped: <reason>` and never stops the server or the scheduler, and a successful run logs `Showcase page "world" created with 12 sites`. Because it only acts when no such page exists, restarting the API never duplicates anything and never undoes a page the owner hid.
+
+## 13d2. The first check of a new monitor
+
+`POST /monitors` starts the first check immediately with `checkSoonAndWait`, which races the running check against a 3 second timer. If the check wins, the answer carries the finished monitor plus its `recentChecks` and `uptime24h`, so the dashboard card is complete the moment it is opened. If the timer wins, the answer returns the monitor as created and the check carries on in the background, because a slow or unreachable site must never hold up the form.
+
+On the client, `utils/monitorState.js` exposes `isAwaitingFirstCheck`. A card with no result yet reads `Checking...` instead of a blank value, and the dashboard polls every 5 seconds instead of 30 while any monitor is still unchecked, dropping back once every monitor has a result.
 
 ## 13e. Alerts
 

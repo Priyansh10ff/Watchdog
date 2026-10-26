@@ -177,7 +177,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | **Performance** | Up to 200 due monitors are claimed per run and checked 10 at a time. Responses are limited to 2 MB. List endpoints are paginated. Indexes cover the dashboard, scheduler and incident queries. |
 | **Compatibility** | Latest two versions of Chrome, Edge, Firefox and Safari. Layouts work from 360 px wide. |
 | **Accessibility** | Text pairs meet WCAG AA, visible focus, labelled form fields, semantic buttons and links, reduced-motion support. Remaining gaps are listed in [DESIGN.md](./DESIGN.md) and tracked in [CHECKLIST.md](./CHECKLIST.md). |
-| **Maintainability** | Configuration from environment variables only. Logic lives in services, controllers stay thin. Automated tests (596 server and 88 client) run in CI, and manual test cases for the rest are in [TESTING.md](./TESTING.md). |
+| **Maintainability** | Configuration from environment variables only. Logic lives in services, controllers stay thin. Automated tests (607 server and 97 client) run in CI, and manual test cases for the rest are in [TESTING.md](./TESTING.md). |
 
 ## 8. Success metrics
 

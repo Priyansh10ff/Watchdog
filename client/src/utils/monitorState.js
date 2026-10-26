@@ -1,5 +1,11 @@
 export const SLOW_MS = 1500;
 
+export const isAwaitingFirstCheck = (monitor) =>
+  Boolean(monitor) && monitor.isActive !== false && !monitor.lastCheckedAt;
+
+export const hasPendingFirstCheck = (monitors) =>
+  Array.isArray(monitors) && monitors.some(isAwaitingFirstCheck);
+
 export const getState = (monitor) => {
   if (!monitor.isActive) return "paused";
   if (monitor.status === "down") return "down";

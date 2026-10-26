@@ -25,7 +25,7 @@ Register and login share a rate limit of 10 requests per 15 minutes per IP and r
 
 | Method | Path | Description |
 |---|---|---|
-| POST | /monitors | Create a monitor. Starts an immediate check |
+| POST | /monitors | Create a monitor. The first check runs at once: the answer waits up to 3 seconds for it and carries the result, with `recentChecks` and `uptime24h`. A slower site answers with no result yet and the check finishes in the background |
 | GET | /monitors | List the user's monitors, newest first. Each monitor also has `recentChecks` and `uptime24h` |
 | GET | /monitors/:id | One monitor |
 | PATCH | /monitors/:id | Update `name`, `method`, `intervalMinutes`, `timeoutMs`, `expectedStatusCodes`, `keyword`, `failureThreshold`. The URL cannot change |

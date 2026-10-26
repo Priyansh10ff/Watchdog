@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { SLOW_MS, getState, sortMonitors, summarize } from "../src/utils/monitorState.js";
+import { SLOW_MS, getState, hasPendingFirstCheck, isAwaitingFirstCheck, sortMonitors, summarize } from "../src/utils/monitorState.js";
 
 const monitor = (name, extra = {}) => ({
   name,
@@ -144,5 +144,51 @@ describe("summarize", () => {
     for (const list of [[], [monitor("a")], [monitor("a", { status: "down" })], [monitor("a", { lastResponseTimeMs: 5000 })], [monitor("a", { isActive: false })]]) {
       assert.ok(summarize(list).hint.length > 10);
     }
+  });
+});
+
+describe("isAwaitingFirstCheck", () => {
+  it("is true for an active monitor that has never been checked", () => {
+    assert.equal(isAwaitingFirstCheck({ isActive: true }), true);
+    assert.equal(isAwaitingFirstCheck({ isActive: true, lastCheckedAt: null }), true);
+  });
+
+  it("is false once it has been checked", () => {
+    assert.equal(isAwaitingFirstCheck({ isActive: true, lastCheckedAt: "2026-10-11T12:00:00.000Z" }), false);
+  });
+
+  it("is false for a paused monitor, which is not going to be checked", () => {
+    assert.equal(isAwaitingFirstCheck({ isActive: false }), false);
+  });
+
+  it("treats a missing isActive as active", () => {
+    assert.equal(isAwaitingFirstCheck({}), true);
+  });
+
+  it("is false for nothing at all", () => {
+    assert.equal(isAwaitingFirstCheck(null), false);
+    assert.equal(isAwaitingFirstCheck(undefined), false);
+  });
+});
+
+describe("hasPendingFirstCheck", () => {
+  const checked = { isActive: true, lastCheckedAt: "2026-10-11T12:00:00.000Z" };
+
+  it("is true when any monitor is still waiting for its first check", () => {
+    assert.equal(hasPendingFirstCheck([checked, { isActive: true }]), true);
+  });
+
+  it("is false when every monitor has a result", () => {
+    assert.equal(hasPendingFirstCheck([checked, checked]), false);
+  });
+
+  it("is false for an empty list or anything that is not a list", () => {
+    assert.equal(hasPendingFirstCheck([]), false);
+    assert.equal(hasPendingFirstCheck(null), false);
+    assert.equal(hasPendingFirstCheck(undefined), false);
+  });
+
+  it("ignores paused monitors that have never been checked", () => {
+    assert.equal(hasPendingFirstCheck([checked, { isActive: false }]), false);
   });
 });
