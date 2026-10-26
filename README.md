@@ -96,19 +96,6 @@ account.
 **Public status page** — shareable, no login, no URLs<br>
 <img src="docs/screenshots/status-page.png" alt="A public status page" width="820">
 
-<br>
-
-<table>
-<tr>
-<td align="center" width="50%"><b>Landing page</b></td>
-<td align="center" width="50%"><b>On a phone</b></td>
-</tr>
-<tr>
-<td align="center" valign="top"><img src="docs/screenshots/landing.png" alt="The landing page" width="400"></td>
-<td align="center" valign="top"><img src="docs/screenshots/mobile.png" alt="The dashboard on a phone" width="185"></td>
-</tr>
-</table>
-
 </div>
 
 > The screenshots show sample data.
