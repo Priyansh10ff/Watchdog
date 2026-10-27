@@ -303,6 +303,7 @@ describe("delivery", () => {
     receiver.behavior.statuses = [];
     receiver.behavior.defaultStatus = 204;
     receiver.behavior.delayMs = 0;
+    receiver.behavior.body = undefined;
   });
 
   const channel = (extra = {}) => ({ _id: oid(), format: "generic", url: `${receiver.base}/hook`, signingSecret: "", ...extra });
@@ -354,6 +355,50 @@ describe("delivery", () => {
 
     assert.match(receiver.requests[0].headers["x-watchdog-timestamp"], /^\d{10}$/);
     assert.equal(receiver.requests[0].headers["x-watchdog-signature"], undefined);
+  });
+
+  it("introduces itself to Discord the way Discord expects, so Cloudflare does not block it", async () => {
+    await deliver(channel({ format: "discord" }), info(), FAST);
+
+    assert.match(receiver.requests[0].headers["user-agent"], /^DiscordBot \(https?:\/\/\S+, [\d.]+\)$/);
+  });
+
+  it("keeps its own name for Slack and generic channels", async () => {
+    await deliver(channel({ format: "slack" }), info(), FAST);
+    await deliver(channel(), info(), FAST);
+
+    for (const request of receiver.requests) {
+      assert.match(request.headers["user-agent"], /^WatchdogBot\//);
+    }
+  });
+
+  it("passes on the reason the service gives, not just the number", async () => {
+    receiver.behavior.defaultStatus = 429;
+    receiver.behavior.body = JSON.stringify({ message: "You are being rate limited.", retry_after: 4.2 });
+
+    const outcome = await deliver(channel(), info(), { ...FAST, retry: false });
+
+    assert.equal(outcome.ok, false);
+    assert.equal(outcome.error, "HTTP 429: You are being rate limited. (retry in 5s)");
+  });
+
+  it("says plainly when something blocked the request before the service saw it", async () => {
+    receiver.behavior.defaultStatus = 429;
+    receiver.behavior.body = "<html><title>Access denied | Cloudflare</title>error code: 1015</html>";
+
+    const outcome = await deliver(channel(), info(), { ...FAST, retry: false });
+
+    assert.equal(outcome.error, "HTTP 429: blocked before reaching the service, not a message limit");
+  });
+
+  it("falls back to the bare number when the answer explains nothing", async () => {
+    receiver.behavior.defaultStatus = 400;
+    receiver.behavior.body = "";
+
+    assert.equal((await deliver(channel(), info(), FAST)).error, "HTTP 400");
+
+    receiver.behavior.body = "{not json";
+    assert.equal((await deliver(channel(), info(), FAST)).error, "HTTP 400");
   });
 
   it("sends neither a signature nor a timestamp to Slack or Discord", async () => {

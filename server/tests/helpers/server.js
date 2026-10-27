@@ -173,7 +173,7 @@ export const startDemoServer = async () => {
 
 export const startReceiver = async () => {
   const requests = [];
-  const behavior = { statuses: [], defaultStatus: 204, delayMs: 0 };
+  const behavior = { statuses: [], defaultStatus: 204, delayMs: 0, body: undefined };
 
   const server = http.createServer((req, res) => {
     let body = "";
@@ -189,7 +189,7 @@ export const startReceiver = async () => {
 
       const respond = () => {
         res.writeHead(status, status >= 300 && status < 400 ? { Location: "/elsewhere" } : {});
-        res.end(status === 200 ? "ok" : "");
+        res.end(behavior.body !== undefined ? behavior.body : status === 200 ? "ok" : "");
       };
 
       if (behavior.delayMs) setTimeout(respond, behavior.delayMs);

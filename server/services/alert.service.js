@@ -14,6 +14,7 @@ import {
 } from "../utils/safeHttp.js";
 
 const USER_AGENT = "WatchdogBot/1.0 (alerts)";
+const DISCORD_USER_AGENT = "DiscordBot (https://github.com/Priyansh10ff/Watchdog, 1.0)";
 const TIMEOUT_MS = 5000;
 const RETRY_MS = 1500;
 const MAX_RESPONSE_BYTES = 64 * 1024;
@@ -204,7 +205,7 @@ const build = (channel, info) => {
   const timestamp = String(Math.floor(Date.now() / 1000));
   const headers = {
     "Content-Type": "application/json",
-    "User-Agent": USER_AGENT,
+    "User-Agent": channel.format === "discord" ? DISCORD_USER_AGENT : USER_AGENT,
     "X-Watchdog-Event": info.type,
   };
 
@@ -235,6 +236,31 @@ const redact = (message, url) => {
   }
 
   return text;
+};
+
+const explain = (status, data) => {
+  const text = typeof data === "string" ? data.trim() : "";
+
+  if (!text) return `HTTP ${status}`;
+
+  if (text.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(text);
+      const reason = clip(parsed.message || parsed.error || "", 120);
+      const wait = parsed.retry_after;
+
+      if (reason && wait) return `HTTP ${status}: ${reason} (retry in ${Math.ceil(Number(wait))}s)`;
+      if (reason) return `HTTP ${status}: ${reason}`;
+    } catch (error) {
+      return `HTTP ${status}`;
+    }
+  }
+
+  if (status === 429 && /cloudflare|blocked|banned/i.test(text)) {
+    return `HTTP ${status}: blocked before reaching the service, not a message limit`;
+  }
+
+  return `HTTP ${status}`;
 };
 
 const attempt = async (channel, info, timeoutMs) => {
@@ -272,7 +298,7 @@ const attempt = async (channel, info, timeoutMs) => {
     return {
       ok: false,
       statusCode: status,
-      error: `HTTP ${status}`,
+      error: explain(status, response.data),
       retryable: status >= 500 || status === 429,
     };
   } catch (error) {

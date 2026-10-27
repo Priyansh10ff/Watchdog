@@ -247,6 +247,8 @@ On the client, `utils/monitorState.js` exposes `isAwaitingFirstCheck`. A card wi
 
 **Delivery.** One POST with a 5 second timeout. It retries once after 1.5 seconds, but only when retrying could help: a 5xx, a 429 or a connection problem. A 4xx, a redirect or a blocked address is final. Redirects are never followed, so a webhook cannot be bounced to another host. The result of each attempt is stored on the channel as `lastDelivery`, which is what the Alerts page shows. All of an account's channels are sent at the same time.
 
+**Who it says it is.** Discord sits behind Cloudflare, which refuses requests whose `User-Agent` it does not recognise and answers 429 before Discord ever sees the message. Discord channels are therefore sent `DiscordBot (<repo url>, 1.0)`, the form Discord's own API documents; Slack and generic channels keep `WatchdogBot/1.0`. A failed delivery records the service's own reason (`HTTP 429: You are being rate limited. (retry in 5s)`) rather than the bare number, and says plainly when something blocked the request before the service saw it.
+
 **Message shapes.** Slack gets plain text with the Slack markup characters escaped. Discord gets an embed with `allowed_mentions` empty, so a monitor named `@everyone` cannot ping a server. A `generic` channel gets JSON plus `X-Watchdog-Timestamp` and, when the channel has a secret, `X-Watchdog-Signature`: `sha256=` followed by the HMAC SHA-256 of `<timestamp>.<raw body>`. Messages carry the monitor's name and host name, never the full URL, so a webhook receiver cannot learn the address or any query string.
 
 **What keeps it safe.**
