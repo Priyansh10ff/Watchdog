@@ -2,7 +2,7 @@
 
 Know when your site goes down before your users do. Watchdog checks your websites and APIs on a schedule, confirms real outages without false alarms, and keeps a clear record of every incident.
 
-Requirements in [PRD.md](./PRD.md) · Implementation in [TECHNICAL.md](./TECHNICAL.md) · Interface in [DESIGN.md](./DESIGN.md)
+Requirements in [PRD.md](./PRD.md) · Implementation in [TECHNICAL.md](./TECHNICAL.md)
 
 ---
 

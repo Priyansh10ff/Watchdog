@@ -5,10 +5,10 @@
 | **Product** | Watchdog uptime and incident tracker |
 | **Owner** | Priyansh Dugar |
 | **Status** | v1.0, end-term submission |
-| **Live** | Deployed on Vercel, Render and Atlas. Links are in the [README](../README.md), hosting steps in [deployment.md](./deployment.md) |
+| **Live** | Deployed on Vercel, Render and Atlas. Links are in the [README](../README.md) |
 | **Last updated** | October 2026 |
 
-Related: [PRODUCT.md](./PRODUCT.md) (overview) · [TECHNICAL.md](./TECHNICAL.md) (implementation) · [DESIGN.md](./DESIGN.md) (interface) · [CHECKLIST.md](./CHECKLIST.md) (readiness)
+Related: [PRODUCT.md](./PRODUCT.md) (overview) · [TECHNICAL.md](./TECHNICAL.md) (implementation)
 
 ---
 
@@ -176,8 +176,8 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | **Reliability** | The server only listens once MongoDB is connected. A claimed monitor is leased for 2 minutes, so a crashed check is retried. The scheduler skips a run while the previous one is still going. One monitor's error never stops the others. |
 | **Performance** | Up to 200 due monitors are claimed per run and checked 10 at a time. Responses are limited to 2 MB. List endpoints are paginated. Indexes cover the dashboard, scheduler and incident queries. |
 | **Compatibility** | Latest two versions of Chrome, Edge, Firefox and Safari. Layouts work from 360 px wide. |
-| **Accessibility** | Text pairs meet WCAG AA, visible focus, labelled form fields, semantic buttons and links, reduced-motion support. Remaining gaps are listed in [DESIGN.md](./DESIGN.md) and tracked in [CHECKLIST.md](./CHECKLIST.md). |
-| **Maintainability** | Configuration from environment variables only. Logic lives in services, controllers stay thin. Automated tests (607 server and 97 client) run in CI, and manual test cases for the rest are in [TESTING.md](./TESTING.md). |
+| **Accessibility** | Text pairs meet WCAG AA, visible focus, labelled form fields, semantic buttons and links, reduced-motion support. Remaining gaps: announcing page loading and error states to screen readers, and a keyboard-only pass. |
+| **Maintainability** | Configuration from environment variables only. Logic lives in services, controllers stay thin. Automated tests (607 server and 97 client) run in CI. |
 
 ## 8. Success metrics
 
@@ -207,7 +207,7 @@ Watchdog checks each address on a schedule, waits for several failures in a row 
 | Free hosting sleeps | The scheduler lives in the API process, so checks stop while the server is asleep | Always-on instance, or an external ping on `/api/health` every 5 minutes (never more than 14) |
 | Sites that block bots or datacenter IPs | False "down" results | A clear User-Agent, and users can list 403 or 429 as expected status codes |
 | Geo-blocked sites | A site looks down from one region | Documented limitation. The second-region agent (FR19) addresses it |
-| Cross-site cookies between Vercel and Render | Browsers that block third-party cookies may break login | Proxy `/api` through the client host so cookies are first-party (see [deployment.md](./deployment.md)) |
+| Cross-site cookies between Vercel and Render | Browsers that block third-party cookies may break login | Proxy `/api` through the client host so cookies are first-party |
 | Large check history on the free database | Storage fills up | 30 day automatic retention. Estimate: a 1-minute monitor stores about 43,000 results per month |
 | Single scheduler process | One process does all checking | Atomic claiming already makes extra instances safe. Scaling out is a later step |
 | A webhook address could be aimed at the server's own network | SSRF: a user could reach internal services | The same private-address blocking the checker uses, plus host rules for Slack and Discord in production |

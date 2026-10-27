@@ -14,9 +14,7 @@ opens a single incident per outage and closes it automatically on recovery.
 &nbsp;![License](https://img.shields.io/badge/license-MIT-blue)
 
 [Product](docs/PRODUCT.md)&nbsp; · &nbsp;[Requirements](docs/PRD.md)&nbsp; ·
-&nbsp;[Technical](docs/TECHNICAL.md)&nbsp; · &nbsp;[Design](docs/DESIGN.md)&nbsp; ·
-&nbsp;[API](docs/api.md)&nbsp; · &nbsp;[Deployment](docs/deployment.md)&nbsp; ·
-&nbsp;[Testing](docs/TESTING.md)
+&nbsp;[Technical](docs/TECHNICAL.md)
 
 <br>
 
@@ -204,8 +202,8 @@ curl -b cookies.txt http://localhost:5000/api/monitors
 ```
 
 On Windows PowerShell `curl` is a different command, so use Git Bash or the Postman
-collection in [docs/postman](docs/postman). The full endpoint list, bodies, filters and
-error codes are in [docs/api.md](docs/api.md).
+collection. Every route, its body and its error codes are listed in
+[docs/TECHNICAL.md](docs/TECHNICAL.md).
 
 | Group | Endpoints |
 |---|---|
@@ -220,7 +218,7 @@ error codes are in [docs/api.md](docs/api.md).
 goes down and when it recovers. Slack and Discord webhook URLs work as they are; `generic`
 sends JSON signed with an HMAC so your own service can verify it. Up to 3 channels per
 account, and a Send test button checks a channel straight away. The message format and the
-signature are described in [docs/api.md](docs/api.md).
+signature are described in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
 **Landing page ticker.** The ticker on the landing page shows real checks of 12 popular
 sites from a public status page called `world`. In production the API creates it by itself
@@ -235,7 +233,7 @@ node scripts/seedShowcase.js
 
 Without that page the section is hidden. If the API is still starting when someone opens
 the landing page, the ticker retries every few seconds and appears by itself. Production
-setup and options are in [docs/deployment.md](docs/deployment.md).
+setup and options are in [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
 ## Architecture
 
@@ -284,8 +282,7 @@ cd client && npm test
 607 server tests and 97 client tests, using Node's built-in test runner, so there is
 nothing extra to install. The server tests need no database or internet: they replace the
 models with in-memory stand-ins and test the check engine against a real local web server.
-GitHub Actions runs both suites and the client build on every push. `docs/TESTING.md`
-lists what is covered and holds the manual cases for the interface.
+GitHub Actions runs both suites and the client build on every push.
 
 To check a deployed app end to end, run the smoke test. It registers a throwaway account
 and goes through the main features over the real address. With `--demo` it also breaks the
@@ -301,7 +298,7 @@ npm run smoke -- https://your-app.vercel.app --demo=https://your-demo-target.onr
 
 Watchdog runs on MongoDB Atlas (database), Render (API) and Vercel (client). Step-by-step
 instructions, the production settings and a troubleshooting table are in
-[docs/deployment.md](docs/deployment.md). Three things matter in production:
+[docs/TECHNICAL.md](docs/TECHNICAL.md). Three things matter in production:
 
 - The scheduler runs inside the API process, so the API instance must stay awake. On a
   free plan, point an external pinger at `/api/health` every 5 minutes.
@@ -346,14 +343,6 @@ authenticated checks, maintenance windows and a second-region checker. The full 
 | [PRODUCT.md](docs/PRODUCT.md) | What Watchdog is, why it exists, who it is for |
 | [PRD.md](docs/PRD.md) | Requirements, user stories, acceptance criteria, release plan, risks |
 | [TECHNICAL.md](docs/TECHNICAL.md) | Architecture, check pipeline, status machine, security, configuration |
-| [DESIGN.md](docs/DESIGN.md) | Design system: colour, type, components, motion and accessibility |
-| [api.md](docs/api.md) | API reference |
-| [database-schema.md](docs/database-schema.md) | Collections and indexes |
-| [deployment.md](docs/deployment.md) | Hosting guide and troubleshooting |
-| [TESTING.md](docs/TESTING.md) | Automated tests and manual test cases with expected results |
-| [DEMO.md](docs/DEMO.md) | Demo video script and submission form text |
-| [postman](docs/postman) | Postman collection and environments |
-| [CHECKLIST.md](docs/CHECKLIST.md) | Submission and production readiness checklist |
 
 ## License
 

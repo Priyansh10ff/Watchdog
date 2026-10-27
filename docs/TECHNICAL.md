@@ -1,8 +1,6 @@
 # Watchdog: Technical Documentation
 
-How Watchdog is built and why. For requirements see [PRD.md](./PRD.md), for the product overview see [PRODUCT.md](./PRODUCT.md), for the interface see [DESIGN.md](./DESIGN.md).
-
-Details live in [api.md](./api.md) (endpoints), [database-schema.md](./database-schema.md) (collections), [deployment.md](./deployment.md) (hosting) and [TESTING.md](./TESTING.md) (test cases).
+How Watchdog is built and why. For requirements see [PRD.md](./PRD.md), for the product overview see [PRODUCT.md](./PRODUCT.md). Endpoints, collections, hosting and testing are all covered below.
 
 ---
 
@@ -105,7 +103,7 @@ Acknowledge is a conditional update (`status: "open"` to `"acknowledged"`), so i
 
 ## 8. Data model
 
-Collections: `users`, `monitors`, `checkresults`, `incidents`. Fields and indexes are listed in [database-schema.md](./database-schema.md). Notable choices:
+Collections: `users`, `monitors`, `checkresults`, `incidents`, `statuspages`, `webhookchannels`. Notable choices:
 
 - Monitor status and last result are stored on the monitor so the dashboard needs one query.
 - `checkresults` has a TTL index that deletes documents 30 days after `checkedAt`, so no cleanup job is needed.
@@ -114,7 +112,7 @@ Collections: `users`, `monitors`, `checkresults`, `incidents`. Fields and indexe
 
 ## 9. API
 
-Endpoints, bodies and error codes are in [api.md](./api.md). Summary:
+Every endpoint, with its body and error codes:
 
 | Group | Paths |
 |---|---|
@@ -208,7 +206,7 @@ On `SIGTERM` or `SIGINT`, which Render sends when it redeploys, the server stops
 
 ## 13. Testing
 
-Automated tests use Node's built-in test runner: 607 server tests and 97 client tests, run with `npm test` in each folder and in CI on every push. The server tests replace the database models with in-memory stand-ins and test the check engine against a local web server, so they need no database or internet. `scripts/smokeTest.mjs` (run with `npm run smoke -- <address>`) checks a deployed app over HTTP, and its own tests (`npm run test:smoke`) run it against a copy of the API on in-memory data. The full list is in [TESTING.md](./TESTING.md), which also holds the manual cases for the parts the automated tests do not cover (the React components, the animations and the real database).
+Automated tests use Node's built-in test runner: 607 server tests and 97 client tests, run with `npm test` in each folder and in CI on every push. The server tests replace the database models with in-memory stand-ins and test the check engine against a local web server, so they need no database or internet. `scripts/smokeTest.mjs` (run with `npm run smoke -- <address>`) checks a deployed app over HTTP, and its own tests (`npm run test:smoke`) run it against a copy of the API on in-memory data. The React components, the animations and the real database are not covered by them and are checked by hand.
 
 ## 13a. Client animation
 
