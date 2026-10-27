@@ -18,6 +18,10 @@ opens a single incident per outage and closes it automatically on recovery.
 
 <br>
 
+**Demo video:** [Watch the demo](https://drive.google.com/file/d/1XAZxVV0oss0Z9DDdDFGZ71-QkGRDNuFD/view?usp=sharing)
+
+<br>
+
 <img src="docs/screenshots/dashboard.png" alt="The Watchdog dashboard" width="900">
 
 </div>
